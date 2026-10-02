@@ -1,7 +1,7 @@
 ﻿# 🎸 合成邦高祖！！！ · v0.4.2
 
 > BanG Dream! 棉花娃娃版「合成大西瓜」—— 45 只毛绒娃娃、按轮廓碰撞、果冻手感、无服务器全球榜。
-> **在线玩：https://vanilla-icewagtail.github.io/merge-dolls/**（GitHub Pages，纯静态）
+> **在线玩：https://vanilla-icewagtail.github.io/bangdream/**（GitHub Pages，纯静态）
 
 零依赖、零构建：双击 `index.html` 就能玩；想让成绩存得住（某些浏览器在 `file://` 下禁本地存储）就双击 `启动游戏.cmd`。
 
@@ -101,7 +101,7 @@ node server.cjs --port 8080
 **方式 C：静态托管（发给别人玩）**
 
 把整个目录（`index.html` / `css/` / `js/` / `vendor/` / `assets/dolls/`）原样丢到任意静态托管即可，
-GitHub Pages 现成例子：`merge-dolls` 仓库 → 线上 https://vanilla-icewagtail.github.io/merge-dolls/
+GitHub Pages 现成例子：`bangdream` 仓库 → 线上 https://vanilla-icewagtail.github.io/bangdream/
 
 **方式 D：自建共享排行榜（可选）**
 
@@ -193,7 +193,7 @@ node tools\bangdream\poc.cjs assets\library-bangdream\src\Roselia\凑友希那.P
 | `&board=textdb\|rest\|local` | 强制用哪种排行榜后端（线上/自建/本机） |
 | `&lib=none` | 演示模式也不生成占位图库 |
 
-示例：`https://vanilla-icewagtail.github.io/merge-dolls/?demo=1&shapes=1&pump=300`
+示例：`https://vanilla-icewagtail.github.io/bangdream/?demo=1&shapes=1&pump=300`
 
 ### 5.3 输出：本机存储（localStorage）
 
