@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.5';
+  var VERSION = '0.4.6';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -171,6 +171,8 @@
     board: 'suika.board.v1',
     pending: 'suika.pending.v1',
     best: 'suika.best.v1',
+    // 打到一半的局（手机切后台可能被系统丢掉页面，回来要能接着打）
+    save: 'suika.save.v1',
     prefs: 'suika.prefs.v1'
   };
 

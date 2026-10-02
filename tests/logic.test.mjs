@@ -426,3 +426,62 @@ test('果冻：形变会过冲（弹过头变成微微拉长）再回摆停住�
   const f = game.fruits().find((x) => x.suikaTier === 5);
   assert.ok(!f || Math.abs(f.suikaSq || 0) < 0.01, '晃完要停，实际 ' + (f ? f.suikaSq : 'n/a'));
 });
+
+
+  /* ---------------- 局内快照：手机切后台被系统回收后要能接着打 ---------------- */
+
+  test('局内快照：分数/统计/玩偶位置原样还原（切后台回来不清零）', () => {
+    const g1 = ENGINE.create({ difficulty: 5 });
+    for (let i = 0; i < 6; i++) {
+      g1.drop(g1.pickTier(0.1), 140 + i * 25);
+      runSteps(g1, 600);
+    }
+    const before = g1.summary();
+    assert.ok(before.drops > 0, '前置条件：应该投过玩偶');
+
+    const snap = g1.snapshot();
+    assert.ok(snap.dolls.length > 0, '快照要带上场上的玩偶');
+    const json = JSON.stringify(snap);
+    assert.ok(json.length < 60 * 1024, '快照要小到能塞进 localStorage，实际 ' + json.length + ' 字节');
+
+    /* 模拟「页面被系统丢掉 → 重新加载 → 从存档还原」 */
+    const g2 = ENGINE.create({ difficulty: 5 });
+    assert.equal(g2.restore(JSON.parse(json)), true, '还原应该成功');
+    const after = g2.summary();
+    assert.equal(after.score, before.score, '分数要还原');
+    assert.equal(after.drops, before.drops, '投放次数要还原');
+    assert.equal(after.merges, before.merges, '合成次数要还原');
+    assert.equal(after.maxTier, before.maxTier, '最大玩偶等级要还原');
+    assert.equal(after.bestCombo, before.bestCombo, '最高连击要还原');
+    assert.equal(Math.round(after.durationMs), Math.round(before.durationMs), '本局用时也要还原');
+    assert.equal(after.difficulty, before.difficulty, '难度要还原');
+    assert.equal(g2.snapshot().dolls.length, snap.dolls.length, '场上玩偶数量要还原');
+
+    /* 还原之后物理世界必须是活的：还能继续跑、时间继续走 */
+    runSteps(g2, 600);
+    assert.ok(g2.summary().durationMs > after.durationMs, '还原后时间要继续走：' + after.durationMs + ' → ' + g2.summary().durationMs);
+    assert.ok(g2.fruits().length > 0, '还原后场上还有玩偶');
+    assert.equal(g2.getState().gameOver, false, '还原后不该是已结束状态');
+
+    /* 再存一次应该稳定（可以反复切后台） */
+    const again = g2.snapshot();
+    assert.equal(JSON.stringify(again).length < 60 * 1024, true);
+    const g3 = ENGINE.create({ difficulty: 5 });
+    assert.equal(g3.restore(again), true);
+    assert.equal(g3.summary().score, after.score, '二次还原分数不变');
+  });
+
+  test('局内快照：坏存档不炸（被改坏/版本不符时按新一局处理）', () => {
+    const g = ENGINE.create({ difficulty: 5 });
+    assert.equal(g.restore(null), false, 'null 应该被拒绝');
+    assert.equal(g.restore('nonsense'), false, '字符串应该被拒绝');
+    assert.equal(g.restore(123), false, '数字应该被拒绝');
+    /* 结构不对但能兜住：不抛异常，也不该把分数弄成 NaN */
+    g.restore({ score: 'x', drops: null, dolls: [{ t: 999 }, null, { t: 3, x: 'a', y: 'b' }] });
+    const s = g.summary();
+    assert.equal(Number.isFinite(s.score), true, '分数必须是数字');
+    assert.equal(Number.isFinite(s.drops), true, '投放次数必须是数字');
+    assert.equal(s.score, 0, '坏分数按 0 处理');
+    runSteps(g, 200);
+    assert.equal(Number.isFinite(g.summary().score), true, '坏存档之后还能正常跑');
+  });

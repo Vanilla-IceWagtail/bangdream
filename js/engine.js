@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 游戏核心（物理 + 合成 + 计分 + 判负）
  *
  * 这个文件完全不碰 DOM，只维护 Matter.js 世界和游戏状态，
@@ -510,6 +510,77 @@
       return CFG.pickSpawnTier(rand, CFG.difficultyOf(difficulty).spawnWeights);
     }
 
+    /* ---------------- 局内快照（切后台被系统回收后恢复用） ---------------- */
+
+    /**
+     * 导出当前局面。手机切后台时浏览器可能直接把页面丢掉（回来就是重新加载），
+     * 所以要把「打到一半的成绩」存下来 —— 分数、统计、以及每只玩偶的位置姿态。
+     * 几十只玩偶也就几 KB。
+     */
+    function snapshot() {
+      var dolls = [];
+      var list = fruits();
+      for (var i = 0; i < list.length; i++) {
+        var b = list[i];
+        if (!b || !b.position || b.suikaTier == null) continue;
+        dolls.push({
+          t: b.suikaTier,
+          x: Math.round(b.position.x * 100) / 100,
+          y: Math.round(b.position.y * 100) / 100,
+          a: Math.round((b.angle || 0) * 1000) / 1000,
+          vx: Math.round((b.velocity ? b.velocity.x : 0) * 100) / 100,
+          vy: Math.round((b.velocity ? b.velocity.y : 0) * 100) / 100
+        });
+      }
+      return {
+        score: state.score,
+        merges: state.merges,
+        maxTier: state.maxTier,
+        drops: state.drops,
+        elapsedMs: Math.round(state.elapsedMs),
+        bestCombo: state.bestCombo,
+        tierCounts: Object.assign({}, state.tierCounts),
+        difficulty: difficulty,
+        dolls: dolls
+      };
+    }
+
+    /**
+     * 用 snapshot() 的结果还原局面。
+     * 分数这类统计必须直接写回 state —— 它们是「这一局的成绩」，不是物理世界的衍生物，
+     * 重建刚体不会自己算回来。
+     */
+    function restore(snap) {
+      if (!snap || typeof snap !== 'object') return false;
+      reset();
+      if (snap.difficulty != null) setDifficulty(snap.difficulty);
+      var dolls = Array.isArray(snap.dolls) ? snap.dolls : [];
+      for (var i = 0; i < dolls.length; i++) {
+        var d = dolls[i];
+        if (!d || !CFG.tierByNumber(d.t)) continue;
+        var body = spawnBody(d.t, d.x, d.y);
+        if (!body) continue;
+        Matter.Body.setPosition(body, { x: d.x, y: d.y });
+        Matter.Body.setAngle(body, d.a || 0);
+        if (body.velocity) Matter.Body.setVelocity(body, { x: d.vx || 0, y: d.vy || 0 });
+      }
+      state.score = Number(snap.score) || 0;
+      state.merges = Number(snap.merges) || 0;
+      state.maxTier = Math.max(1, Number(snap.maxTier) || 1);
+      state.drops = Number(snap.drops) || 0;
+      state.elapsedMs = Math.max(0, Number(snap.elapsedMs) || 0);
+      state.bestCombo = Number(snap.bestCombo) || 0;
+      state.tierCounts = Object.assign({}, snap.tierCounts || {});
+      state.combo = 0;
+      state.comboRatio = 0;
+      state.lastMergeMs = -1e9;
+      state.dangerMs = 0;
+      state.warned = false;
+      state.gameOver = false;
+      state.overReason = null;
+      return true;
+    }
+
     /* ---------------- 主循环 ---------------- */
 
     function step(dtMs) {
@@ -578,6 +649,8 @@
         return Object.assign({}, state, { gameOver: state.gameOver });
       },
       summary: summary,
+      snapshot: snapshot,
+      restore: restore,
       endGame: endGame,
       pickTier: pickTier,
       setDifficulty: setDifficulty,

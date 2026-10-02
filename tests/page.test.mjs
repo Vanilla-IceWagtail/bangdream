@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 页面级冒烟测试（真实页面代码 + 无头 DOM）
  *
  * 为什么要有它：截图只能证明「第一帧长什么样」。页面里有些代码要跑一会儿才会执行到
@@ -173,6 +173,7 @@ function makeCtx() {
 
 function makeDocument() {
   const byId = new Map();
+  const docEvents = {};
   const doc = {
     readyState: 'complete',
     body: null,
@@ -195,8 +196,18 @@ function makeDocument() {
       }
       return byId.get(id);
     },
-    addEventListener() {},
-    removeEventListener() {},
+    /* document 上的事件要能真派发：切后台（visibilitychange）这类逻辑就挂在 document 上 */
+    addEventListener(type, fn) {
+      (docEvents[type] || (docEvents[type] = [])).push(fn);
+    },
+    removeEventListener(type, fn) {
+      const list = docEvents[type] || [];
+      const i = list.indexOf(fn);
+      if (i >= 0) list.splice(i, 1);
+    },
+    dispatch(type, evt) {
+      (docEvents[type] || []).forEach((fn) => fn(Object.assign({ preventDefault() {}, stopPropagation() {} }, evt || {})));
+    },
     _byId: byId
   };
   doc.body = makeNode(doc, 'body');
@@ -210,7 +221,8 @@ function bootPage(opts = {}) {
   const rafQueue = [];
   const timeouts = [];
   const doc = makeDocument();
-  const store = new Map();
+  /* 允许传入同一份 store：用来模拟「页面被系统丢掉 → 重新加载」（localStorage 还在） */
+  const store = opts.store || new Map();
 
   const sandbox = {
     console,
@@ -573,4 +585,80 @@ test('结算流程：先确认名字再同步（有名字输入框 + 小布丁�
   assert.ok(donateBody.indexOf('本网站为爱发电') >= 0, '要有寄语');
   assert.ok(donateBody.indexOf('感谢喜欢邦多利') >= 0, '寄语要提到邦多利');
   assert.deepEqual(page.errors, [], '这条流程不该报错');
+});
+
+test('切后台：自动存档；页面被系统丢掉后重新打开能接着打（不清零）', async () => {
+  /*
+   * 手机上的「切后台回来数据清零」多半是系统把页面丢掉、浏览器重新加载了一次。
+   * 这里就照这个场景演一遍：同一份 localStorage（store）开两次页面。
+   */
+  const store = new Map();
+
+  /* ---- 第一段：正常开局、投几颗、跑一会儿 ---- */
+  const page = await bootPage({ search: '?lib=none', store });
+  await new Promise((r) => setTimeout(r, 0));
+  const startBtn = page.el('overlay-actions').children[0];
+  assert.ok(startBtn, '开始界面应该有按钮');
+  startBtn.click(); // 开始游戏
+
+  const canvas = page.el('stage-canvas');
+  const touch = { pointerType: 'touch', pointerId: 3, clientX: 240, clientY: 120 };
+  for (let i = 0; i < 3; i++) {
+    canvas.dispatch('pointerdown', Object.assign({}, touch));
+    canvas.dispatch('pointerup', Object.assign({}, touch, { clientX: 200 + i * 40 }));
+    page.pump(30); // 跑掉投放冷却
+  }
+  page.pump(120);
+  const timeBefore = String(page.el('hud-time').textContent);
+  assert.notEqual(timeBefore, '0:00', '前置条件：本局用时该走起来了，实际 ' + timeBefore);
+
+  /* ---- 切到后台：应该自动暂停并写存档 ---- */
+  page.doc.visibilityState = 'hidden';
+  page.doc.dispatch('visibilitychange', {});
+  assert.ok(store.has('suika.save.v1'), '切后台时要写下局内存档');
+  const saved = JSON.parse(store.get('suika.save.v1'));
+  assert.equal(saved.v, 1, '存档要带版本号');
+  assert.ok(saved.round.dolls.length > 0, '存档里要有场上的玩偶，实际 ' + saved.round.dolls.length);
+  assert.ok(saved.round.elapsedMs > 0, '存档里要有本局用时');
+  assert.ok(saved.round.difficulty >= 1, '存档里要有难度');
+  assert.ok(store.get('suika.save.v1').length < 60 * 1024, '存档不能太大');
+
+  /* ---- 第二段：模拟「页面被丢掉 → 重新加载」（localStorage 还在） ---- */
+  const page2 = await bootPage({ search: '?lib=none', store });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(page2.errors, [], '恢复过程不该报错');
+  assert.equal(
+    page2.el('overlay').classList.contains('is-open'),
+    false,
+    '应该直接接着打，而不是又停在开始界面'
+  );
+  const timeAfter = String(page2.el('hud-time').textContent);
+  assert.notEqual(timeAfter, '0:00', '恢复后本局用时不该被清零，实际 ' + timeAfter);
+
+  /* 恢复后还能继续玩：再投一颗，用时继续走 */
+  const canvas2 = page2.el('stage-canvas');
+  canvas2.dispatch('pointerdown', Object.assign({}, touch));
+  canvas2.dispatch('pointerup', Object.assign({}, touch));
+  page2.pump(120);
+  assert.deepEqual(page2.errors, [], '恢复后继续玩不该报错');
+});
+
+test('存档只在真正开局后写：停在开始界面 / 演示模式都不写', async () => {
+  const store = new Map();
+  /* 停在开始界面（没点开始）：不该产生存档 */
+  const page = await bootPage({ search: '?lib=none', store });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(120);
+  page.doc.visibilityState = 'hidden';
+  page.doc.dispatch('visibilitychange', {});
+  assert.equal(store.has('suika.save.v1'), false, '没开局就不该写存档');
+
+  /* 演示模式：即便在玩也不碰存档（演示用内存存储，不动你的数据） */
+  const demoStore = new Map();
+  const demo = await bootPage({ search: '?demo=1&lib=none', store: demoStore });
+  await new Promise((r) => setTimeout(r, 0));
+  demo.pump(120);
+  demo.doc.visibilityState = 'hidden';
+  demo.doc.dispatch('visibilitychange', {});
+  assert.equal(demoStore.has('suika.save.v1'), false, '演示模式不该写存档');
 });

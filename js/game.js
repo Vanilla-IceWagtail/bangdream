@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -364,11 +364,114 @@
     }
   }
 
+  /* ---------------- 局内存档（手机切后台不清零） ---------------- */
+
+  /*
+   * 手机上切到后台再回来「数据清零」，绝大多数不是我们的 bug，而是：
+   * 系统为了省内存把页面直接丢掉，回来时浏览器**重新加载**了一次页面 ——
+   * 内存里的这一局自然就没了（最高分/昵称这些进了 localStorage，所以还在）。
+   *
+   * 对策：把「打到一半的这一局」也存进 localStorage。
+   *   · 什么时候存：切到后台、页面要卸载、暂停、以及玩的时候每 2 秒一次
+   *   · 什么时候清：这一局结束（结算/重开）之后
+   *   · 什么时候恢复：下次打开页面时，如果存档还新鲜（12 小时内）就直接接着打
+   * 一个快照只有几 KB，写起来很便宜。
+   */
+
+  var SAVE_VERSION = 1;
+  var SAVE_FRESH_MS = 12 * 60 * 60 * 1000;
+  var saveClock = 0;
+
+  function saveProgress(force) {
+    /* 演示模式一律用内存存储，绝不碰你自己的存档 */
+    if (demoMode || !storage) return false;
+    if (phase !== 'playing' && phase !== 'paused') return false;
+    if (!force && saveClock < 2000) return false;
+    saveClock = 0;
+    try {
+      storage.setItem(
+        CFG.STORAGE_KEYS.save,
+        JSON.stringify({
+          v: SAVE_VERSION,
+          ts: Date.now(),
+          currentTier: currentTier,
+          nextTier: nextTier,
+          aim: aimX,
+          cooldown: cooldown,
+          round: game.snapshot()
+        })
+      );
+      return true;
+    } catch (err) {
+      /* 存不下就算了（比如隐私模式），不能因为存档把游戏搞崩 */
+      return false;
+    }
+  }
+
+  function clearProgress() {
+    if (demoMode || !storage) return;
+    try {
+      storage.removeItem(CFG.STORAGE_KEYS.save);
+    } catch (err) {
+      /* 忽略 */
+    }
+  }
+
+  /** 读存档；过期/坏掉的返回 null（顺便把坏档删掉） */
+  function loadProgress() {
+    if (demoMode || !storage) return null;
+    var raw = null;
+    try {
+      raw = storage.getItem(CFG.STORAGE_KEYS.save);
+    } catch (err) {
+      return null;
+    }
+    if (!raw) return null;
+    var data = null;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      clearProgress();
+      return null;
+    }
+    var fresh = data && data.v === SAVE_VERSION && Date.now() - Number(data.ts) < SAVE_FRESH_MS;
+    if (!fresh || !data.round || !Array.isArray(data.round.dolls) || !data.round.dolls.length) {
+      clearProgress();
+      return null;
+    }
+    return data;
+  }
+
+  /** 用存档接着打 */
+  function resumeFromSave(data) {
+    if (!data) return false;
+    if (!game.restore(data.round)) return false;
+    prefs.difficulty = CFG.clampDifficulty(data.round.difficulty != null ? data.round.difficulty : prefs.difficulty);
+    diffPending = false;
+    game.setDifficulty(prefs.difficulty);
+    render.clearEffects();
+    round = { id: 'r' + Date.now().toString(36), rank: 0 };
+    currentTier = CFG.tierByNumber(data.currentTier) ? data.currentTier : game.pickTier();
+    nextTier = CFG.tierByNumber(data.nextTier) ? data.nextTier : game.pickTier();
+    cooldown = Math.max(0, Number(data.cooldown) || 0);
+    aimX = clampAim(Number(data.aim) || BOARD.width / 2);
+    phase = 'playing';
+    if (dom.delta) dom.delta.textContent = '';
+    setComboHud(0, 1, 0);
+    UI.hideOverlay();
+    syncDiffUi();
+    renderBoardView();
+    syncHud();
+    UI.toast('已恢复上一局：' + game.getState().score + ' 分', 'ok');
+    return true;
+  }
+
   /* ---------------- 一局流程 ---------------- */
 
   function startRound() {
     UI.hideOverlay();
     sfx.unlock();
+    clearProgress(); // 开新的一局，旧存档作废
     // 难度在一局开始时定下来（中途改难度会在下一局生效）
     diffPending = false;
     game.setDifficulty(prefs.difficulty);
@@ -389,6 +492,7 @@
 
   function endRound(summary) {
     phase = 'over';
+    clearProgress(); // 这一局结束了：成绩已经进榜单/最高分，临时存档没用了
     render.addBurst(BOARD.width / 2, game.getState().dangerY + 30);
     sfx.over();
     setComboHud(0, 1, 0);
@@ -611,6 +715,7 @@
   function togglePause(force) {
     if (phase === 'playing' || force === true) {
       phase = 'paused';
+      saveProgress(true); // 暂停时顺手存一次
       syncHud();
       UI.showOverlay({
         title: '已暂停',
@@ -719,6 +824,12 @@
     }
     render.update(dt);
     render.draw(buildFrame());
+
+    /* 每 2 秒落一次盘：切后台时系统可能直接丢掉页面，不能只在切后台那一刻才存 */
+    if (phase === 'playing') {
+      saveClock += dt;
+      saveProgress(false);
+    }
 
     hudClock += dt;
     if (hudClock > 200) {
@@ -910,6 +1021,40 @@
     root.addEventListener('resize', function () {
       setAim(aimX);
       applyMobileLayout(); // 横竖屏切换 / 改窗口大小时重排
+    });
+
+    /*
+     * 切后台 / 切回来。
+     * 手机切后台时浏览器可能把页面冻结、甚至直接丢掉（回来就是重新加载），
+     * 所以这一刻必须把这一局存下来；回来时如果是我们自动暂停的，就自动继续。
+     */
+    var autoPaused = false;
+
+    function isHidden() {
+      return D.hidden === true || D.visibilityState === 'hidden' || D.webkitHidden === true;
+    }
+
+    function onVisibility() {
+      if (isHidden()) {
+        if (phase === 'playing') {
+          autoPaused = true;
+          togglePause(true); // 自动暂停：免得切后台期间被判定失败
+        }
+        saveProgress(true);
+      } else if (autoPaused) {
+        autoPaused = false;
+        if (phase === 'paused') {
+          phase = 'playing';
+          UI.hideOverlay();
+          syncHud();
+        }
+      }
+    }
+
+    D.addEventListener('visibilitychange', onVisibility);
+    /* pagehide 比 beforeunload 更可靠（iOS/bfcache 场景），而且不影响前进后退缓存 */
+    root.addEventListener('pagehide', function () {
+      saveProgress(true);
     });
   }
 
@@ -1159,7 +1304,15 @@
       }
     });
     wire();
-    showReadyOverlay();
+
+    /*
+     * 上次打到一半的局（手机切后台被系统丢掉页面后，回来不能让成绩清零）：
+     * 存档还新鲜就直接接着打，否则正常显示开始界面。
+     */
+    var saved = demoMode ? null : loadProgress();
+    if (!(saved && resumeFromSave(saved))) {
+      showReadyOverlay();
+    }
     syncHud();
     render.draw(buildFrame());
     root.requestAnimationFrame(loop);

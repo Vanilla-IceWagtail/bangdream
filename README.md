@@ -1,4 +1,4 @@
-# 🎸 合成邦多利皇帝 · v0.4.5
+# 🎸 合成邦多利皇帝 · v0.4.6
 
 [![tests](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml/badge.svg)](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml)
 [![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
@@ -68,7 +68,7 @@
 **工程**
 
 - 无框架、无构建、无 npm 依赖（物理引擎 Matter.js 已内嵌 `vendor/matter.min.js`）。
-- **84 项测试**（`node --test`），含整页无头冒烟。
+- **98 项测试**（`node --test`），含整页无头冒烟。
 - 调试/自检用 URL 参数：`?shapes=1`（画碰撞体）、`?squash=`（摆挤压形变）、`?demo=1`（自动开局，不动存档）等，见第五节。
 
 ---
@@ -215,6 +215,7 @@ node tools\bangdream\poc.cjs assets\library-bangdream\src\Roselia\凑友希那.P
 | `suika.board.v1` | 榜单缓存（自愈用） | `{"v":1,"u":1730000000000,"top":[...],"live":[...]}` |
 | `suika.board.v1.at` | 上次拉取时间戳 | `1730000000000` |
 | `suika.pending.v1` | 待上传队列 | `[{"n":"沙绫","s":386,"d":5,"m":9,"c":6,"t":1730000000000}]` |
+| `suika.save.v1` | **局内存档**（切后台/页面被系统回收后接着打） | `{"v":1,"ts":1730000000000,"currentTier":3,"nextTier":5,"aim":240,"round":{"score":386,"elapsedMs":45000,"difficulty":5,"dolls":[{"t":3,"x":210.5,"y":640.2}]}}` |
 
 ### 5.4 输出：榜单文档（一份 JSON，第三方 KV 或自建服务器都一样）
 
@@ -286,15 +287,15 @@ $ node --test tests/logic.test.mjs tests/library.test.mjs tests/boards.test.mjs 
               tests/sync.test.mjs  tests/server.test.mjs  tests/page.test.mjs \
               tests/ui-layers.test.mjs
 
-logic      20 项   物理 / 合成 / 连击 / 难度 / 判负 / 果冻形变
+logic      22 项   物理 / 合成 / 连击 / 难度 / 判负 / 果冻形变 / 局内快照还原
 library    16 项   图库分组 / 默认图 / 选图校验 / 尺寸提示
 boards     10 项   榜单合并 / 排序 / 去重 / 自愈 / 裁剪
 sync       16 项   第三方 KV 读写 / 缓存队列 / 30 分钟节奏 / 自建服务器集成
 server     15 项   HTTP API / 并发不丢成绩 / 落盘 / 目录穿越防护
-page        9 项   整页无头冒烟：真页面代码跑 600 帧、零报错、结算与选图、触屏投放手感
+page       11 项   整页无头冒烟：真页面代码跑 600 帧、零报错、结算与选图、触屏手感、切后台存档恢复
 ui-layers   8 项   CSS 契约：弹窗层级 > 浮动「即将投放」、手机端连击不撑高分数面板
 
-合计 94 / 94 通过
+合计 98 / 98 通过
 ```
 
 ---
@@ -338,6 +339,18 @@ ui-layers   8 项   CSS 契约：弹窗层级 > 浮动「即将投放」、手�
 ---
 
 ## 七、版本改动记录（含踩坑复盘）
+
+### v0.4.6
+- **手机端切后台不再清零**。切后台再回来「数据清零」多半不是逻辑 bug，而是系统为省内存把页面
+  直接丢掉、回来时浏览器**重新加载**了一次（最高分/昵称在 localStorage 里，所以还在，只有这一局没了）。
+  现在把「打到一半的这一局」也存进 `localStorage`：
+  · **什么时候存**：切到后台（`visibilitychange`）、页面要卸载（`pagehide`）、暂停、以及玩的时候每 2 秒一次；
+  · **什么时候清**：这一局结束（结算 / 重开）之后；
+  · **什么时候恢复**：下次打开页面时，存档在 12 小时内且结构完好，就直接接着打（右上角提示「已恢复上一局：N 分」）。
+  · 存档是纯数据（分数、统计、每只玩偶的位置姿态），一个快照几 KB；演示模式（`?demo=1`）不读不写。
+- 切到后台时**自动暂停**（免得切走期间被判定失败），切回来若本来是我们暂停的会自动继续。
+- 引擎新增 `snapshot()` / `restore()`；新增 2 项逻辑测试（快照往返、坏存档不炸）与 2 项页面测试
+  （切后台自动存档 + 用同一份 localStorage 重新加载页面后接着打；停在开始界面/演示模式不写存档）。
 
 ### v0.4.4
 - **触屏手感：改成「按住瞄准 → 松手投放」**。原来 `pointerdown` 里直接 `drop()`，手指一碰屏幕娃娃就掉，
