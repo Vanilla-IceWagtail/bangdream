@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成大西瓜 · 界面层
+ * 合成邦高祖！！！ · 界面层
  * 只做「把数据画成 DOM」和「弹提示」，游戏逻辑不在这里。
  */
 (function (root) {
@@ -66,9 +66,9 @@
     }, 400);
   }
 
-  /* ---------------- 水果小图标 ---------------- */
+  /* ---------------- 玩偶小图标 ---------------- */
 
-  /** 一颗水果的小圆片：有贴图用贴图，没有就画个 emoji 圆 */
+  /** 一颗玩偶的小圆片：有贴图用贴图，没有就画个 emoji 圆 */
   function fruitChip(tier, assets, sizePx) {
     var def = CFG.tierByNumber(tier);
     var node = document.createElement('span');
@@ -112,7 +112,7 @@
     container.appendChild(label);
   }
 
-  /* ---------------- 水果进化表 ---------------- */
+  /* ---------------- 玩偶进化表 ---------------- */
 
   function buildChain(container, assets) {
     if (!container) return;
@@ -180,7 +180,7 @@
       return;
     }
     list.forEach(function (entry, i) {
-      // 记录格式：{ n:昵称, s:分数, d:难度, m:最大水果等级, c:最高连击, t:提交时间 }
+      // 记录格式：{ n:昵称, s:分数, d:难度, m:最大玩偶等级, c:最高连击, t:提交时间 }
       var pending = opts.isPending ? !!opts.isPending(entry) : !!entry.pending;
       var key = entry.n + '|' + entry.t + '|' + entry.s;
       var def = CFG.tierByNumber(entry.m) || CFG.tierByNumber(1);

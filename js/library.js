@@ -1,8 +1,8 @@
 ﻿/*!
- * 合成大西瓜 · 图片库（纯函数）
+ * 合成邦高祖！！！ · 图片库（纯函数）
  *
  * 图片不再是「用户自己导入」，而是**内嵌在游戏里的一个图库**（`js/assets-builtin.js` 里的
- * `window.SUIKA_IMAGE_LIBRARY`），用户在「选图小窗口」里从图库里挑 11 张，分别放到 11 个水果位上。
+ * `window.SUIKA_IMAGE_LIBRARY`），用户在「选图小窗口」里从图库里挑 11 张，分别放到 11 个玩偶位上。
  *
  * 图库结构：
  *   {
@@ -213,7 +213,7 @@
     return id ? byId(lib, id) : null;
   }
 
-  /** 11 个水果位：颜色 / 名字 / 直径 / 得分 —— 窗口里的槽位和图例都用它 */
+  /** 11 个玩偶位：颜色 / 名字 / 直径 / 得分 —— 窗口里的槽位和图例都用它 */
   function slots() {
     var tiers = (CFG ? CFG.TIERS : []) || [];
     return tiers.map(function (t) {
@@ -270,7 +270,7 @@
     };
   }
 
-  /** 哪些水果位还没图（1 起的等级数组）；用来提示「还没选满 11 张」 */
+  /** 哪些玩偶位还没图（1 起的等级数组）；用来提示「还没选满 11 张」 */
   function missingSlots(lib, pick) {
     var out = [];
     for (var t = 1; t <= TIER_COUNT; t++) {

@@ -1,6 +1,6 @@
 ﻿/*!
- * 合成大西瓜 · Canvas 渲染
- * 只负责画：场地、危险线、水果（贴图或默认 emoji 外观）、粒子与飘分特效。
+ * 合成邦高祖！！！ · Canvas 渲染
+ * 只负责画：场地、危险线、玩偶（贴图或默认 emoji 外观）、粒子与飘分特效。
  */
 (function (root) {
   'use strict';
@@ -263,7 +263,7 @@
       var r = body.circleRadius || def.r;
       var shape = body.suikaShape;
       var JELLY = (CFG.RULES && CFG.RULES.jelly) || {};
-      // 合成瞬间「弹出来」：新水果出生后 popMs 内从 1+popScale 缩到 1
+      // 合成瞬间「弹出来」：新玩偶出生后 popMs 内从 1+popScale 缩到 1
       var pop = 1;
       if (body.suikaBornMs != null && nowMs) {
         var age = nowMs - body.suikaBornMs;

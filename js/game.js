@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成大西瓜 · 主流程
+ * 合成邦高祖！！！ · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
 (function (root) {
@@ -151,7 +151,7 @@
     if (dom.merges) dom.merges.textContent = String(st.merges);
     if (dom.maxtier) {
       var def = CFG.tierByNumber(st.maxTier);
-      // 玩偶版显示角色名（不再显示水果名 / emoji）
+      // 玩偶版显示角色名（不再显示玩偶名 / emoji）
       dom.maxtier.textContent = def ? assets.labelOf(st.maxTier) : '—';
     }
     UI.paintPreview(dom.current, currentTier, assets, 0.5);
@@ -894,7 +894,7 @@
   }
 
   function demoSeed() {
-    // ?demo=1 ：自动开局并按剧本投一批水果，方便截图 / 检查画面
+    // ?demo=1 ：自动开局并按剧本投一批玩偶，方便截图 / 检查画面
     // 演示模式用内存存储，不会污染你自己的存档
     startRound();
     var script = [
@@ -1015,8 +1015,8 @@
 
     UI.buildChain(dom.chain, assets);
     /*
-     * 玩偶版：界面文案也跟着换 —— 不再出现「水果」字样（11 个位子按大小排序，
-     * 名字用角色名），水果版（图库为空）保持原样。
+     * 玩偶版：界面文案也跟着换 —— 不再出现「玩偶」字样（11 个位子按大小排序，
+     * 名字用角色名），玩偶版（图库为空）保持原样。
      */
     if (assets.hasLibrary()) {
       var maxLabel = UI.el('hud-max-label');
@@ -1047,7 +1047,7 @@
       assets: assets,
       ui: UI,
       onChanged: function () {
-        // 换图后：进化表色块、HUD 预览、画布上的水果都要跟着变
+        // 换图后：进化表色块、HUD 预览、画布上的玩偶都要跟着变
         refreshAssetViews();
       }
     });
@@ -1101,7 +1101,7 @@
       // ?demo=1&pump=120 ：同步跑 120 帧（≈2 秒），把 HUD/计时/同步倒计时这些
       // 「要跑一会儿才会执行到」的代码路径提前跑到 —— 自检和截图都用它，
       // 否则报错会发生在截图之后，看不到。
-      // ?demo=1&squash=0.28 ：把所有水果置成「正在被压」的状态并重绘一帧，
+      // ?demo=1&squash=0.28 ：把所有玩偶置成「正在被压」的状态并重绘一帧，
       // 用来给截图/自检看挤压形变（真实游戏里这是撞出来的，不是摆出来的）
       // ?demo=1&donate=1 ：直接打开「请作者吃小布丁」弹窗（截图/自检用）
       if (/[?&]donate=1/.test(root.location.search)) showDonate();

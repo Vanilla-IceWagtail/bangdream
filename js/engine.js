@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成大西瓜 · 游戏核心（物理 + 合成 + 计分 + 判负）
+ * 合成邦高祖！！！ · 游戏核心（物理 + 合成 + 计分 + 判负）
  *
  * 这个文件完全不碰 DOM，只维护 Matter.js 世界和游戏状态，
  * 所以可以直接在 node 里跑模拟测试（见 tests/logic.test.mjs）。
@@ -47,7 +47,7 @@
     // 玩偶轮廓：给定等级返回 { circles:[{x,y,r}] }（归一化），没有就返回 null → 退回圆形碰撞
     var shapeOf = typeof options.shapeOf === 'function' ? options.shapeOf : null;
     var engine = Engine.create({
-      // 默认不开沉睡：见 config.js 里的说明（沉睡会让半空卡住的水果永远不掉）
+      // 默认不开沉睡：见 config.js 里的说明（沉睡会让半空卡住的玩偶永远不掉）
       enableSleeping: options.enableSleeping != null ? options.enableSleeping : PH.enableSleeping
     });
     engine.gravity.y = options.gravity != null ? options.gravity : PH.gravity;
@@ -86,7 +86,7 @@
       restitution: PH.wall.restitution,
       label: 'wall'
     };
-    // 墙做得比画面厚很多：Matter 没有连续碰撞检测，薄墙会被高速水果穿过去
+    // 墙做得比画面厚很多：Matter 没有连续碰撞检测，薄墙会被高速玩偶穿过去
     var BULK = 90;
     var walls = [
       Bodies.rectangle(W / 2, floorY + BULK / 2, W + BULK * 2, BULK, staticOpts),
@@ -131,7 +131,7 @@
       }
     }
 
-    /* ---------------- 水果 ---------------- */
+    /* ---------------- 玩偶 ---------------- */
 
     function spawnBody(tierNum, x, y) {
       var def = CFG.tierByNumber(tierNum);
@@ -204,7 +204,7 @@
       return { x: sx / sw, y: sy / sw };
     }
 
-    /** 当前场上还活着的水果（排除正在合并中的两颗） */
+    /** 当前场上还活着的玩偶（排除正在合并中的两颗） */
     function fruits() {
       var all = Composite.allBodies(world);
       var out = [];
@@ -243,7 +243,7 @@
     /**
      * 处理一次接触对：
      *   · 法向接近速度低于阈值 → 把这一对的弹性清零（堆叠静止时不微弹）
-     *   · 高于阈值 → 记下碰撞前速度，并给两颗水果注入挤压形变
+     *   · 高于阈值 → 记下碰撞前速度，并给两颗玩偶注入挤压形变
      */
     function applyJelly(pair, a, b) {
       var col = pair.collision;
@@ -359,7 +359,7 @@
         var resultTier;
         var created = null;
         if (tier >= RULES.maxTier) {
-          // 两个西瓜相撞：双双消失 + 奖励分
+          // 两个玩偶相撞：双双消失 + 奖励分
           resultTier = 0;
           base = CFG.scoreOf(0);
         } else {
@@ -403,8 +403,8 @@
 
     /**
      * 正常情况下不会触发（墙已经加厚），留着当安全带：
-     * 只有水果整颗被挤出场地（或掉到地板下面很深）时才拉回来，
-     * 阈值放得很宽 —— 堆叠时水果陷进墙里几像素是正常的，不能每帧去硬掰它。
+     * 只有玩偶整颗被挤出场地（或掉到地板下面很深）时才拉回来，
+     * 阈值放得很宽 —— 堆叠时玩偶陷进墙里几像素是正常的，不能每帧去硬掰它。
      */
     function containFruits() {
       var list = fruits();
@@ -505,7 +505,7 @@
       return difficulty;
     }
 
-    /** 按当前难度抽一颗随机掉落的水果 */
+    /** 按当前难度抽一颗随机掉落的玩偶 */
     function pickTier(rand) {
       return CFG.pickSpawnTier(rand, CFG.difficultyOf(difficulty).spawnWeights);
     }

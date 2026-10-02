@@ -1,11 +1,11 @@
-/*!
- * 合成大西瓜 · 「按玩偶轮廓做碰撞体」概念验证
+﻿/*!
+ * 合成邦高祖！！！ · 「按玩偶轮廓做碰撞体」概念验证
  *
  * 输出一张对照图，四格：
  *   1. 抠掉白底后的玩偶（透明背景）
- *   2. 缩放到西瓜大小（⌀250）+ 拟合出的碰撞圆（黄色）+ 老式「一个包住整只玩偶的大球」（白色虚线）
+ *   2. 缩放到玩偶大小（⌀250）+ 拟合出的碰撞圆（黄色）+ 老式「一个包住整只玩偶的大球」（白色虚线）
  *   3. 缩放到中间某级（⌀84）
- *   4. 缩放到樱桃大小（⌀40）
+ *   4. 缩放到玩偶大小（⌀40）
  * 并打印：碰撞圆个数、轮廓覆盖率、以及「大球方案」浪费掉的空白比例。
  *
  * 用法：node tools/bangdream/poc.cjs <一张已转好的 PNG> [输出.png]
@@ -124,9 +124,9 @@ function main() {
   const labelH = 18;
   const panels = [
     { size: 300, circles: false, sphere: false, cap: '1 抠图（透明底）' },
-    { size: 300, circles: true, sphere: true, cap: '2 西瓜 ⌀250' },
+    { size: 300, circles: true, sphere: true, cap: '2 玩偶 ⌀250' },
     { size: 170, circles: true, sphere: true, cap: '3 中级 ⌀84' },
-    { size: 110, circles: true, sphere: true, cap: '4 樱桃 ⌀40' }
+    { size: 110, circles: true, sphere: true, cap: '4 玩偶 ⌀40' }
   ];
   const W = pad + panels.reduce((a, p) => a + p.size + pad, 0);
   const H = pad + labelH + 300 + pad + 40;
@@ -142,7 +142,7 @@ function main() {
     const cx = x + s / 2;
     const cy = y + 150;
     if (panel.sphere) {
-      // 老方案：一个直径 = 水果直径的大球（虚线）
+      // 老方案：一个直径 = 玩偶直径的大球（虚线）
       circle(sheet, W, H, cx, cy, s / 2, [255, 255, 255], 1.5, true);
     }
     if (panel.circles) {

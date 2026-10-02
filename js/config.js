@@ -1,7 +1,7 @@
 ﻿/*!
  * 合成邦高祖！！！ · 基础配置
  * 纯数据 + 纯函数，不依赖 DOM，可以直接在 node 下 require 做逻辑测试。
- * 想改水果顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
+ * 想改玩偶顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -16,7 +16,7 @@
     width: 480,
     height: 700,
     wall: 8, // 左右墙 / 地板的厚度
-    spawnY: 72, // 待投放水果的中心高度
+    spawnY: 72, // 待投放玩偶的中心高度
     dangerY: 145, // 危险线默认位置（随难度变化，见 DIFFICULTY）
     dropCooldownMs: 350, // 投放冷却默认值（随难度变化）
     fixedStep: 1000 / 60,
@@ -31,13 +31,13 @@
     positionIterations: 12,
     velocityIterations: 12,
     /*
-     * 关闭 Matter 的「沉睡」是必须的：水果在半空中互相卡住不动时会被判定为睡着，
+     * 关闭 Matter 的「沉睡」是必须的：玩偶在半空中互相卡住不动时会被判定为睡着，
      * 睡着之后引擎不再对它施加重力，它就会永远挂在那儿（娃娃卡在半空不掉就是这个原因）。
      */
     enableSleeping: false,
     fruit: {
       restitution: 0.42,
-      // 摩擦调小：圆水果之间应该互相打滑滚开，而不是像粘在一起
+      // 摩擦调小：圆玩偶之间应该互相打滑滚开，而不是像粘在一起
       friction: 0.1,
       frictionStatic: 0.16,
       frictionAir: 0.004,
@@ -50,7 +50,7 @@
   /*
    * 11 级玩偶（名字对应默认选中的角色）。
    * r     = 半径（像素，决定体积和外观大小）
-   * score = 「合成出这一级」时获得的分数，越大的水果分数越高
+   * score = 「合成出这一级」时获得的分数，越大的玩偶分数越高
    * 前 5 级会随机从天上掉下来，后面的只能靠合成得到。
    */
   var TIERS = [
@@ -74,11 +74,11 @@
     watermelonBonus: 100, // 两只最大的玩偶（户山香澄）相撞：双双消失，额外加 100 分
     dangerGraceMs: 2000, // 越过危险线并静止多久判定结束
     dangerWarnMs: 800, // 超过这个时间开始闪红警告
-    dangerSpeedLimit: 1.25, // 速度低于此值才算「停下」，避免把下落中的水果算成越线
+    dangerSpeedLimit: 1.25, // 速度低于此值才算「停下」，避免把下落中的玩偶算成越线
     /*
      * 连击加分：两次合成间隔不超过 windowMs 就算连击。
      * 倍率 = 1 + (连击数-1) * step，最高 maxMultiplier；
-     * 实际加成取「倍率加成」和「每连击 +1 分」里更大的那个（保证小水果连击也有收益）。
+     * 实际加成取「倍率加成」和「每连击 +1 分」里更大的那个（保证小玩偶连击也有收益）。
      */
     combo: { windowMs: 1000, step: 0.3, maxMultiplier: 2.5 },
 
@@ -180,7 +180,7 @@
     return TIERS[index] || null;
   }
 
-  /** 1-based 取得水果定义 */
+  /** 1-based 取得玩偶定义 */
   function tierByNumber(n) {
     return TIERS[n - 1] || null;
   }
@@ -190,7 +190,7 @@
     return t ? t.r : 0;
   }
 
-  /** 合成出第 n 级水果的基础得分；n = 0 表示两只最大玩偶相撞（双双消失） */
+  /** 合成出第 n 级玩偶的基础得分；n = 0 表示两只最大玩偶相撞（双双消失） */
   function scoreOf(n) {
     if (n === 0) return RULES.watermelonBonus;
     var t = tierByNumber(n);
@@ -207,7 +207,7 @@
     return DIFFICULTY[clampDifficulty(level) - 1];
   }
 
-  /** 随机掉落的水果等级（在指定权重里抽，默认用默认难度的权重） */
+  /** 随机掉落的玩偶等级（在指定权重里抽，默认用默认难度的权重） */
   function pickSpawnTier(rand, weights) {
     var w = weights || difficultyOf(DEFAULT_DIFFICULTY).spawnWeights;
     var total = 0;
@@ -238,7 +238,7 @@
     return { base: base, multiplier: m, bonus: bonus, gained: base + bonus, combo: c };
   }
 
-  /** 每级水果的直径占场地宽度的比例，用来检查配置是否塞得下 */
+  /** 每级玩偶的直径占场地宽度的比例，用来检查配置是否塞得下 */
   function widthRatio(n) {
     return (radiusOf(n) * 2) / (BOARD.width - BOARD.wall * 2);
   }

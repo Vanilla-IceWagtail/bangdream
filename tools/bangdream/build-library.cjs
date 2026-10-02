@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成大西瓜 · 玩偶版：把 bangdream 的 45 张玩偶做成游戏图库
+ * 合成邦高祖！！！ · 玩偶版：把 bangdream 的 45 张玩偶做成游戏图库
  *
  * 产出（都写到「玩偶版」新文件夹里，不动原版）：
  *   assets/dolls/img/<id>.png     384px 抠好的玩偶（透明底）
@@ -7,7 +7,7 @@
  *   js/assets-builtin.js          图库清单：分组(乐队) / 名字 / 图片路径 / 碰撞形状 / 默认图
  *
  * 碰撞形状：把玩偶轮廓拟合成一组圆（归一化：中心为原点，单位 = 外接框较长边），
- * 游戏里按该级水果的直径缩放 —— 所以碰撞体积跟着玩偶实际大小走，而不是一个包住它的大球。
+ * 游戏里按该级玩偶的直径缩放 —— 所以碰撞体积跟着玩偶实际大小走，而不是一个包住它的大球。
  *
  * 用法：node tools/bangdream/build-library.cjs <已转换的PNG目录> <输出根目录>
  */
@@ -90,7 +90,7 @@ function main() {
       const box = P.contentBox(img, 24);
       if (!box) throw new Error('抠图后为空：' + groupDir + '/' + file);
 
-      // 统一到 384px 长边（最大水果 ⌀250，2 倍余量足够清晰），再裁紧一次
+      // 统一到 384px 长边（最大玩偶 ⌀250，2 倍余量足够清晰），再裁紧一次
       const sized = P.cropAndScale(img, box, 384);
       const tightBox = P.contentBox(sized, 12) || { x: 0, y: 0, w: sized.width, h: sized.height };
       const cut = P.cropAndScale(sized, tightBox, 384);
@@ -145,7 +145,7 @@ function main() {
     defaults[tier] = pickedForDefault[tier - 1] || fallback[(tier - 1) % fallback.length];
   }
 
-  /* 用户指定：最大的那一级（第 11 级 = 西瓜位）默认用 户山香澄（邦高祖） */
+  /* 用户指定：最大的那一级（第 11 级 = 玩偶位）默认用 户山香澄（邦高祖） */
   const DEFAULT_OVERRIDES = { 11: 'poppinparty-03' };
   Object.keys(DEFAULT_OVERRIDES).forEach(function (tier) {
     if (images.some(function (i) { return i.id === DEFAULT_OVERRIDES[tier]; })) defaults[tier] = DEFAULT_OVERRIDES[tier];
@@ -169,14 +169,14 @@ function main() {
   const outFile = path.join(ROOT, 'js', 'assets-builtin.js');
   const body =
     '/*!\n' +
-    ' * 合成大西瓜 · 玩偶版 内置图库（自动生成，勿手改）\n' +
+    ' * 合成邦高祖！！！ · 玩偶版 内置图库（自动生成，勿手改）\n' +
     ' *\n' +
     ' * 来源：桌面 bangdream 文件夹（9 支乐队 × 5 位角色 = ' + images.length + ' 张玩偶）\n' +
     ' * 处理：JPEG→PNG、去白底、裁剪、缩放到 384px、按轮廓拟合碰撞圆\n' +
     ' * 生成时间：' + builtAt + ' · 指纹：' + fingerprint + '\n' +
     ' *\n' +
     ' * 每张图的 shape.circles 是归一化碰撞体（中心为原点，单位 = 外接框较长边），\n' +
-    ' * 游戏里按该级水果直径缩放 —— 碰撞体积贴合玩偶轮廓，不是一个大球。\n' +
+    ' * 游戏里按该级玩偶直径缩放 —— 碰撞体积贴合玩偶轮廓，不是一个大球。\n' +
     ' */\n' +
     '(function (root) {\n' +
     "  'use strict';\n" +
