@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 页面级冒烟测试（真实页面代码 + 无头 DOM）
  *
  * 为什么要有它：截图只能证明「第一帧长什么样」。页面里有些代码要跑一会儿才会执行到
@@ -399,6 +399,67 @@ test('演示模式（自动开局 + 结束一局 + 跑 200 帧）全程无异常
   assert.ok(String(page.el('hud-score').textContent).length > 0, '记分板要有分数');
   // 而且确实开局了（不是停在准备界面）
   assert.ok(page.el('overlay').classList.contains('is-open'), '结束一局后应该弹出结算画面');
+});
+
+test('触屏投放：按下只瞄准不投放，拖动跟着走，松手才投放', async () => {
+  /*
+   * 手机上的核心手感：按住屏幕左右找位置时不要投放，松手才投放。
+   * 之前的实现是 pointerdown 直接 drop()，一点就掉，手机根本来不及找位置。
+   * 这里用真实的事件路径（canvas 上的 pointerdown/move/up）跑一遍，数引擎的投放次数。
+   */
+  const page = await bootPage({ search: '?demo=1&lib=none' });
+  await new Promise((r) => setTimeout(r, 0));
+  const canvas = page.el('stage-canvas');
+  const demo = page.sandbox.SuikaDemo;
+  assert.ok(demo, '演示模式下应该有 SuikaDemo 调试句柄');
+
+  const before = demo.stats().drops;
+  const touch = { pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 100 };
+
+  canvas.dispatch('pointerdown', Object.assign({}, touch));
+  assert.equal(demo.stats().drops, before, '按下时不该投放');
+  const aimAtDown = demo.aim();
+
+  canvas.dispatch('pointermove', Object.assign({}, touch, { clientX: 300 }));
+  assert.equal(demo.stats().drops, before, '拖动过程中不该投放');
+  assert.ok(demo.aim() > aimAtDown, '瞄准位置应该跟着手指走（100 → 300）');
+
+  canvas.dispatch('pointerup', Object.assign({}, touch, { clientX: 380 }));
+  assert.equal(demo.stats().drops, before + 1, '松手时投放一颗');
+  assert.ok(demo.aim() > aimAtDown, '落点用松手时的位置');
+
+  /* 被打断（pointercancel）不该投放 */
+  const afterUp = demo.stats().drops;
+  canvas.dispatch('pointerdown', Object.assign({}, touch, { pointerId: 8 }));
+  canvas.dispatch('pointercancel', Object.assign({}, touch, { pointerId: 8 }));
+  assert.equal(demo.stats().drops, afterUp, 'pointercancel 不该投放');
+
+  /* 多指同时按：只认第一根，松手只投一颗 */
+  page.pump(40); // 投放有间隔冷却（Lv.5 是 350ms），先跑掉冷却再测下一次
+  const beforeMulti = demo.stats().drops;
+  canvas.dispatch('pointerdown', Object.assign({}, touch, { pointerId: 11 }));
+  canvas.dispatch('pointerdown', Object.assign({}, touch, { pointerId: 12 }));
+  canvas.dispatch('pointerup', Object.assign({}, touch, { pointerId: 12 }));
+  canvas.dispatch('pointerup', Object.assign({}, touch, { pointerId: 11, clientX: 200 }));
+  assert.equal(demo.stats().drops, beforeMulti + 1, '两指乱按也只投放一颗');
+
+  assert.deepEqual(page.errors, [], '触屏流程不该报错');
+});
+
+test('手机上连点不会被当成双击放大（touch-action / 高亮）', () => {
+  /* 先去掉注释，否则注释里的花括号会把简单的规则匹配截断 */
+  const css = fs
+    .readFileSync(path.join(ROOT, 'css', 'style.css'), 'utf8')
+    .replace(/\r\n/g, '\n')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const body = /html,\s*body\s*\{([^}]*)\}/.exec(css);
+  assert.ok(body, '应该有 html, body 规则');
+  assert.match(body[1], /touch-action:\s*manipulation/, 'html/body 要禁用双击缩放（保留双指缩放）');
+  assert.match(body[1], /-webkit-tap-highlight-color:\s*transparent/, '点按不要闪灰色高亮块');
+  /* 棋盘更严格：拖动瞄准时页面不许滚 */
+  const canvasRule = /#stage-canvas\s*\{([^}]*)\}/.exec(css);
+  assert.ok(canvasRule, '应该有 #stage-canvas 规则');
+  assert.match(canvasRule[1], /touch-action:\s*none/, '棋盘上禁止滚动/缩放手势，保证拖动瞄准可靠');
 });
 
 test('JS 里用到的所有元素 id 都真实存在于 index.html', () => {

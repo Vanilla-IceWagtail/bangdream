@@ -1,4 +1,4 @@
-﻿/* 合成大西瓜 · 界面样式 */
+/* 合成大西瓜 · 界面样式 */
 :root {
   --bg-0: #fff4ea;
   --bg-1: #ffe8d6;
@@ -24,6 +24,15 @@ body {
   padding: 0;
   /* 抽屉是靠 transform 停在屏幕右侧外面的，不禁掉横向溢出会出现横向滚动条 */
   overflow-x: hidden;
+  /*
+   * 手机上连点不要被当成「双击放大」。touch-action 不是继承属性，但浏览器取的是
+   * 命中元素与各级祖先的交集，所以写在 html/body 上就能管住整页。
+   * manipulation = 允许滚动与双指缩放，只禁用双击缩放（不牺牲无障碍）。
+   * 棋盘自己更严格：#stage-canvas { touch-action: none } —— 拖动瞄准时页面不许滚。
+   */
+  touch-action: manipulation;
+  /* 点击时不要闪灰色高亮块 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {

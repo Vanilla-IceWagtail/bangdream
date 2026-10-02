@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -761,18 +761,64 @@
   function wire() {
     var canvas = dom.canvas;
 
-    canvas.addEventListener('pointermove', function (e) {
+    /*
+     * 投放的手感（手机重点）：
+     *   按下 → 只把瞄准线移过去，**不投放**；拖动 → 跟着手指移动；
+     *   松手 → 才投放。
+     * 这样手机上就能「按住在屏幕上左右找位置」，找好了再松手放，不会一点就掉。
+     * 鼠标同理（点一下就是按下+松手，感觉不到差别）。
+     * pointercancel（被系统手势打断）不投放，避免误放。
+     */
+    var dragging = false;
+    var dragPointerId = null;
+
+    function aimAt(e) {
       var rect = canvas.getBoundingClientRect();
-      if (!rect.width) return;
+      if (!rect.width) return false;
       setAim(((e.clientX - rect.left) * BOARD.width) / rect.width);
-    });
+      return true;
+    }
 
     canvas.addEventListener('pointerdown', function (e) {
       e.preventDefault();
-      var rect = canvas.getBoundingClientRect();
-      if (rect.width) setAim(((e.clientX - rect.left) * BOARD.width) / rect.width);
+      if (phase === 'over') {
+        startRound();
+        return;
+      }
+      if (phase !== 'playing') return;
+      if (dragging) return; // 多指同时按：只认第一根
+      aimAt(e);
+      dragging = true;
+      dragPointerId = e.pointerId;
+      /* 把后续事件绑到 canvas 上：手指划出棋盘也能继续瞄准、并在松手时收到 pointerup */
+      if (e.pointerId != null && canvas.setPointerCapture) {
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch (err) {
+          /* 老浏览器/测试桩没有真实指针，忽略 */
+        }
+      }
+    });
+
+    canvas.addEventListener('pointermove', function (e) {
+      /* 没按下时鼠标移动也实时瞄准（hover 跟手），手机上只有按住才会收到 move */
+      if (dragging && dragPointerId != null && e.pointerId != null && e.pointerId !== dragPointerId) return;
+      aimAt(e);
+    });
+
+    canvas.addEventListener('pointerup', function (e) {
+      if (!dragging) return;
+      if (dragPointerId != null && e.pointerId != null && e.pointerId !== dragPointerId) return;
+      dragging = false;
+      dragPointerId = null;
+      aimAt(e); // 用松手的位置作为最终落点
       if (phase === 'playing') drop();
-      else if (phase === 'over') startRound();
+    });
+
+    canvas.addEventListener('pointercancel', function () {
+      /* 被系统手势/来电打断：只清状态，不投放 */
+      dragging = false;
+      dragPointerId = null;
     });
 
     canvas.addEventListener('contextmenu', function (e) {
@@ -1082,6 +1128,23 @@
       dom.appVersion.textContent = 'v' + String(CFG.VERSION).split('-')[0] + (root.SUIKA_STANDALONE ? ' 单文件版' : ' 全球榜');
     }
 
+    /*
+     * 演示模式暴露一个只读句柄：页面测试要断言「按下不投放、松手才投放」，
+     * 而投放次数只有引擎知道。只在 ?demo=1 下挂，正常玩不受影响。
+     */
+    if (demoMode) {
+      root.SuikaDemo = {
+        phase: function () {
+          return phase;
+        },
+        stats: function () {
+          return game.summary();
+        },
+        aim: function () {
+          return aimX;
+        }
+      };
+    }
     // 手机端：把得分搬到棋盘上方、即将投放浮到棋盘左上角（桌面端不动）
     applyMobileLayout();
 
