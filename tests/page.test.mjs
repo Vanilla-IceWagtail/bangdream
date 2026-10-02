@@ -8,7 +8,7 @@
  * 这个测试把 js/*.js 原封不动地加载进一个假的浏览器环境里，
  * 真的启动一次页面、真的跑几百帧、真的开一局并结束，任何未捕获的异常都算失败。
  *
- *   node --test "C:\Users\极光\Desktop\合成大西瓜\tests\page.test.mjs"
+ *   node --test tests/page.test.mjs
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';

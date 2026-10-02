@@ -85,7 +85,7 @@
 
 ```powershell
 # 双击 index.html，或者：
-start "" "C:\Users\极光\Desktop\合成大西瓜-玩偶版\index.html"
+start "" index.html   # 在项目根目录下执行
 ```
 
 > 注意：Chrome/Edge 在 `file://` 下**不允许网页存本地数据**，排行榜昵称、你的选图可能记不住（页面顶部会提示）。

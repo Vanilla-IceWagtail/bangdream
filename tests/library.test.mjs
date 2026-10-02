@@ -6,7 +6,7 @@
  *   · 图库按分组展示；有「默认图像」；颜色 = 水果 = 大小；
  *   · 用户的选择存在本地，图库换版本时不能错位。
  *
- *   node --test "C:\Users\极光\Desktop\合成大西瓜\tests\library.test.mjs"
+ *   node --test tests/library.test.mjs
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';

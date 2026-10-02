@@ -4,3 +4,13 @@ assets/library-bangdream/
 data/
 # 单文件版（玩偶版图片太多，不做单文件版）
 合成大西瓜-单文件版.html
+
+# 调试 / 临时文件（别手滑提交）
+_dbg*
+_t[0-9]*
+*.bak
+*.tmp
+*.log
+.env
+.DS_Store
+Thumbs.db

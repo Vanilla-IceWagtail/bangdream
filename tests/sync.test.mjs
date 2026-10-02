@@ -6,7 +6,7 @@
  *   2. sync 编排 —— 缓存、待上传队列、自愈合并、双榜视图、30 分钟节奏、节流；
  *   3. 真集成 —— 用 'rest' 通道接真实的 server.cjs，确认自建服务器那条路也还是通的。
  *
- *   node --test "C:\Users\极光\Desktop\合成大西瓜\tests\sync.test.mjs"
+ *   node --test tests/sync.test.mjs
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';

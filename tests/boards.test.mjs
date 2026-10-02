@@ -7,7 +7,7 @@
  *   · 合并时**取优而不是覆盖**（自愈：别人把榜刷没了，客户端能修回来）；
  *   · 排序/截断/名次都稳定，且文档不能无限膨胀（第三方 KV 有限制）。
  *
- *   node --test "C:\Users\极光\Desktop\合成大西瓜\tests\boards.test.mjs"
+ *   node --test tests/boards.test.mjs
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,7 +1,7 @@
 /*!
  * 合成大西瓜 · 服务器测试（node --test）
  *
- *   node --test "C:\Users\极光\Desktop\合成大西瓜\tests\server.test.mjs"
+ *   node --test tests/server.test.mjs
  *
  * 真起服务器（listen(0) 随机端口）+ 真发 HTTP 请求，只依赖 Node 内置模块。
  * 数据目录用 SUIKA_DATA 指向 os.tmpdir() 下的临时目录，绝不碰真实的 data/。
