@@ -1,0 +1,37 @@
+name: tests
+
+# 每次推 main / 提 PR 都跑一遍全部测试。
+# 这个项目零依赖（没有 package.json、没有 npm install），所以 CI 只做两件事：
+# 语法检查 + node --test。跑完大约十几秒。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 语法检查 + 全部测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 语法检查（js / tools / tests）
+        run: |
+          set -e
+          find js tools tests -type f \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print | while read -r f; do
+            node --check "$f"
+          done
+          echo "语法检查通过"
+
+      - name: 跑全部测试
+        run: |
+          set -e
+          for f in tests/*.test.mjs; do
+            echo "== $f"
+            node --test "$f"
+          done

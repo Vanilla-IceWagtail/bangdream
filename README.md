@@ -1,4 +1,7 @@
-﻿# 🎸 合成邦多利皇帝 · v0.4.3
+# 🎸 合成邦多利皇帝 · v0.4.5
+
+[![tests](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml/badge.svg)](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml)
+[![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 
 > BanG Dream! 棉花娃娃版「合成大西瓜」—— 45 只毛绒娃娃、按轮廓碰撞、果冻手感、无服务器全球榜。
 > **在线玩：https://vanilla-icewagtail.github.io/bangdream/**（GitHub Pages，纯静态）
