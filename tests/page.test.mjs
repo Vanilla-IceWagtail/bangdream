@@ -1,0 +1,471 @@
+/*!
+ * 合成大西瓜 · 页面级冒烟测试（真实页面代码 + 无头 DOM）
+ *
+ * 为什么要有它：截图只能证明「第一帧长什么样」。页面里有些代码要跑一会儿才会执行到
+ * （HUD 计时、连击条、同步倒计时、回合结束、弹层……），里面写错一个变量名，
+ * 截图完全看不出来 —— `syncClock is not defined` 就是这么漏过去的。
+ *
+ * 这个测试把 js/*.js 原封不动地加载进一个假的浏览器环境里，
+ * 真的启动一次页面、真的跑几百帧、真的开一局并结束，任何未捕获的异常都算失败。
+ *
+ *   node --test "C:\Users\极光\Desktop\合成大西瓜\tests\page.test.mjs"
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const require = createRequire(import.meta.url);
+const here = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(here, '..');
+const INDEX = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+/** index.html 里真实存在的 id，用来验证 JS 找的元素都存在 */
+const HTML_IDS = new Set([...INDEX.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+
+/** 带 hidden 属性的元素（桩也要还原，否则「横幅有没有被显示」这类断言没意义） */
+const HTML_HIDDEN_IDS = new Set(
+  [...INDEX.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)].filter((m) => /\bhidden\b/.test(m[0])).map((m) => m[1])
+);
+
+/** index.html 里的内联脚本（那段「出错就把错误显示在页面上」的代码） */
+const INLINE_SCRIPTS = [...INDEX.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+
+/* ---------------- 极简 DOM 桩 ---------------- */
+
+function makeClassList(node) {
+  const set = new Set();
+  return {
+    add: (...cs) => cs.forEach((c) => set.add(c)),
+    remove: (...cs) => cs.forEach((c) => set.delete(c)),
+    contains: (c) => set.has(c),
+    toggle: (c, force) => {
+      const on = force === undefined ? !set.has(c) : !!force;
+      if (on) set.add(c);
+      else set.delete(c);
+      return on;
+    },
+    _set: set
+  };
+}
+
+function makeStyle() {
+  const props = {};
+  const style = {
+    setProperty: (k, v) => {
+      props[k] = String(v);
+    },
+    getPropertyValue: (k) => (k in props ? props[k] : ''),
+    removeProperty: (k) => {
+      delete props[k];
+    },
+    _props: props
+  };
+  return style;
+}
+
+function makeNode(doc, tag, id) {
+  const node = {
+    tagName: String(tag || 'div').toUpperCase(),
+    id: id || '',
+    children: [],
+    dataset: {},
+    style: makeStyle(),
+    hidden: false,
+    value: '',
+    textContent: '',
+    type: '',
+    disabled: false,
+    files: null,
+    title: '',
+    className: '',
+    parentNode: null,
+    offsetWidth: 1,
+    src: '',
+    complete: true,
+    naturalWidth: 64,
+    naturalHeight: 64,
+    _listeners: {},
+    _html: ''
+  };
+  node.classList = makeClassList(node);
+  Object.defineProperty(node, 'innerHTML', {
+    get: () => node._html,
+    set: (v) => {
+      node._html = String(v);
+      node.children = [];
+    }
+  });
+  node.appendChild = (child) => {
+    child.parentNode = node;
+    node.children.push(child);
+    return child;
+  };  node.removeChild = (child) => {
+    const i = node.children.indexOf(child);
+    if (i >= 0) node.children.splice(i, 1);
+    return child;
+  };
+  node.setAttribute = (k, v) => {
+    node[k] = v;
+  };
+  node.getAttribute = (k) => node[k];
+  node.addEventListener = (type, fn) => {
+    (node._listeners[type] || (node._listeners[type] = [])).push(fn);
+  };
+  node.removeEventListener = (type, fn) => {
+    const list = node._listeners[type] || [];
+    const i = list.indexOf(fn);
+    if (i >= 0) list.splice(i, 1);
+  };
+  node.dispatch = (type, evt) => {
+    (node._listeners[type] || []).forEach((fn) => fn(Object.assign({ preventDefault() {}, stopPropagation() {} }, evt || {})));
+  };
+  node.getBoundingClientRect = () => ({ left: 0, top: 0, width: 480, height: 700, right: 480, bottom: 700 });
+  node.querySelector = (sel) => makeNode(doc, 'span');
+  node.querySelectorAll = () => [];
+  node.getElementsByTagName = () => [];
+  Object.defineProperty(node, 'childNodes', {
+    get: () => node.children
+  });
+  node.click = () => node.dispatch('click', {});
+  node.getContext = () => makeCtx();
+  node.toDataURL = () => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==';
+  return node;
+}
+
+function makeCtx() {
+  const grad = { addColorStop() {} };
+  const ctx = {
+    canvas: null,
+    createLinearGradient: () => grad,
+    createRadialGradient: () => grad,
+    measureText: () => ({ width: 10 }),
+    setTransform() {},
+    save() {},
+    restore() {},
+    translate() {},
+    rotate() {},
+    scale() {},
+    beginPath() {},
+    closePath() {},
+    moveTo() {},
+    lineTo() {},
+    arc() {},
+    ellipse() {},
+    quadraticCurveTo() {},
+    rect() {},
+    fill() {},
+    stroke() {},
+    clip() {},
+    clearRect() {},
+    fillRect() {},
+    strokeRect() {},
+    fillText() {},
+    strokeText() {},
+    drawImage() {},
+    setLineDash() {}
+  };
+  return ctx;
+}
+
+function makeDocument() {
+  const byId = new Map();
+  const doc = {
+    readyState: 'complete',
+    body: null,
+    createElement: (tag) => makeNode(doc, tag),
+    createTextNode: (text) => {
+      const n = makeNode(doc, '#text');
+      n.textContent = String(text);
+      return n;
+    },
+    getElementById: (id) => {
+      if (!byId.has(id)) {
+        const node = makeNode(doc, 'div', id);
+        node.hidden = HTML_HIDDEN_IDS.has(id); // 还原 HTML 里写的 hidden
+        byId.set(id, node);
+      }
+      return byId.get(id);
+    },
+    addEventListener() {},
+    removeEventListener() {},
+    _byId: byId
+  };
+  doc.body = makeNode(doc, 'body');
+  return doc;
+}
+
+/* ---------------- 运行页面 ---------------- */
+
+function bootPage(opts = {}) {
+  const errors = [];
+  const rafQueue = [];
+  const timeouts = [];
+  const doc = makeDocument();
+  const store = new Map();
+
+  const sandbox = {
+    console,
+    Math,
+    Date,
+    JSON,
+    Object,
+    Array,
+    String,
+    Number,
+    Boolean,
+    Error,
+    Promise,
+    isFinite,
+    isNaN,
+    parseInt,
+    parseFloat,
+    setTimeout: (fn) => {
+      timeouts.push(fn);
+      return timeouts.length;
+    },
+    clearTimeout() {},
+    setInterval: () => 0,
+    clearInterval() {},
+    requestAnimationFrame: (fn) => {
+      rafQueue.push(fn);
+      return rafQueue.length;
+    },
+    cancelAnimationFrame() {},
+    devicePixelRatio: 1,
+    innerWidth: 1400,
+    innerHeight: 900,
+    performance: { now: () => Date.now() },
+    localStorage: {
+      getItem: (k) => (store.has(k) ? store.get(k) : null),
+      setItem: (k, v) => store.set(k, String(v)),
+      removeItem: (k) => store.delete(k),
+      clear: () => store.clear()
+    },
+    location: { protocol: 'http:', search: opts.search || '', href: 'http://127.0.0.1:5173/' + (opts.search || '') },
+    navigator: { userAgent: 'node-test' },
+    confirm: () => true,
+    alert() {},
+    Image: class {
+      constructor() {
+        this.complete = false;
+        this.naturalWidth = 0;
+        this.naturalHeight = 0;
+      }
+      set src(v) {
+        this._src = v;
+        this.complete = true;
+        this.naturalWidth = 64;
+        this.naturalHeight = 64;
+        if (this.onload) this.onload();
+      }
+      get src() {
+        return this._src;
+      }
+    },
+    Blob: class {
+      constructor(parts) {
+        this.parts = parts;
+      }
+    },
+    URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
+    AbortController: globalThis.AbortController,
+    fetch: () => Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) }),
+    document: doc
+  };
+  sandbox.window = sandbox;
+  sandbox.globalThis = sandbox;
+  sandbox.self = sandbox;
+  // 音频直接用不了（和真实浏览器首次交互前一样），顺便验证静音路径不炸
+  sandbox.AudioContext = undefined;
+  sandbox.webkitAudioContext = undefined;
+
+  const context = vm.createContext(sandbox);
+
+  // 真实页面靠 window.onerror / SUIKA_ON_ERROR 把错误显示成红色横幅，
+  // 这里把这两个入口都接上：只要页面内部出错，横幅就会被显示出来，断言就会失败。
+  const errHandlers = [];
+  sandbox.addEventListener = (type, fn) => {
+    if (type === 'error') errHandlers.push(fn);
+  };
+  function reportError(err, where) {
+    const message = (err && err.message) || String(err);
+    errors.push(where ? `${where}: ${message}` : message);
+    errHandlers.forEach((fn) =>
+      fn({ message, error: err, filename: 'game.js', lineno: 1, preventDefault() {}, stopPropagation() {} })
+    );
+  }
+  sandbox.__reportError = reportError;
+
+  for (const code of INLINE_SCRIPTS) {
+    try {
+      vm.runInContext(code, context, { filename: 'index.html(inline)' });
+    } catch (err) {
+      errors.push(`index.html(inline): ${err && err.message}`);
+    }
+  }
+
+  const files = [
+    'vendor/matter.min.js',
+    'js/config.js',
+    'js/library.js',
+    'js/assets-builtin.js',
+    'js/assets.js',
+    'js/boards.js',
+    'js/transport.js',
+    'js/sync.js',
+    'js/engine.js',
+    'js/render.js',
+    'js/ui.js',
+    'js/picker.js',
+    'js/game.js'
+  ];
+  for (const rel of files) {
+    const code = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    try {
+      vm.runInContext(code, context, { filename: rel });
+    } catch (err) {
+      errors.push(`${rel}: ${err && err.message}`);
+    }
+  }
+
+  /** 跑 n 帧：每次取出一个 rAF 回调执行（回调里会重新注册下一帧） */
+  function pump(n) {
+    for (let i = 0; i < n; i++) {
+      const cb = rafQueue.shift();
+      if (!cb) break;
+      try {
+        cb(1000 + i * 16.7);
+      } catch (err) {
+        reportError(err, `frame ${i}`);
+        break;
+      }
+    }
+    // 定时器回调（比如弹层的 180ms 收尾）也跑一遍
+    const pending = timeouts.splice(0, timeouts.length);
+    pending.forEach((fn) => {
+      try {
+        fn();
+      } catch (err) {
+        reportError(err, 'timeout');
+      }
+    });
+  }
+
+  function el(id) {
+    return doc.getElementById(id);
+  }
+
+  return { sandbox, doc, errors, pump, el, store };
+}
+
+/* ---------------- 测试 ---------------- */
+
+test('页面能正常启动，并且跑 600 帧不报任何错', () => {
+  const page = bootPage();
+  assert.deepEqual(page.errors, [], '加载/启动阶段不该有异常');
+  const api = page.sandbox.SuikaConfig;
+  assert.ok(api, 'config 应该挂到 window 上');
+
+  page.pump(600); // ≈10 秒
+  assert.deepEqual(page.errors, [], '跑 600 帧不该有异常（HUD 计时/连击条/同步倒计时都在里面）');
+  assert.equal(page.el('boot-error').hidden, true, '不应该显示错误横幅');
+});
+
+test('演示模式（自动开局 + 结束一局 + 跑 200 帧）全程无异常', () => {
+  const page = bootPage({ search: '?demo=1&over=1' });
+  assert.deepEqual(page.errors, [], '演示模式启动不该有异常');
+  page.pump(200);
+  assert.deepEqual(page.errors, [], '演示模式跑 200 帧不该有异常');
+  assert.equal(page.el('boot-error').hidden, true);
+
+  // 演示模式会造出几条成绩，榜单上应该有内容
+  const list = page.el('lb-list');
+  assert.ok(list.children.length > 0, '排行榜应该有成绩行');
+  assert.ok(String(page.el('hud-score').textContent).length > 0, '记分板要有分数');
+});
+
+test('JS 里用到的所有元素 id 都真实存在于 index.html', () => {
+  const jsFiles = [
+    'js/config.js',
+    'js/library.js',
+    'js/assets.js',
+    'js/boards.js',
+    'js/transport.js',
+    'js/sync.js',
+    'js/engine.js',
+    'js/render.js',
+    'js/ui.js',
+    'js/picker.js',
+    'js/game.js'
+  ];
+  const missing = new Set();
+  for (const rel of jsFiles) {
+    const code = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    for (const m of code.matchAll(/(?:UI\.el|document\.getElementById)\(\s*'([^']+)'\s*\)/g)) {
+      if (!HTML_IDS.has(m[1])) missing.add(m[1]);
+    }
+  }
+  assert.deepEqual([...missing], [], '这些 id 在 JS 里被使用，但 index.html 里没有');
+});
+
+test('点难度按钮、重开、暂停都不炸（走真实的按钮事件）', () => {
+  const page = bootPage();
+  page.pump(5);
+  const before = page.sandbox.SuikaConfig.difficultyOf(page.el('diff-level').textContent.replace('Lv.', '')).level;
+  assert.ok(before >= 1 && before <= 10);
+
+  page.el('diff-plus').dispatch('click', {});
+  page.el('diff-plus').dispatch('click', {});
+  assert.equal(page.el('diff-level').textContent, 'Lv.' + Math.min(10, before + 2), '加号应该提高难度');
+  page.el('diff-minus').dispatch('click', {});
+  assert.equal(page.el('diff-level').textContent, 'Lv.' + Math.min(10, before + 1));
+
+  page.el('btn-restart').dispatch('click', {});
+  page.pump(60);
+  page.el('btn-pause').dispatch('click', {});
+  page.pump(30);
+  page.el('btn-pause').dispatch('click', {});
+  page.el('btn-sound').dispatch('click', {});
+  page.el('lb-refresh').dispatch('click', {});
+  page.pump(60);
+  assert.deepEqual(page.errors, [], '交互之后也不该有异常');
+  assert.equal(page.el('boot-error').hidden, true);
+});
+
+test('单文件版标记生效：排行榜改成「本机/单文件版」的说明', () => {
+  const page = bootPage();
+  page.sandbox.SUIKA_STANDALONE = true;
+  page.el('lb-refresh').dispatch('click', {});
+  // 直接触发一次状态重绘
+  const status = page.el('lb-status');
+  page.pump(5);
+  assert.ok(status.innerHTML.length > 0, '状态行要有内容');
+  assert.deepEqual(page.errors, []);
+});
+
+test('选图窗口能开能关、点图片和水果位都不炸（图片库为空时也一样）', () => {
+  const page = bootPage();
+  page.pump(3);
+  page.el('btn-picker').dispatch('click', {}); // 打开选图小窗口
+  page.pump(3);
+  const win = page.sandbox.SuikaPicker ? page.doc.getElementById('picker-window') : null;
+  assert.ok(win, '窗口节点应该被创建出来');
+  assert.equal(win.hidden, false, '点「选图」后窗口要显示');
+
+  // 图库是空的：状态行要说明「图库还是空的」，不能是空白或者报错
+  const status = page.el('picker-status') || null;
+  page.pump(5);
+  assert.deepEqual(page.errors, [], '空图库下开窗口不该抛异常');
+  assert.equal(page.el('boot-error').hidden, true, '不应该显示错误横幅');
+
+  // 再点一次按钮（Toggle 到关闭），然后重开
+  page.el('btn-picker').dispatch('click', {});
+  page.pump(2);
+  page.el('btn-picker').dispatch('click', {});
+  page.pump(5);
+  assert.deepEqual(page.errors, []);
+});

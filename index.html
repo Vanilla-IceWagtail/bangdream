@@ -1,0 +1,178 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>合成大西瓜 · 全球排行榜</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-logo">🍉</span>
+          <div class="brand-text">
+            <h1>合成大西瓜</h1>
+            <p>两颗一样的水果碰在一起，就会合成更大的水果</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span class="version" id="app-version">v0.3</span>
+          <button class="btn" id="btn-sound" type="button">🔊 音效</button>
+          <button class="btn" id="btn-pause" type="button">⏸ 暂停</button>
+          <button class="btn" id="btn-restart" type="button">↻ 重开</button>
+          <button class="btn btn-primary" id="btn-picker" type="button">🖼 选图</button>
+        </div>
+      </header>
+
+      <div class="notice" id="storage-warning" hidden>
+        ⚠️ 当前是用 <code>file://</code> 直接打开的，浏览器可能不允许本页保存数据，
+        导入的水果图片和排行榜会记不住。建议双击同目录下的 <b>启动游戏.cmd</b>，用本地服务器打开。
+      </div>
+
+      <div class="notice notice-error" id="boot-error" hidden></div>
+
+      <main class="layout">
+        <!-- 左栏：记分显示器 + 预告 + 进化表 -->
+        <aside class="col col-left">
+          <section class="panel score-panel">
+            <div class="panel-head">
+              <span class="panel-title">本局得分</span>
+              <span class="score-delta" id="hud-delta"></span>
+            </div>
+            <div class="score-value" id="hud-score">0</div>
+            <div class="combo" id="hud-combo">
+              <span class="combo-label">连击</span>
+              <b id="hud-combo-count"></b>
+              <span class="combo-mult" id="hud-combo-mult"></span>
+              <i class="combo-bar"><em id="hud-combo-bar"></em></i>
+            </div>
+            <div class="score-grid">
+              <div><span class="k">最高分</span><b id="hud-best">0</b></div>
+              <div><span class="k">合成次数</span><b id="hud-merges">0</b></div>
+              <div><span class="k">最大水果</span><b id="hud-maxtier">🍒 樱桃</b></div>
+              <div><span class="k">本局用时</span><b id="hud-time">0:00</b></div>
+            </div>
+          </section>
+
+          <section class="panel diff-panel">
+            <div class="panel-head">
+              <span class="panel-title">难度</span>
+              <span class="panel-hint">1 ~ 10 级</span>
+            </div>
+            <div class="diff-row">
+              <button class="btn btn-mini" id="diff-minus" type="button" aria-label="降低难度">−</button>
+              <div class="diff-value">
+                <b id="diff-level">Lv.5</b>
+                <span id="diff-name">熟练</span>
+              </div>
+              <button class="btn btn-mini" id="diff-plus" type="button" aria-label="提高难度">＋</button>
+            </div>
+            <div class="diff-track"><i id="diff-bar" style="width: 50%"></i></div>
+            <p class="diff-hint" id="diff-hint">掉落权重 · 投放间隔 · 危险线</p>
+          </section>
+
+          <section class="panel next-panel">
+            <div class="panel-head"><span class="panel-title">即将投放</span></div>
+            <div class="next-row">
+              <div class="next-box">
+                <span class="next-tag">当前</span>
+                <div class="next-fruit" id="hud-current"></div>
+              </div>
+              <div class="next-box">
+                <span class="next-tag">下一颗</span>
+                <div class="next-fruit" id="hud-next"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel chain-panel">
+            <div class="panel-head">
+              <span class="panel-title">水果进化表</span>
+              <span class="panel-hint">分数＝合成出该水果的得分</span>
+            </div>
+            <ol class="chain" id="chain-list"></ol>
+          </section>
+        </aside>
+
+        <!-- 中间：游戏画面 -->
+        <section class="stage">
+          <div class="board-wrap">
+            <canvas id="stage-canvas" width="480" height="700" aria-label="合成大西瓜游戏画面"></canvas>
+            <div class="overlay" id="overlay" hidden>
+              <div class="overlay-card">
+                <h2 id="overlay-title"></h2>
+                <div class="overlay-body" id="overlay-body"></div>
+                <div class="overlay-actions" id="overlay-actions"></div>
+              </div>
+            </div>
+          </div>
+          <p class="stage-hint">
+            移动鼠标 / 手指瞄准，<kbd>点击</kbd> 或 <kbd>空格</kbd> 投放 · <kbd>←</kbd> <kbd>→</kbd> 微调 ·
+            <kbd>P</kbd> 暂停 · <kbd>R</kbd> 重开 · 左栏可调难度（1~10 级）
+          </p>
+        </section>
+
+        <!-- 右栏：排行榜 -->
+        <aside class="col col-right">
+          <section class="panel board-panel">
+            <div class="panel-head">
+              <span class="panel-title">排行榜</span>
+              <span class="live-dot" id="lb-live">全球</span>
+            </div>
+            <div class="lb-tabs" role="tablist">
+              <button class="lb-tab is-on" id="lb-tab-live" type="button" role="tab">实时 · 最近 20 次</button>
+              <button class="lb-tab" id="lb-tab-top" type="button" role="tab">总榜 · 前 100</button>
+            </div>
+            <div class="lb-player-row">
+              <input id="lb-player" maxlength="12" placeholder="你的名字" value="玩家" />
+              <button class="btn btn-mini" id="lb-refresh" type="button">同步</button>
+              <button class="btn btn-mini btn-ghost" id="lb-clear" type="button">清空</button>
+            </div>
+            <ol class="lb-list" id="lb-list"></ol>
+            <p class="lb-status" id="lb-status"></p>
+            <p class="lb-note" id="lb-note"></p>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <!-- 玩偶图预加载池：挂在这里的 img 会被页面 load 事件等待，首屏/截图才不会拍到 emoji 兜底外观 -->
+    <div id="asset-pool" hidden aria-hidden="true"></div>
+
+    <script>
+      // 启动阶段如果出错，直接把错误显示在页面上，避免只有一片空白
+      (function () {
+        function report(msg) {
+          var n = document.getElementById('boot-error');
+          if (!n) return;
+          n.hidden = false;
+          n.textContent = '⚠️ 页面出错了：' + msg;
+        }
+        window.addEventListener('error', function (e) {
+          var file = String(e.filename || '').split('/').pop();
+          report((e.message || e.error) + (file ? '（' + file + ':' + e.lineno + '）' : ''));
+        });
+        window.SUIKA_ON_ERROR = function (err, where) {
+          report('游戏事件「' + where + '」处理失败：' + ((err && err.message) || err));
+        };
+      })();
+    </script>
+    <script src="vendor/matter.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/library.js"></script>
+    <script src="js/assets-builtin.js"></script>
+    <script src="js/assets.js"></script>
+    <script src="js/boards.js"></script>
+    <script src="js/transport.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/picker.js"></script>
+    <script src="js/game.js"></script>
+  </body>
+</html>
