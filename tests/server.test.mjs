@@ -96,7 +96,7 @@ test('GET / 返回首页 HTML', async () => {
   const res = await fetch(url('/'));
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type') || '', /text\/html/);
-  // 断言页面骨架而不是游戏名：玩偶版叫「合成邦高祖！！！」，水果版叫「合成大西瓜」，名字会变
+  // 断言页面骨架而不是游戏名：玩偶版叫「合成邦多利皇帝」，水果版叫「合成大西瓜」，名字会变
   const html = await res.text();
   assert.match(html, /id="stage-canvas"/);
   assert.match(html, /<title>/);

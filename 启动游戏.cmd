@@ -1,6 +1,6 @@
 ﻿@echo off
 chcp 65001 >nul
-title 合成邦高祖！！！
+title 合成邦多利皇帝
 cd /d "%~dp0"
 where node >nul 2>nul
 if errorlevel 1 (

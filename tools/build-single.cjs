@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成邦高祖！！！ · 单文件打包脚本
+ * 合成邦多利皇帝 · 单文件打包脚本
  *
  * 把 index.html + css/style.css + vendor/matter.min.js + js/*.js
  * 全部内联成一个可以直接双击、也可以直接发给别人的 HTML 文件。
@@ -7,7 +7,7 @@
  * 用法（在这个目录下）：
  *   node tools/build-single.cjs
  * 产物：
- *   合成邦高祖！！！-单文件版.html
+ *   合成邦多利皇帝-单文件版.html
  *
  * 注意：单文件版里没有共享排行榜服务器，所以成绩只保存在本机；
  * 要多个人进同一张榜，仍然要用「启动游戏.cmd / 启动共享榜.cmd」那套（文件夹版）。
@@ -19,7 +19,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'index.html');
-const OUT = path.join(ROOT, '合成邦高祖！！！-单文件版.html');
+const OUT = path.join(ROOT, '合成邦多利皇帝-单文件版.html');
 
 /** 内联进 <script> 的内容里如果出现 </script 会把标签提前闭合，转义掉（JS 里 <\/script 等价） */
 function safeForScriptTag(js) {
@@ -60,10 +60,10 @@ function build() {
 
   // 4) 标题 + 生成时间
   const stamp = new Date().toLocaleString('zh-CN', { hour12: false });
-  html = html.replace(/<title>[^<]*<\/title>/, '<title>合成邦高祖！！！ · 单文件版</title>');
+  html = html.replace(/<title>[^<]*<\/title>/, '<title>合成邦多利皇帝 · 单文件版</title>');
   html = html.replace(
     /<!doctype html>/i,
-    '<!doctype html>\n<!--\n  合成邦高祖！！！ · 单文件版（自动生成，请勿手改）\n' +
+    '<!doctype html>\n<!--\n  合成邦多利皇帝 · 单文件版（自动生成，请勿手改）\n' +
       '  生成时间：' +
       stamp +
       '\n  来源：' +

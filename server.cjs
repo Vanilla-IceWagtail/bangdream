@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成邦高祖！！！ · 本地静态服务器（可选，但推荐）
+ * 合成邦多利皇帝 · 本地静态服务器（可选，但推荐）
  *
  * 为什么需要它：直接用 file:// 双击打开 index.html 时，部分浏览器（尤其 Firefox）
  * 不允许网页保存数据，导入的玩偶贴图和排行榜就存不下来。
@@ -473,7 +473,7 @@ if (require.main === module) {
 
     server.listen(port, host, () => {
       const localUrl = `http://127.0.0.1:${port}/`;
-      console.log('🍉 合成邦高祖！！！已启动：' + localUrl);
+      console.log('🍉 合成邦多利皇帝已启动：' + localUrl);
       console.log('   关掉这个窗口就是关掉服务器。');
       if (args.lan) {
         console.log('   当前是局域网模式，同一个网络里的其他人可以打开下面的地址一起玩：');

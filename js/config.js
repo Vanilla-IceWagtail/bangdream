@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成邦高祖！！！ · 基础配置
+ * 合成邦多利皇帝 · 基础配置
  * 纯数据 + 纯函数，不依赖 DOM，可以直接在 node 下 require 做逻辑测试。
  * 想改玩偶顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
  */
@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.2';
+  var VERSION = '0.4.3';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {

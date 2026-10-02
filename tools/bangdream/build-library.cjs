@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成邦高祖！！！ · 玩偶版：把 bangdream 的 45 张玩偶做成游戏图库
+ * 合成邦多利皇帝 · 玩偶版：把 bangdream 的 45 张玩偶做成游戏图库
  *
  * 产出（都写到「玩偶版」新文件夹里，不动原版）：
  *   assets/dolls/img/<id>.png     384px 抠好的玩偶（透明底）
@@ -169,7 +169,7 @@ function main() {
   const outFile = path.join(ROOT, 'js', 'assets-builtin.js');
   const body =
     '/*!\n' +
-    ' * 合成邦高祖！！！ · 玩偶版 内置图库（自动生成，勿手改）\n' +
+    ' * 合成邦多利皇帝 · 玩偶版 内置图库（自动生成，勿手改）\n' +
     ' *\n' +
     ' * 来源：桌面 bangdream 文件夹（9 支乐队 × 5 位角色 = ' + images.length + ' 张玩偶）\n' +
     ' * 处理：JPEG→PNG、去白底、裁剪、缩放到 384px、按轮廓拟合碰撞圆\n' +
