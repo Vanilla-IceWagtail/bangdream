@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -614,7 +614,7 @@
       syncHud();
       UI.showOverlay({
         title: '已暂停',
-        body: '<p>水果们先歇一会儿。</p>',
+        body: '<p>棉花娃娃们先歇一会儿。</p>',
         actions: [
           {
             label: '继续游戏',
@@ -871,13 +871,13 @@
       title: '🎸 合成邦高祖！！！',
       body:
         '<ul class="rules">' +
-        '<li>前 5 级水果会从天上掉下来，<b>两颗相同的水果碰在一起</b>就会合成更大的水果。</li>' +
-        '<li>得分按<b>合成出的水果大小</b>计算：草莓 +1、葡萄 +3、橘子 +6 …… 西瓜 +55。</li>' +
+        '<li>前 5 级棉花娃娃会从天上掉下来，<b>两只相同的棉花娃娃碰在一起</b>就会合成更大的棉花娃娃。</li>' +
+        '<li>得分按<b>合成出的棉花娃娃大小</b>计算：越大越多分（每级分数见左栏进化表）。</li>' +
         '<li><b>连击加分</b>：1 秒内连续合成会累积连击，得分最高 ×' +
         CFG.RULES.combo.maxMultiplier +
         '，飘字和音效都会跟着变。</li>' +
         '<li>两颗西瓜相撞会双双消失，额外 +100 分。</li>' +
-        '<li>水果堆过红色危险线并停下 <b>2 秒</b>，本局结束。左上角可以调 <b>1~10 级难度</b>（默认 Lv.' +
+        '<li>棉花娃娃堆过红色危险线并停下 <b>2 秒</b>，本局结束。左上角可以调 <b>1~10 级难度</b>（默认 Lv.' +
         CFG.DEFAULT_DIFFICULTY +
         '）。</li>' +
         '<li>成绩自动进 <b>全球排行榜</b>：实时榜是全世界最近 20 次提交（打开即最新），' +
@@ -886,7 +886,7 @@
         ' 分钟自动刷新）。' +
         (root.SUIKA_STANDALONE ? '' : '用「启动游戏.cmd」打开也一样是全球榜。') +
         '</li>' +
-        '<li>水果图片来自内置图库：点右上角 <b>🖼 选图</b> 打开小窗口，从图库里挑 11 张放进水果位'
+        '<li>棉花娃娃图片来自内置图库：点右上角 <b>🖼 选图</b> 打开小窗口，从图库里挑 11 张放进棉花娃娃位'
         + '（图片不用自己导入）。</li>' +
         '</ul>',
       actions: [{ label: '开始游戏', kind: 'primary', onClick: startRound }]
@@ -1022,9 +1022,9 @@
       var maxLabel = UI.el('hud-max-label');
       var chainTitle = UI.el('chain-title');
       var chainHint = UI.el('chain-hint');
-      if (maxLabel) maxLabel.textContent = '最大玩偶';
-      if (chainTitle) chainTitle.textContent = '玩偶进化表';
-      if (chainHint) chainHint.textContent = '分数＝合成出该玩偶的得分';
+      if (maxLabel) maxLabel.textContent = '最大棉花娃娃';
+      if (chainTitle) chainTitle.textContent = '棉花娃娃进化表';
+      if (chainHint) chainHint.textContent = '分数＝合成出该棉花娃娃的得分';
       if (dom.current && dom.current.parentNode) {
         var curLabel = dom.current.parentNode.querySelector('.preview-label');
         if (curLabel) curLabel.textContent = '当前';

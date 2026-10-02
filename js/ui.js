@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 界面层
  * 只做「把数据画成 DOM」和「弹提示」，游戏逻辑不在这里。
  */
@@ -221,7 +221,7 @@
       li.appendChild(score);
       li.appendChild(when);
       li.title =
-        '最大水果：' +
+        '最大棉花娃娃：' +
         def.name +
         ' · 难度 Lv.' +
         (entry.d || '-') +

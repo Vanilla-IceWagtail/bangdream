@@ -49,7 +49,7 @@
 
     var bar = el('header', 'pk-bar');
     var title = el('span', 'pk-title', '🖼 选图窗口');
-    var subtitle = el('span', 'pk-subtitle', '从图库里挑 11 张放到水果位上');
+    var subtitle = el('span', 'pk-subtitle', '从图库里挑 11 张放到棉花娃娃位上');
     var barActions = el('div', 'pk-bar-actions');
     var btnCollapse = el('button', 'btn btn-mini btn-ghost', '折叠');
     btnCollapse.type = 'button';
@@ -69,8 +69,8 @@
     // 左：11 个水果位
     var colSlots = el('section', 'pk-col pk-col-slots');
     var slotsHead = el('div', 'pk-col-head');
-    slotsHead.appendChild(el('b', null, '11 个水果位'));
-    slotsHead.appendChild(el('span', 'pk-head-hint', '颜色 = 水果 = 大小'));
+    slotsHead.appendChild(el('b', null, '11 个棉花娃娃位'));
+    slotsHead.appendChild(el('span', 'pk-head-hint', '颜色 = 棉花娃娃 = 大小'));
     var slotList = el('ol', 'pk-slots');
     colSlots.appendChild(slotsHead);
     colSlots.appendChild(slotList);
@@ -365,10 +365,10 @@
     function renderHeaderHint() {
       if (state.selectedId) {
         var img = LIB.byId(assets.library, state.selectedId);
-        subtitle.textContent = '已选中 ' + (img ? img.file : '') + ' → 点左边的水果位放上去';
+        subtitle.textContent = '已选中 ' + (img ? img.file : '') + ' → 点左边的棉花娃娃位放上去';
         subtitle.classList.add('is-active');
       } else {
-        subtitle.textContent = '从图库里挑 11 张放到水果位上';
+        subtitle.textContent = '从图库里挑 11 张放到棉花娃娃位上';
         subtitle.classList.remove('is-active');
       }
     }
@@ -381,7 +381,7 @@
       var names = missing.map(function (t) {
         return '⌀' + LIB.slotOf(t).diameter;
       });
-      confirmTitle.textContent = '还有 ' + missing.length + ' 个水果位没选图：' + names.join('、');
+      confirmTitle.textContent = '还有 ' + missing.length + ' 个棉花娃娃位没选图：' + names.join('、');
       confirmBox.hidden = false;
       return true;
     }
