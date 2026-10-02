@@ -1,4 +1,4 @@
-/* 合成大西瓜 · 界面样式 */
+﻿/* 合成大西瓜 · 界面样式 */
 :root {
   --bg-0: #fff4ea;
   --bg-1: #ffe8d6;
@@ -496,7 +496,12 @@ kbd {
   padding: 18px;
   background: rgba(140, 92, 64, 0.26);
   backdrop-filter: blur(4px);
-  z-index: 5;
+  /*
+   * 必须高于棋盘里的浮动「即将投放」（.next-panel.is-floating 是 z-index: 6），
+   * 否则手机上弹窗会被那个浮层和玩偶图标压住（bug 复现过一次）。
+   * 同时要低于 toast(80) 与选图小窗口(90)。
+   */
+  z-index: 30;
 }
 
 .overlay.is-open {
@@ -1614,10 +1619,23 @@ kbd {
     font-size: 13px;
   }
 
+  /*
+   * 连击提示不进分数面板：它一出现（.combo.is-on 变成 display:flex）面板就会长高，
+   * 把整个棋盘往下顶。手机端只保留画布里飘出的「连击 ×N」，面板高度恒定。
+   */
   .score-panel.is-topstrip .combo {
-    margin-top: 5px;
+    display: none;
   }
 
+  /*
+   * 弹窗（结算 / 打赏 / 开始说明 / 暂停）打开期间，棋盘里的浮动「即将投放」直接让位。
+   * 单靠 z-index 不够：.overlay 已经提到 30（浮层是 6），但带 backdrop-filter 的遮罩
+   * 在 Firefox 里仍会被浮层的玩偶图标压住 —— 所以由 js/ui.js 给 body 挂 .has-overlay
+   * 做确定性隐藏（弹窗彻底关掉后才恢复）。
+   */
+  body.has-overlay .next-panel.is-floating {
+    display: none;
+  }
   /* 「即将投放」浮在棋盘右上角：不要黑底，只留玩偶 + 名字，上方标一行「即将投放：」 */
   .next-panel.is-floating {
     position: absolute;

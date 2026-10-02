@@ -1145,11 +1145,18 @@
       // ?demo=1&pump=120 ：同步跑 120 帧（≈2 秒），把 HUD/计时/同步倒计时这些
       // 「要跑一会儿才会执行到」的代码路径提前跑到 —— 自检和截图都用它，
       // 否则报错会发生在截图之后，看不到。
-      // ?demo=1&squash=0.28 ：把所有玩偶置成「正在被压」的状态并重绘一帧，
-      // 用来给截图/自检看挤压形变（真实游戏里这是撞出来的，不是摆出来的）
       // ?demo=1&donate=1 ：直接打开「请作者吃小布丁」弹窗（截图/自检用）
       if (/[?&]donate=1/.test(root.location.search)) showDonate();
 
+      // ?combo=6 ：把连击 HUD 摆成 6 连（走真实的 HUD 更新路径，用来验证手机端分数面板不会被撑高）
+      var cm = /[?&]combo=(\d+)/.exec(root.location.search);
+      if (cm) {
+        var stacks = Math.min(20, Math.max(1, parseInt(cm[1], 10) || 2));
+        setComboHud(stacks, Math.min(CFG.RULES.combo.maxMultiplier, 1 + (stacks - 1) * CFG.RULES.combo.step), 0.7);
+      }
+
+      // ?demo=1&squash=0.28 ：把所有玩偶置成「正在被压」的状态并重绘一帧，
+      // 用来给截图/自检看挤压形变（真实游戏里这是撞出来的，不是摆出来的）
       var sm = /[?&]squash=([\d.]+)/.exec(root.location.search);
       if (sm) {
         var kk = Math.min(CFG.RULES.jelly.squashMax, parseFloat(sm[1]) || 0.25);
@@ -1159,6 +1166,7 @@
         });
         render.draw(buildFrame());
       }
+
       var pm = /[?&]pump=(\d+)/.exec(root.location.search);
       if (pm) {
         var n = Math.min(900, Math.max(1, parseInt(pm[1], 10) || 120));

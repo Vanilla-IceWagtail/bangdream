@@ -1,4 +1,4 @@
-﻿# 🎸 合成邦多利皇帝 · v0.4.2
+# 🎸 合成邦多利皇帝 · v0.4.3
 
 > BanG Dream! 棉花娃娃版「合成大西瓜」—— 45 只毛绒娃娃、按轮廓碰撞、果冻手感、无服务器全球榜。
 > **在线玩：https://vanilla-icewagtail.github.io/bangdream/**（GitHub Pages，纯静态）
@@ -6,7 +6,7 @@
 零依赖、零构建：双击 `index.html` 就能玩；想让成绩存得住（某些浏览器在 `file://` 下禁本地存储）就双击 `启动游戏.cmd`。
 
 > **开源**：代码按 [BSD 3-Clause](LICENSE) 授权，欢迎 fork / 改 / 二次分发（保留版权声明即可）。
-> ssets/dolls/ 里的娃娃图是同人素材，版权归 BanG Dream! 项目方，请勿商用 —— 详见「[八、许可与第三方组件](#八许可与第三方组件)」。
+> `assets/dolls/` 里的娃娃图是同人素材，版权归 BanG Dream! 项目方，请勿商用 —— 详见「[八、许可与第三方组件](#八许可与第三方组件)」。
 
 ---
 
@@ -190,6 +190,7 @@ node tools\bangdream\poc.cjs assets\library-bangdream\src\Roselia\凑友希那.P
 | `&squash=0.28` | 把"正在被压"的形变状态摆出来 |
 | `&donate=1` | 直接打开「请作者吃小布丁」弹窗 |
 | `&close=1` | 配合 `panel=1`：试着关窗口，触发"没选满"提醒 |
+| `&combo=6` | 把「连击」HUD 摆成 6 连（走真实的 HUD 更新路径；手机端用来确认分数面板不会被撑高） |
 | `&board=textdb\|rest\|local` | 强制用哪种排行榜后端（线上/自建/本机） |
 | `&lib=none` | 演示模式也不生成占位图库 |
 
@@ -240,6 +241,7 @@ POST /api/scores  ← 单条 {"n":"沙绫","s":386,"d":5,"m":9,"c":6}
   assets/dolls/img/<id>.png      45 张 384px 抠好的娃娃（透明底）
   assets/dolls/thumb/<id>.png    45 张 96px 缩略图（选图窗口用）
   js/assets-builtin.js           图库清单（74KB）：9 个分组 + 45 条记录 + 默认图像 + 碰撞形状
+```
 
 每条记录长这样（截自 js/assets-builtin.js 的 roselia-01）：
 
@@ -267,22 +269,23 @@ POST /api/scores  ← 单条 {"n":"沙绫","s":386,"d":5,"m":9,"c":6}
 `shape.circles` 是**归一化**碰撞体：原点在图片中心、单位是「外接框较长边 = 1」，
 游戏里乘以该级直径使用（`long` 恒为 1）。
 实测：平均 **12.9 个圆/只**（区间 7~18），覆盖轮廓 **87.6% ~ 96.2%**；素材合计 9.3MB（含缩略图，运行时按需加载）。
-```
 
 ### 5.7 输出：测试与自检
 
 ```
 $ node --test tests/logic.test.mjs tests/library.test.mjs tests/boards.test.mjs \
-              tests/sync.test.mjs  tests/server.test.mjs  tests/page.test.mjs
+              tests/sync.test.mjs  tests/server.test.mjs  tests/page.test.mjs \
+              tests/ui-layers.test.mjs
 
-logic    20 项   物理 / 合成 / 连击 / 难度 / 判负 / 果冻形变
-library  16 项   图库分组 / 默认图 / 选图校验 / 尺寸提示
-boards   10 项   榜单合并 / 排序 / 去重 / 自愈 / 裁剪
-sync     16 项   第三方 KV 读写 / 缓存队列 / 30 分钟节奏 / 自建服务器集成
-server   15 项   HTTP API / 并发不丢成绩 / 落盘 / 目录穿越防护
-page      7 项   整页无头冒烟：真页面代码跑 600 帧、零报错、结算与选图流程
+logic      20 项   物理 / 合成 / 连击 / 难度 / 判负 / 果冻形变
+library    16 项   图库分组 / 默认图 / 选图校验 / 尺寸提示
+boards     10 项   榜单合并 / 排序 / 去重 / 自愈 / 裁剪
+sync       16 项   第三方 KV 读写 / 缓存队列 / 30 分钟节奏 / 自建服务器集成
+server     15 项   HTTP API / 并发不丢成绩 / 落盘 / 目录穿越防护
+page        7 项   整页无头冒烟：真页面代码跑 600 帧、零报错、结算与选图流程
+ui-layers   8 项   CSS 契约：弹窗层级 > 浮动「即将投放」、手机端连击不撑高分数面板
 
-合计 84 / 84 通过
+合计 92 / 92 通过
 ```
 
 ---
@@ -326,6 +329,19 @@ page      7 项   整页无头冒烟：真页面代码跑 600 帧、零报错、
 ---
 
 ## 七、版本改动记录（含踩坑复盘）
+
+### v0.4.3
+- **项目改名**：合成邦高祖！！！ → **合成邦多利皇帝**。
+- **手机端 bug：弹窗被「即将投放」浮层压住**。浮层原本 `z-index: 6`，而遮罩是 `5`。
+  把遮罩提到 `30` 之后**仍然**被压 —— 实测计算值 `overlay z=30 / 浮层 z=6`、两者同父节点，
+  带 `backdrop-filter` 的遮罩在 Firefox 里就是不按 z-index 让位。
+  最终改成**确定性方案**：弹窗打开时由 `js/ui.js` 给 `<body>` 挂 `.has-overlay`，
+  浮层直接 `display: none`，弹窗彻底关掉后才恢复。
+- **手机端 bug：连击提示把棋盘顶下去**。连击条（`.combo.is-on`）在分数面板里一出现，
+  面板就长高、整个棋盘下移。手机端现在隐藏面板里的连击条，
+  **只保留画布里飘出的「连击 ×N」**，面板高度恒定。
+- 新增 `tests/ui-layers.test.mjs`：把上面两条当 **CSS 契约**盯住（这类层级/占位 bug
+  跑帧、点按钮都测不出来）；新增 `?combo=N` 演示参数，方便复现第二种情况。
 
 ### v0.4.2
 - 手机端：选图窗口两栏**内容溢出导致重叠/误触** → 移动端 `min-height: auto` 让两列按内容撑开；

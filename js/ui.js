@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 界面层
  * 只做「把数据画成 DOM」和「弹提示」，游戏逻辑不在这里。
  */
@@ -264,6 +264,19 @@
     }
     overlay.hidden = false;
     overlay.classList.add('is-open');
+    markOverlayOpen(true);
+  }
+
+  /**
+   * 弹窗开关时给 <body> 挂/摘标记，手机端棋盘里的浮动「即将投放」靠它让位。
+   *
+   * 为什么不只靠 z-index：实测把 .overlay 提到 z-index:30（浮动层是 6）之后，
+   * 带 backdrop-filter 的遮罩在 Firefox 里**仍然**被浮层的玩偶图标压住，
+   * 所以这里加一道确定性的保险：弹窗期间直接不让那个浮层显示。
+   */
+  function markOverlayOpen(on) {
+    if (typeof document === 'undefined' || !document.body || !document.body.classList) return;
+    document.body.classList.toggle('has-overlay', !!on);
   }
 
   function hideOverlay() {
@@ -279,7 +292,11 @@
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = setTimeout(function () {
       hideTimer = null;
-      if (!overlay.classList.contains('is-open')) overlay.hidden = true;
+      if (!overlay.classList.contains('is-open')) {
+        overlay.hidden = true;
+        /* 真正藏掉之后，才让浮动「即将投放」回来（淡出期间先别闪一下） */
+        markOverlayOpen(false);
+      }
     }, 180);
   }
 
