@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 界面层
  * 只做「把数据画成 DOM」和「弹提示」，游戏逻辑不在这里。
  */
@@ -234,6 +234,8 @@
 
   /* ---------------- 覆盖层 ---------------- */
 
+  var hideTimer = null; // 「延迟隐藏」定时器：见 hideOverlay 的说明
+
   function showOverlay(opts) {
     var overlay = el('overlay');
     var title = el('overlay-title');
@@ -255,6 +257,11 @@
         actions.appendChild(b);
       });
     }
+    // 上一次关闭留下的「延迟隐藏」要撤销，否则它会把这次刚打开的遮罩又藏起来
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
     overlay.hidden = false;
     overlay.classList.add('is-open');
   }
@@ -263,8 +270,16 @@
     var overlay = el('overlay');
     if (!overlay) return;
     overlay.classList.remove('is-open');
-    setTimeout(function () {
-      overlay.hidden = true;
+    /*
+     * 这里故意延迟 180ms 再真正 hidden（等淡出动画放完）。
+     * 但「开始游戏」这类流程 hide 完紧接着又会 show（比如本局结束弹结算），
+     * 所以定时器要能被 showOverlay 取消，触发时也要再确认没被重新打开 ——
+     * 否则结算画面会被上一次的定时器偷偷藏掉。
+     */
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () {
+      hideTimer = null;
+      if (!overlay.classList.contains('is-open')) overlay.hidden = true;
     }, 180);
   }
 

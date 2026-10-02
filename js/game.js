@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -43,6 +43,9 @@
   var prefs = { sound: true, player: '玩家', difficulty: CFG.DEFAULT_DIFFICULTY };
   var sfx;
   var picker = null;
+  var lastRec = null; // 本局成绩记录（等玩家确认名字后再提交）
+  var lastSummary = null; // 本局小结（结算画面重绘用）
+  var roundSubmitted = false; // 本局是否已经确认上榜
   var demoMode = false;
   var sync = null;
   var syncClock = 0; // 每 200ms 加一，累计到 75（≈15 秒）刷新一次同步倒计时
@@ -399,44 +402,119 @@
       c: summary.bestCombo || 1,
       t: Date.now()
     };
+    lastRec = rec;
+    lastSummary = summary;
     lastRecKey = rec.n + '|' + rec.t + '|' + rec.s;
+    roundSubmitted = false;
 
-    // 先本地落一份并渲染（自己这条会先显示成「待确认」），上传在后台进行
-    renderBoardView(lastRecKey);
-    if (isShared()) {
-      sync.submit(rec).then(function (res) {
-        if (!res.ok) UI.toast('成绩没能立刻上传，已放进待上传队列，下次自动重试', 'bad');
-        else UI.toast('已提交到全球榜：第 ' + (res.rank || '-') + ' 名', 'ok');
-        renderBoardView(lastRecKey);
-        renderRoundResult(summary, { uploaded: !!res.ok, rank: res.rank || 0, shared: true });
-      });
-      renderRoundResult(summary, { uploaded: false, rank: BOARDS.rankOf(rec, sync.view('top')), shared: true, provisional: true });
-    } else {
-      var localRank = BOARDS.rankOf(rec, sync.view('top'));
+    /*
+     * 按需求：**先让玩家确认名字，再同步成绩**。
+     * 所以这里不自动上传，只在结算画面里给一个「上榜名字」输入框
+     * （默认取排行榜那边填的名字，兜底「玩家」），点「确认并上榜」才提交。
+     */
+    renderRoundResult(summary, {
+      pending: true,
+      rank: BOARDS.rankOf(rec, sync.view('top')),
+      shared: isShared(),
+      limit: BOARDS.TOP_MAX
+    });
+  }
+
+  /** 结算画面里的「确认并上榜」：存名字 → 提交成绩 → 刷新名次 */
+  function confirmAndSubmit() {
+    if (roundSubmitted || !lastRec) return;
+    var input = document.getElementById('result-player');
+    var name = input && input.value ? String(input.value).trim().slice(0, 12) : '';
+    if (!name) name = '玩家';
+    if (dom.player) dom.player.value = name;
+    prefs.player = name;
+    saveJson(CFG.STORAGE_KEYS.prefs, prefs);
+
+    lastRec.n = name;
+    lastRecKey = name + '|' + lastRec.t + '|' + lastRec.s;
+    roundSubmitted = true;
+
+    if (!isShared()) {
+      UI.toast('本机模式：成绩只记在这台电脑上', 'ok');
       renderBoardView(lastRecKey);
-      renderRoundResult(summary, {
+      renderRoundResult(lastSummary, {
         uploaded: false,
-        rank: localRank,
+        rank: BOARDS.rankOf(lastRec, sync.view('top')),
         shared: false,
         limit: BOARDS.TOP_MAX
       });
+      return;
     }
+
+    renderRoundResult(lastSummary, {
+      uploading: true,
+      rank: BOARDS.rankOf(lastRec, sync.view('top')),
+      shared: true,
+      limit: BOARDS.TOP_MAX
+    });
+    sync.submit(lastRec).then(function (res) {
+      if (!res.ok) UI.toast('没上传成功，已放进待上传队列，联网后自动重试', 'bad');
+      else UI.toast('已上榜：' + name + ' · 第 ' + (res.rank || '-') + ' 名', 'ok');
+      renderBoardView(lastRecKey);
+      renderRoundResult(lastSummary, {
+        uploaded: !!res.ok,
+        rank: res.rank || 0,
+        shared: true,
+        limit: BOARDS.TOP_MAX
+      });
+    });
+  }
+
+  /** 「请作者吃小布丁」：弹出收款码 + 寄语 */
+  function showDonate() {
+    UI.showOverlay({
+      title: '🍮 请作者吃小布丁',
+      body:
+        '<p class="donate-msg">本网站为爱发电，全程无广，感谢喜欢，作者会努力整活的！感谢喜欢邦多利！</p>' +
+        '<div class="donate-qr-wrap">' +
+        '<img class="donate-qr" src="assets/qr-donate.jpg" alt="请作者吃小布丁（收款码）" />' +
+        '</div>' +
+        '<p class="donate-tip">微信扫码 · 一块两块都是爱，全部用来买小布丁 🍮</p>',
+      actions: [
+        {
+          label: '返回结算',
+          kind: 'primary',
+          onClick: function () {
+            if (lastSummary) renderRoundResult(lastSummary, roundSubmitted ? { uploaded: true, rank: BOARDS.rankOf(lastRec, sync.view('top')), shared: isShared(), limit: BOARDS.TOP_MAX } : { pending: true, rank: BOARDS.rankOf(lastRec, sync.view('top')), shared: isShared(), limit: BOARDS.TOP_MAX });
+            else UI.hideOverlay();
+          }
+        },
+        { label: '再来一局', kind: 'ghost', onClick: startRound }
+      ]
+    });
   }
 
   function renderRoundResult(summary, submitted) {
     var def = CFG.tierByNumber(summary.maxTier) || CFG.tierByNumber(1);
     var diff = CFG.difficultyOf(summary.difficulty);
     var rankText;
-    if (submitted.shared) {
-      if (submitted.provisional) {
-        rankText = '正在提交到全球榜…（本地暂列第 <b>' + (submitted.rank || '-') + '</b> 名）';
-      } else {
-        rankText = submitted.uploaded
-          ? '已提交到全球榜，暂列第 <b>' + (submitted.rank || '-') + '</b> 名'
-          : '已存入待上传队列，联网后自动上榜';
-      }
+    var statusText;
+    var submitLabel = '确认并上榜';
+    var submitDisabled = false;
+    if (submitted.pending) {
+      rankText = '还没上榜 —— 确认名字后马上同步（本地预览第 <b>' + (submitted.rank || '-') + '</b> 名）';
+      statusText = '填好名字点右边按钮，就可以上榜了';
+    } else if (submitted.uploading) {
+      rankText = '正在同步到榜上…';
+      statusText = '同步中…';
+      submitLabel = '同步中…';
+      submitDisabled = true;
+    } else if (submitted.shared) {
+      rankText = submitted.uploaded
+        ? '已上榜（' + escapeHtml(lastRec ? lastRec.n : '') + '），暂列第 <b>' + (submitted.rank || '-') + '</b> 名'
+        : '已存进待上传队列，联网后自动上榜';
+      statusText = submitted.uploaded ? '已上榜 ✔' : '已排队，等联网';
+      submitLabel = '已上榜 ✔';
+      submitDisabled = true;
     } else {
       rankText = '本机榜暂列第 <b>' + (submitted.rank || '-') + '</b> 名（当前是本机模式）';
+      statusText = '本机模式：只记在这台电脑上';
+      submitLabel = '记到本机榜';
     }
     var rows =
       '<div class="result-score">' +
@@ -460,15 +538,30 @@
       ' ' +
       diff.name +
       '</b></div>' +
-      '<div><span class="k">投放水果</span><b>' +
+      '<div><span class="k">投放次数</span><b>' +
       summary.drops +
       '</b></div>' +
+      '</div>' +
+      // 名字确认：自定义，或留空用默认「玩家」，确认后才同步成绩
+      '<div class="result-name">' +
+      '<label for="result-player">上榜名字</label>' +
+      '<input id="result-player" type="text" maxlength="12" placeholder="玩家" value="' +
+      escapeHtml(lastRec ? lastRec.n : '玩家') +
+      '" />' +
+      '<button class="btn btn-primary btn-mini" id="result-submit" type="button"' +
+      (submitDisabled ? ' disabled' : '') +
+      '>' +
+      submitLabel +
+      '</button>' +
+      '<span class="result-name-status" id="result-name-status">' +
+      statusText +
+      '</span>' +
       '</div>' +
       '<p class="result-rank">' +
       rankText +
       '</p>' +
       '<p class="result-note">按当前需求，本局成绩<b>不写入个人排行表</b>；' +
-      (submitted.shared
+      (submitted.shared || submitted.pending
         ? '实时榜打开即最新，总榜每 ' + Math.round(sync.refreshMs / 60000) + ' 分钟自动刷新。'
         : '当前是本机模式（看榜单右下角的说明可以切回全球榜）。') +
       '</p>';
@@ -484,9 +577,35 @@
           onClick: function () {
             UI.hideOverlay();
           }
-        }
+        },
+        { label: '🍮 请作者吃小布丁', kind: 'ghost', onClick: showDonate }
       ]
     });
+
+    // showOverlay 用 innerHTML 重建，事件得在这之后再挂
+    var input = document.getElementById('result-player');
+    var btn = document.getElementById('result-submit');
+    if (btn && !submitDisabled) btn.addEventListener('click', confirmAndSubmit);
+    if (input && !submitDisabled) {
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') confirmAndSubmit();
+      });
+      try {
+        input.focus();
+        input.select();
+      } catch (e) {
+        /* 无头环境没有 focus 也没关系 */
+      }
+    }
+  }
+
+  /** 名字要拼进 innerHTML，做一下转义（玩家可以随便输） */
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   function togglePause(force) {
@@ -984,6 +1103,9 @@
       // 否则报错会发生在截图之后，看不到。
       // ?demo=1&squash=0.28 ：把所有水果置成「正在被压」的状态并重绘一帧，
       // 用来给截图/自检看挤压形变（真实游戏里这是撞出来的，不是摆出来的）
+      // ?demo=1&donate=1 ：直接打开「请作者吃小布丁」弹窗（截图/自检用）
+      if (/[?&]donate=1/.test(root.location.search)) showDonate();
+
       var sm = /[?&]squash=([\d.]+)/.exec(root.location.search);
       if (sm) {
         var kk = Math.min(CFG.RULES.jelly.squashMax, parseFloat(sm[1]) || 0.25);
@@ -1001,9 +1123,22 @@
       }
     }
 
+    /*
+     * 演示模式（自检 / 截图用）在 preloadAll 之后才跑，也就是在 Promise 里执行 ——
+     * 这里的异常原本会被静默吞掉（页面看着正常，其实演示脚本根本没跑）。
+     * 包一层把错误接到页面错误横幅上，自检脚本 / 测试才看得见。
+     */
+    var runDemoSafe = function () {
+      try {
+        runDemo();
+      } catch (e) {
+        if (root.SUIKA_ON_ERROR) root.SUIKA_ON_ERROR(e, 'demo');
+        else throw e;
+      }
+    };
     if (demoMode) {
-      if (assets && assets.preloadAll) assets.preloadAll().then(runDemo, runDemo);
-      else runDemo();
+      if (assets && assets.preloadAll) assets.preloadAll().then(runDemoSafe, runDemoSafe);
+      else runDemoSafe();
     }
   }
 

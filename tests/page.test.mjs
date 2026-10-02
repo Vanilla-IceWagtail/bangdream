@@ -375,8 +375,13 @@ test('页面能正常启动，并且跑 600 帧不报任何错', () => {
   assert.equal(page.el('boot-error').hidden, true, '不应该显示错误横幅');
 });
 
-test('演示模式（自动开局 + 结束一局 + 跑 200 帧）全程无异常', () => {
+test('演示模式（自动开局 + 结束一局 + 跑 200 帧）全程无异常', async () => {
   const page = bootPage({ search: '?demo=1&over=1' });
+  /*
+   * 演示脚本是等 assets.preloadAll() 之后才跑的（异步），所以必须先放一个 tick，
+   * 否则「自动开局 / 结束一局」根本没发生，这个测试会看着通过其实什么都没跑到。
+   */
+  await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(page.errors, [], '演示模式启动不该有异常');
   page.pump(200);
   assert.deepEqual(page.errors, [], '演示模式跑 200 帧不该有异常');
@@ -386,6 +391,8 @@ test('演示模式（自动开局 + 结束一局 + 跑 200 帧）全程无异常
   const list = page.el('lb-list');
   assert.ok(list.children.length > 0, '排行榜应该有成绩行');
   assert.ok(String(page.el('hud-score').textContent).length > 0, '记分板要有分数');
+  // 而且确实开局了（不是停在准备界面）
+  assert.ok(page.el('overlay').classList.contains('is-open'), '结束一局后应该弹出结算画面');
 });
 
 test('JS 里用到的所有元素 id 都真实存在于 index.html', () => {
@@ -403,9 +410,16 @@ test('JS 里用到的所有元素 id 都真实存在于 index.html', () => {
     'js/game.js'
   ];
   const missing = new Set();
+  /*
+   * 结算画面是 UI.showOverlay 用 innerHTML 动态拼出来的，
+   * 里面的 id（上榜名字输入框、确认按钮、状态文字）本来就不在 index.html 里，
+   * 所以这里排除掉；其余静态 id 仍然要求真实存在（防止写错 id 的回归）。
+   */
+  const DYNAMIC_IDS = new Set(['result-player', 'result-submit', 'result-name-status']);
   for (const rel of jsFiles) {
     const code = fs.readFileSync(path.join(ROOT, rel), 'utf8');
     for (const m of code.matchAll(/(?:UI\.el|document\.getElementById)\(\s*'([^']+)'\s*\)/g)) {
+      if (DYNAMIC_IDS.has(m[1])) continue;
       if (!HTML_IDS.has(m[1])) missing.add(m[1]);
     }
   }
@@ -468,4 +482,28 @@ test('选图窗口能开能关、点图片和水果位都不炸（图片库为�
   page.el('btn-picker').dispatch('click', {});
   page.pump(5);
   assert.deepEqual(page.errors, []);
+});
+
+test('结算流程：先确认名字再同步（有名字输入框 + 小布丁按钮，点小布丁出收款码）', async () => {
+  const page = bootPage({ search: '?demo=1&over=1' });
+  await new Promise((r) => setTimeout(r, 0)); // 等 assets.preloadAll().then(runDemo) 跑完
+  page.pump(160);
+  const body = page.el('overlay-body');
+  const actions = page.el('overlay-actions');
+  assert.ok(body && body.innerHTML.indexOf('result-player') >= 0, '结算画面要有「上榜名字」输入框');
+  assert.ok(body.innerHTML.indexOf('result-submit') >= 0, '要有「确认并上榜」按钮');
+  const labels = (actions.children || []).map((b) => b.textContent);
+  assert.ok(labels.some((s) => s.indexOf('留在榜上看看') >= 0), '要有「留在榜上看看」');
+  assert.ok(labels.some((s) => s.indexOf('小布丁') >= 0), '「留在榜上看看」后面要有「请作者吃小布丁」');
+  assert.ok(labels.indexOf(labels.find((s) => s.indexOf('小布丁') >= 0)) > labels.indexOf(labels.find((s) => s.indexOf('留在榜上看看') >= 0)), '小布丁按钮要排在留榜按钮之后');
+
+  // 点「请作者吃小布丁」→ 弹出收款码 + 寄语
+  const donate = actions.children.find((b) => b.textContent.indexOf('小布丁') >= 0);
+  donate.dispatch('click', {});
+  page.pump(2);
+  const donateBody = page.el('overlay-body').innerHTML;
+  assert.ok(donateBody.indexOf('qr-donate.jpg') >= 0, '要显示收款码图片');
+  assert.ok(donateBody.indexOf('本网站为爱发电') >= 0, '要有寄语');
+  assert.ok(donateBody.indexOf('感谢喜欢邦多利') >= 0, '寄语要提到邦多利');
+  assert.deepEqual(page.errors, [], '这条流程不该报错');
 });
