@@ -82,14 +82,14 @@
     if (img) {
       var im = document.createElement('img');
       im.src = img.src;
-      im.alt = def.name;
+      im.alt = assets.labelOf ? assets.labelOf(tier) : def.name;
       node.appendChild(im);
       node.classList.add('has-image');
     } else {
       node.style.background = 'radial-gradient(circle at 32% 28%, ' + root.SuikaRender.lighten(def.color, 0.5) + ', ' + def.color + ' 62%, ' + def.edge + ')';
       node.textContent = def.emoji;
     }
-    node.title = 'Lv.' + def.tier + ' ' + def.name + '（半径 ' + def.r + 'px）';
+    node.title = 'Lv.' + def.tier + ' ' + (assets && assets.labelOf ? assets.labelOf(tier) : def.name) + '（直径 ' + def.r * 2 + 'px）';
     return node;
   }
 
@@ -108,7 +108,7 @@
     container.appendChild(fruitChip(tier, assets, size));
     var label = document.createElement('span');
     label.className = 'preview-name';
-    label.textContent = def.name;
+    label.textContent = assets && assets.labelOf ? assets.labelOf(tier) : def.name;
     container.appendChild(label);
   }
 
@@ -128,7 +128,7 @@
 
       var name = document.createElement('span');
       name.className = 'chain-name';
-      name.textContent = t.name;
+      name.textContent = assets && assets.labelOf ? assets.labelOf(t.tier) : t.name;
 
       var size = document.createElement('span');
       size.className = 'chain-size';

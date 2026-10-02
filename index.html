@@ -51,7 +51,7 @@
             <div class="score-grid">
               <div><span class="k">最高分</span><b id="hud-best">0</b></div>
               <div><span class="k">合成次数</span><b id="hud-merges">0</b></div>
-              <div><span class="k">最大水果</span><b id="hud-maxtier">🍒 樱桃</b></div>
+              <div><span class="k" id="hud-max-label">最大水果</span><b id="hud-maxtier">—</b></div>
               <div><span class="k">本局用时</span><b id="hud-time">0:00</b></div>
             </div>
           </section>
@@ -89,8 +89,8 @@
 
           <section class="panel chain-panel">
             <div class="panel-head">
-              <span class="panel-title">水果进化表</span>
-              <span class="panel-hint">分数＝合成出该水果的得分</span>
+              <span class="panel-title" id="chain-title">水果进化表</span>
+              <span class="panel-hint" id="chain-hint">分数＝合成出该水果的得分</span>
             </div>
             <ol class="chain" id="chain-list"></ol>
           </section>

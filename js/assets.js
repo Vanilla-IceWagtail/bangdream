@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 贴图运行时
  *
  * 图片**全部内嵌在图库里**（`js/assets-builtin.js` → `window.SUIKA_IMAGE_LIBRARY`），
@@ -124,6 +124,25 @@
       return img && img.shape ? img.shape : null;
     }
 
+    /**
+     * 这一级的显示名。
+     *   · 玩偶版（图库里有图）：用**角色名**；该位没选图就是「未选图」
+     *     —— 不再显示水果名 / emoji，因为 11 个水果位本身已经按大小排好序了
+     *   · 水果版（图库为空）：沿用水果名
+     */
+    function labelOf(tier) {
+      var img = imageFor(tier);
+      if (img && img.name) return img.name;
+      if (hasLibrary()) return '未选图';
+      var def = CFG.tierByNumber ? CFG.tierByNumber(tier) : null;
+      return def ? def.name : '—';
+    }
+
+    /** 是不是「玩偶版」（图库里有图）：界面据此决定还显不显示 emoji */
+    function hasLibrary() {
+      return (library.images || []).length > 0;
+    }
+
     function imageOf(tier) {
       var url = urlOf(tier);
       if (!url) return null;
@@ -228,6 +247,8 @@
       imageOf: imageOf,
       urlOf: urlOf,
       thumbOf: thumbOf,
+      labelOf: labelOf,
+      hasLibrary: hasLibrary,
       shapeOf: shapeOf,
       idOf: idOf,
       sourceOf: sourceOf,

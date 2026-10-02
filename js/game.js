@@ -148,7 +148,8 @@
     if (dom.merges) dom.merges.textContent = String(st.merges);
     if (dom.maxtier) {
       var def = CFG.tierByNumber(st.maxTier);
-      dom.maxtier.textContent = def ? def.emoji + ' ' + def.name : '—';
+      // 玩偶版显示角色名（不再显示水果名 / emoji）
+      dom.maxtier.textContent = def ? assets.labelOf(st.maxTier) : '—';
     }
     UI.paintPreview(dom.current, currentTier, assets, 0.5);
     UI.paintPreview(dom.next, nextTier, assets, 0.5);
@@ -442,10 +443,8 @@
       CFG.formatScore(summary.score) +
       '<span>分</span></div>' +
       '<div class="result-grid">' +
-      '<div><span class="k">最大水果</span><b>' +
-      def.emoji +
-      ' ' +
-      def.name +
+      '<div><span class="k">最大</span><b>' +
+      (def ? assets.labelOf(def.tier) : '—') +
       '</b></div>' +
       '<div><span class="k">合成次数</span><b>' +
       summary.merges +
@@ -896,6 +895,22 @@
     assets.onChange(refreshAssetViews);
 
     UI.buildChain(dom.chain, assets);
+    /*
+     * 玩偶版：界面文案也跟着换 —— 不再出现「水果」字样（11 个位子按大小排序，
+     * 名字用角色名），水果版（图库为空）保持原样。
+     */
+    if (assets.hasLibrary()) {
+      var maxLabel = UI.el('hud-max-label');
+      var chainTitle = UI.el('chain-title');
+      var chainHint = UI.el('chain-hint');
+      if (maxLabel) maxLabel.textContent = '最大玩偶';
+      if (chainTitle) chainTitle.textContent = '玩偶进化表';
+      if (chainHint) chainHint.textContent = '分数＝合成出该玩偶的得分';
+      if (dom.current && dom.current.parentNode) {
+        var curLabel = dom.current.parentNode.querySelector('.preview-label');
+        if (curLabel) curLabel.textContent = '当前';
+      }
+    }
     UI.updateChain(dom.chain, 1, {});
     renderBoardView();
     if (dom.lbNote) {

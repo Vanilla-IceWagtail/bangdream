@@ -211,12 +211,12 @@
         var colorBar = el('i', 'pk-slot-color');
         var info = el('div', 'pk-slot-info');
         var line1 = el('div', 'pk-slot-line1');
-        line1.appendChild(el('b', null, s.emoji + ' ' + s.name));
+        line1.appendChild(el('b', null, assets.labelOf(s.tier)));
         line1.appendChild(el('span', 'pk-slot-size', '⌀' + s.diameter));
         var line2 = el('div', 'pk-slot-line2');
         var img = assets.imageFor(s.tier);
         var src = assets.sourceOf(s.tier);
-        line2.appendChild(el('span', 'pk-slot-file', img ? img.file : '还没选图'));
+        line2.appendChild(el('span', 'pk-slot-file', img ? img.file : '这个位子还没选图'));
         if (src === 'default') line2.appendChild(el('span', 'pk-slot-tag', '默认'));
         if (src === 'pick') line2.appendChild(el('span', 'pk-slot-tag is-pick', '已选'));
         info.appendChild(line1);
@@ -328,7 +328,7 @@
         if (tier) {
           // 颜色 + 水果 + 大小都标在图上：颜色 = 水果 = 这一级的大小
           var slot2 = LIB.slotOf(tier);
-          var badge = el('span', 'pk-tile-badge', slot2.emoji + slot2.name + ' ⌀' + slot2.diameter);
+          var badge = el('span', 'pk-tile-badge', '⌀' + slot2.diameter);
           badge.style.background = slot2.color;
           badge.style.color = '#fff';
           li.appendChild(badge);
@@ -379,7 +379,7 @@
       var missing = LIB.missingSlots(assets.library, assets.pick());
       if (!missing.length) return false;
       var names = missing.map(function (t) {
-        return LIB.slotOf(t).emoji + LIB.slotOf(t).name;
+        return '⌀' + LIB.slotOf(t).diameter;
       });
       confirmTitle.textContent = '还有 ' + missing.length + ' 个水果位没选图：' + names.join('、');
       confirmBox.hidden = false;
