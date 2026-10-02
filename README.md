@@ -332,7 +332,8 @@ ui-layers   8 项   CSS 契约：弹窗层级 > 浮动「即将投放」、手�
 ├─ tools/bump-version.cjs    发布：升版本号 + 刷新 index.html 的 ?v=
 ├─ tools/theme-bright.cjs    配色迁移：旧值→新值的映射表，可复核残留
 ├─ tools/ghpush.cjs          特殊网络下用 GitHub API 推送（github.com 不通时）
-├─ tests/                    84 项测试（见 5.7）
+├─ tests/                    98 项测试（见 5.7）
+├─ .github/workflows/tests.yml  CI：每次推送跑语法检查 + 全部测试
 └─ preview/                  界面预览图与真机截图
 ```
 
