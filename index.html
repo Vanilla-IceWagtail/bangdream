@@ -4,21 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
-    <title>合成大西瓜 · 全球排行榜</title>
+    <title>合成邦高祖！！！ · BanG Dream! 玩偶版</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <div class="app">
       <header class="topbar">
         <div class="brand">
-          <span class="brand-logo">🍉</span>
+          <span class="brand-logo">🎸</span>
           <div class="brand-text">
-            <h1>合成大西瓜</h1>
-            <p>两颗一样的水果碰在一起，就会合成更大的水果</p>
+            <h1>合成邦高祖！！！</h1>
+            <p>两只一样的玩偶碰在一起，就会合成更大的玩偶</p>
           </div>
         </div>
         <div class="top-actions">
-          <span class="version" id="app-version">v0.3</span>
+          <span class="version" id="app-version">v0.4</span>
           <button class="btn" id="btn-sound" type="button">🔊 音效</button>
           <button class="btn" id="btn-pause" type="button">⏸ 暂停</button>
           <button class="btn" id="btn-restart" type="button">↻ 重开</button>
@@ -28,7 +28,7 @@
 
       <div class="notice" id="storage-warning" hidden>
         ⚠️ 当前是用 <code>file://</code> 直接打开的，浏览器可能不允许本页保存数据，
-        导入的水果图片和排行榜会记不住。建议双击同目录下的 <b>启动游戏.cmd</b>，用本地服务器打开。
+        排行榜成绩和你的选图会记不住。建议双击同目录下的 <b>启动游戏.cmd</b>，用本地服务器打开。
       </div>
 
       <div class="notice notice-error" id="boot-error" hidden></div>
@@ -81,7 +81,7 @@
                 <div class="next-fruit" id="hud-current"></div>
               </div>
               <div class="next-box">
-                <span class="next-tag">下一颗</span>
+                <span class="next-tag">下一只</span>
                 <div class="next-fruit" id="hud-next"></div>
               </div>
             </div>
@@ -99,7 +99,7 @@
         <!-- 中间：游戏画面 -->
         <section class="stage">
           <div class="board-wrap">
-            <canvas id="stage-canvas" width="480" height="700" aria-label="合成大西瓜游戏画面"></canvas>
+            <canvas id="stage-canvas" width="480" height="700" aria-label="合成邦高祖游戏画面"></canvas>
             <div class="overlay" id="overlay" hidden>
               <div class="overlay-card">
                 <h2 id="overlay-title"></h2>

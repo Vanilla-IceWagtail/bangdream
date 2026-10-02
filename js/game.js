@@ -749,7 +749,7 @@
 
   function showReadyOverlay() {
     UI.showOverlay({
-      title: '🍉 合成大西瓜',
+      title: '🎸 合成邦高祖！！！',
       body:
         '<ul class="rules">' +
         '<li>前 5 级水果会从天上掉下来，<b>两颗相同的水果碰在一起</b>就会合成更大的水果。</li>' +

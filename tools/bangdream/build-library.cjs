@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 玩偶版：把 bangdream 的 45 张玩偶做成游戏图库
  *
  * 产出（都写到「玩偶版」新文件夹里，不动原版）：
@@ -145,6 +145,11 @@ function main() {
     defaults[tier] = pickedForDefault[tier - 1] || fallback[(tier - 1) % fallback.length];
   }
 
+  /* 用户指定：最大的那一级（第 11 级 = 西瓜位）默认用 户山香澄（邦高祖） */
+  const DEFAULT_OVERRIDES = { 11: 'poppinparty-03' };
+  Object.keys(DEFAULT_OVERRIDES).forEach(function (tier) {
+    if (images.some(function (i) { return i.id === DEFAULT_OVERRIDES[tier]; })) defaults[tier] = DEFAULT_OVERRIDES[tier];
+  });
   const builtAt = new Date().toISOString();
   const fingerprint = require('crypto')
     .createHash('sha1')

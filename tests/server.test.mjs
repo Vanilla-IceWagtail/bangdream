@@ -96,7 +96,10 @@ test('GET / 返回首页 HTML', async () => {
   const res = await fetch(url('/'));
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type') || '', /text\/html/);
-  assert.match(await res.text(), /合成大西瓜/);
+  // 断言页面骨架而不是游戏名：玩偶版叫「合成邦高祖！！！」，水果版叫「合成大西瓜」，名字会变
+  const html = await res.text();
+  assert.match(html, /id="stage-canvas"/);
+  assert.match(html, /<title>/);
 });
 
 /* ---------------- 2. 静态资源与 404 ---------------- */

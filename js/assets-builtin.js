@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 玩偶版 内置图库（自动生成，勿手改）
  *
  * 来源：桌面 bangdream 文件夹（9 支乐队 × 5 位角色 = 45 张玩偶）
@@ -3689,7 +3689,7 @@
     "8": "avemujica-casual-01",
     "9": "mewtype-01",
     "10": "avemujica-05",
-    "11": "avemujica-casual-01"
+    "11": "poppinparty-03"
   }
 };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
