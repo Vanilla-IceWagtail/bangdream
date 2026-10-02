@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦高祖！！！ · Canvas 渲染
  * 只负责画：场地、危险线、玩偶（贴图或默认 emoji 外观）、粒子与飘分特效。
  */
@@ -178,18 +178,20 @@
       var r = 26;
       roundRectPath(ctx, 0, 0, W, H, [0, 0, r, r]);
       ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(28,36,52,0.16)';
+      ctx.strokeStyle = 'rgba(180,120,88,0.28)';
       ctx.stroke();
 
-      ctx.fillStyle = '#26303f';
+      // 墙壁/地板：跟着明亮主题走（原来是深灰蓝，和暖色棋盘不搭）
+      ctx.fillStyle = '#f0d9c4';
       roundRectPath(ctx, 0, H - WT, W, WT, [0, 0, r, r]);
       ctx.fill();
       ctx.fillRect(0, 0, WT, H);
       ctx.fillRect(W - WT, 0, WT, H);
 
+      // 一点点内阴影，让边框有厚度但不发黑
       var lg = ctx.createLinearGradient(0, 0, 0, H);
-      lg.addColorStop(0, 'rgba(255,255,255,0.10)');
-      lg.addColorStop(1, 'rgba(0,0,0,0.22)');
+      lg.addColorStop(0, 'rgba(255,255,255,0.55)');
+      lg.addColorStop(1, 'rgba(196,140,104,0.22)');
       ctx.fillStyle = lg;
       ctx.fillRect(0, 0, WT, H);
       ctx.fillRect(W - WT, 0, WT, H);
