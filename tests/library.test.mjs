@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 图片库与选图测试（js/library.js + js/assets.js）
  *
  * 需求：
@@ -149,7 +149,8 @@ test('11 个水果位：颜色 / 名字 / 直径 / 清晰度要求都来自 conf
   assert.equal(slots[10].diameter, 250, '西瓜直径 250px');
   assert.equal(slots[10].color, CFG.TIERS[10].color);
   assert.ok(slots[10].wantedEdge > slots[0].wantedEdge, '越大的水果对图片尺寸要求越高');
-  assert.equal(LIB.slotOf(11).name, '西瓜');
+  // 玩偶版把每级的显示名换成了对应默认玩偶的角色名（第 11 级 = 户山香澄）
+  assert.equal(LIB.slotOf(11).name, '户山香澄');
   assert.equal(LIB.slotOf(99), null);
 });
 

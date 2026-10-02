@@ -37,14 +37,16 @@ function build() {
   const inlined = [];
 
   // 1) 样式表
-  html = html.replace(/[ \t]*<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>\s*/i, (m, href) => {
+  html = html.replace(/[ \t]*<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>\s*/i, (m, rawHref) => {
+    const href = rawHref.split('?')[0]; // index.html 里带 ?v=版本号（缓存击穿），取路径时要剥掉
     const css = read(href);
     inlined.push(href);
     return '<style>\n/* ===== ' + href + ' ===== */\n' + css + '\n</style>\n';
   });
 
   // 2) 外部脚本（保持原顺序：matter → config → … → game）
-  html = html.replace(/[ \t]*<script src="([^"]+)"><\/script>\s*/gi, (m, src) => {
+  html = html.replace(/[ \t]*<script src="([^"]+)"><\/script>\s*/gi, (m, rawSrc) => {
+    const src = rawSrc.split('?')[0]; // 同样剥掉 ?v=
     const js = read(src);
     inlined.push(src);
     return '<script>\n/* ===== ' + src + ' ===== */\n' + safeForScriptTag(js) + '\n</script>\n';

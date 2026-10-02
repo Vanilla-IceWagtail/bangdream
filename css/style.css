@@ -1558,3 +1558,13 @@ kbd {
   font-size: 12px;
   color: var(--muted);
 }
+
+/* 玩偶版标题变长了（棉花娃娃进化表）：标题不折行，让右边的说明自己换行 */
+.chain-panel .panel-head {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.chain-panel .panel-title {
+  white-space: nowrap;
+}

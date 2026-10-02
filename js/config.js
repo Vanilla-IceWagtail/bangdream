@@ -1,5 +1,5 @@
 ﻿/*!
- * 合成大西瓜 · 基础配置
+ * 合成邦高祖！！！ · 基础配置
  * 纯数据 + 纯函数，不依赖 DOM，可以直接在 node 下 require 做逻辑测试。
  * 想改水果顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
  */
@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.0';
+  var VERSION = '0.4.1';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -32,7 +32,7 @@
     velocityIterations: 12,
     /*
      * 关闭 Matter 的「沉睡」是必须的：水果在半空中互相卡住不动时会被判定为睡着，
-     * 睡着之后引擎不再对它施加重力，它就会永远挂在那儿（草莓卡住不掉就是这个原因）。
+     * 睡着之后引擎不再对它施加重力，它就会永远挂在那儿（娃娃卡在半空不掉就是这个原因）。
      */
     enableSleeping: false,
     fruit: {
@@ -48,30 +48,30 @@
   };
 
   /*
-   * 11 级水果。
+   * 11 级玩偶（名字对应默认选中的角色）。
    * r     = 半径（像素，决定体积和外观大小）
    * score = 「合成出这一级」时获得的分数，越大的水果分数越高
    * 前 5 级会随机从天上掉下来，后面的只能靠合成得到。
    */
   var TIERS = [
-    { tier: 1, key: 'cherry', name: '樱桃', emoji: '🍒', r: 20, score: 0, color: '#e8483f', edge: '#9e1f18' },
-    { tier: 2, key: 'strawberry', name: '草莓', emoji: '🍓', r: 24, score: 1, color: '#f2536b', edge: '#ab2540' },
-    { tier: 3, key: 'grape', name: '葡萄', emoji: '🍇', r: 29, score: 3, color: '#8e5ad6', edge: '#52298f' },
-    { tier: 4, key: 'orange', name: '橘子', emoji: '🍊', r: 35, score: 6, color: '#f79331', edge: '#b25c0a' },
-    { tier: 5, key: 'kiwi', name: '猕猴桃', emoji: '🥝', r: 42, score: 10, color: '#8bbf3f', edge: '#547f19' },
-    { tier: 6, key: 'tomato', name: '番茄', emoji: '🍅', r: 50, score: 15, color: '#e8402f', edge: '#9c1d12' },
-    { tier: 7, key: 'peach', name: '桃子', emoji: '🍑', r: 60, score: 21, color: '#f7a6a0', edge: '#c4635c' },
-    { tier: 8, key: 'pineapple', name: '菠萝', emoji: '🍍', r: 72, score: 28, color: '#e8c53f', edge: '#9c7d0f' },
-    { tier: 9, key: 'coconut', name: '椰子', emoji: '🥥', r: 87, score: 36, color: '#c69a6d', edge: '#7d5528' },
-    { tier: 10, key: 'melon', name: '哈密瓜', emoji: '🍈', r: 104, score: 45, color: '#c9e07a', edge: '#839933' },
-    { tier: 11, key: 'watermelon', name: '西瓜', emoji: '🍉', r: 125, score: 55, color: '#3fae5a', edge: '#1c6f32' }
+    { tier: 1, key: 'cherry', name: '山吹沙绫', emoji: '🍒', r: 20, score: 0, color: '#e8483f', edge: '#9e1f18' },
+    { tier: 2, key: 'strawberry', name: '上原绯玛', emoji: '🍓', r: 24, score: 1, color: '#f2536b', edge: '#ab2540' },
+    { tier: 3, key: 'grape', name: '丸山彩', emoji: '🍇', r: 29, score: 3, color: '#8e5ad6', edge: '#52298f' },
+    { tier: 4, key: 'orange', name: '今井莉莎', emoji: '🍊', r: 35, score: 6, color: '#f79331', edge: '#b25c0a' },
+    { tier: 5, key: 'kiwi', name: '北泽育美', emoji: '🥝', r: 42, score: 10, color: '#8bbf3f', edge: '#547f19' },
+    { tier: 6, key: 'tomato', name: '千早爱音', emoji: '🍅', r: 50, score: 15, color: '#e8402f', edge: '#9c1d12' },
+    { tier: 7, key: 'peach', name: '三角初音', emoji: '🍑', r: 60, score: 21, color: '#f7a6a0', edge: '#c4635c' },
+    { tier: 8, key: 'pineapple', name: '三角初音', emoji: '🍍', r: 72, score: 28, color: '#e8c53f', edge: '#9c7d0f' },
+    { tier: 9, key: 'coconut', name: '仲町阿拉蕾', emoji: '🥥', r: 87, score: 36, color: '#c69a6d', edge: '#7d5528' },
+    { tier: 10, key: 'melon', name: '若叶睦', emoji: '🍈', r: 104, score: 45, color: '#c9e07a', edge: '#839933' },
+    { tier: 11, key: 'watermelon', name: '户山香澄', emoji: '🍉', r: 125, score: 55, color: '#3fae5a', edge: '#1c6f32' }
   ];
 
   /* 规则 */
   var RULES = {
     maxTier: TIERS.length,
     maxDropTier: 5, // 只有前 5 级会随机掉落
-    watermelonBonus: 100, // 两个西瓜相撞：双双消失，额外加 100 分
+    watermelonBonus: 100, // 两只最大的玩偶（户山香澄）相撞：双双消失，额外加 100 分
     dangerGraceMs: 2000, // 越过危险线并静止多久判定结束
     dangerWarnMs: 800, // 超过这个时间开始闪红警告
     dangerSpeedLimit: 1.25, // 速度低于此值才算「停下」，避免把下落中的水果算成越线
@@ -190,7 +190,7 @@
     return t ? t.r : 0;
   }
 
-  /** 合成出第 n 级水果的基础得分；n = 0 表示两个西瓜相撞（双双消失） */
+  /** 合成出第 n 级水果的基础得分；n = 0 表示两只最大玩偶相撞（双双消失） */
   function scoreOf(n) {
     if (n === 0) return RULES.watermelonBonus;
     var t = tierByNumber(n);
