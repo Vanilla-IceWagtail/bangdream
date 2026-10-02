@@ -401,11 +401,21 @@
         confirmBox.hidden = true;
         win.hidden = false;
         if (!win.style.left) {
-          // 默认停靠右侧，尽量不挡住游戏
-          var w = Math.min(820, (window.innerWidth || 1400) - 40);
-          win.style.width = w + 'px';
-          win.style.left = Math.max(12, (window.innerWidth || 1400) - w - 24) + 'px';
-          win.style.top = '74px';
+          var vw = window.innerWidth || 1400;
+          var vh = window.innerHeight || 900;
+          if (vw < 620) {
+            // 手机：直接铺满，别留边（留边会把游戏和窗口都挤小）
+            win.style.left = '6px';
+            win.style.width = (vw - 12) + 'px';
+            win.style.top = '52px';
+            win.style.maxHeight = (vh - 62) + 'px';
+          } else {
+            // 桌面：停靠右侧，尽量不挡住游戏
+            var w = Math.min(820, vw - 40);
+            win.style.width = w + 'px';
+            win.style.left = Math.max(12, vw - w - 24) + 'px';
+            win.style.top = '74px';
+          }
         }
         self.render();
         return self;

@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦高祖！！！ · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -635,6 +635,46 @@
     }
   }
 
+  /* ---------------- 手机端布局：得分搬到棋盘上方、即将投放浮到棋盘左上角 ---------------- */
+
+  var mobileLayout = null; // null = 还没判断过
+
+  /**
+   * 手机端（≤880px）：
+   *   · 「本局得分」整块搬到 .layout 之前 —— 顶栏按钮下方、棋盘正上方
+   *   · 「即将投放」搬进 .board-wrap，做成棋盘左上角的小浮层
+   * 桌面端恢复原位（记了原来的父节点与后继节点，搬回去是精确的）。
+   * 为什么搬 DOM 而不是纯 CSS：这些面板嵌在 .col-left 里，外层网格排不到它们；
+   * 而用 display:contents + 命名区域重排，在没有 grid-template-areas 时
+   * （`grid-area: stage` 会退化成隐式命名线）反而会把单列布局搞成乱多列。
+   */
+  function applyMobileLayout() {
+    // 环境不支持就跳过（很老的浏览器 / 精简的测试环境）
+    if (typeof document.querySelector !== 'function') return;
+    var narrow = root.matchMedia ? root.matchMedia('(max-width: 880px)').matches : (root.innerWidth || 9999) <= 880;
+    if (mobileLayout === narrow) return;
+    var score = document.querySelector('.score-panel');
+    var next = document.querySelector('.next-panel');
+    var wrap = document.querySelector('.board-wrap');
+    var layout = document.querySelector('.layout');
+    if (!score || !next || !wrap || !layout || !layout.parentNode) return;
+    mobileLayout = narrow;
+    if (narrow) {
+      if (!score.__home) score.__home = { parent: score.parentNode, next: score.nextSibling };
+      if (!next.__home) next.__home = { parent: next.parentNode, next: next.nextSibling };
+      layout.parentNode.insertBefore(score, layout);
+      wrap.appendChild(next);
+      score.classList.add('is-topstrip');
+      next.classList.add('is-floating');
+    } else {
+      if (score.__home) score.__home.parent.insertBefore(score, score.__home.next);
+      if (next.__home) next.__home.parent.insertBefore(next, next.__home.next);
+      score.__home = null;
+      next.__home = null;
+      score.classList.remove('is-topstrip');
+      next.classList.remove('is-floating');
+    }
+  }
   /* ---------------- 画面 ---------------- */
 
   function buildFrame() {
@@ -823,6 +863,7 @@
 
     root.addEventListener('resize', function () {
       setAim(aimX);
+      applyMobileLayout(); // 横竖屏切换 / 改窗口大小时重排
     });
   }
 
@@ -1040,6 +1081,9 @@
     if (dom.appVersion) {
       dom.appVersion.textContent = 'v' + String(CFG.VERSION).split('-')[0] + (root.SUIKA_STANDALONE ? ' 单文件版' : ' 全球榜');
     }
+
+    // 手机端：把得分搬到棋盘上方、即将投放浮到棋盘左上角（桌面端不动）
+    applyMobileLayout();
 
     syncDiffUi();
     // 选图小窗口（图片全部来自内嵌图库，不做导入）

@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成大西瓜 · 页面级冒烟测试（真实页面代码 + 无头 DOM）
  *
  * 为什么要有它：截图只能证明「第一帧长什么样」。页面里有些代码要跑一会儿才会执行到
@@ -177,6 +177,11 @@ function makeDocument() {
     readyState: 'complete',
     body: null,
     createElement: (tag) => makeNode(doc, tag),
+    // 让 applyMobileLayout() 这类按视口重排的代码在桩里也能跑通（返回占位节点）
+    querySelector: (sel) => {
+      const id = { '.score-panel': 'score-stub', '.next-panel': 'next-stub', '.board-wrap': 'wrap-stub', '.layout': 'layout-stub' }[sel];
+      return id ? doc.getElementById(id) : makeNode(doc, 'div');
+    },
     createTextNode: (text) => {
       const n = makeNode(doc, '#text');
       n.textContent = String(text);
@@ -236,6 +241,7 @@ function bootPage(opts = {}) {
     },
     cancelAnimationFrame() {},
     devicePixelRatio: 1,
+    matchMedia: (q) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }),
     innerWidth: 1400,
     innerHeight: 900,
     performance: { now: () => Date.now() },

@@ -1,4 +1,4 @@
-﻿/* 合成大西瓜 · 界面样式 */
+/* 合成大西瓜 · 界面样式 */
 :root {
   --bg-0: #0d131b;
   --bg-1: #1a2531;
@@ -1036,7 +1036,7 @@ kbd {
 }
 
 .pk-window.is-collapsed .pk-body,
-
+.pk-window.is-collapsed .pk-confirm {
   display: none;
 }
 
@@ -1426,18 +1426,26 @@ kbd {
 /* ---------- 手机 / 窄屏 ---------- */
 
 @media (max-width: 780px) {
-  /* 窗口里改成整块滚动，手机上不要两个小滚动区 */
+  /*
+   * 手机上整个窗口一块滚动（不要两个小滚动区）。
+   * 关键：这里必须让两列**不被压扁**（min-height: auto）。
+   * 基础样式里的 .pk-col { min-height: 0 } 在窄屏会把两列压到几十像素高
+   * （实测 11 个水果位那一列只有 345px，内容要 ~570px），多出来的内容会溢出到
+   * 下面那块面板上 —— 看起来就是「11 个棉花娃娃位」和「图片库」重叠、还容易误触。
+   */
   .pk-body {
     overflow-y: auto;
+  }
+
+  .pk-col {
+    min-height: auto;
+    padding: 10px 10px 12px;
   }
 
   .pk-slots,
   .pk-tiles {
     overflow: visible;
-  }
-
-  .pk-col {
-    padding: 10px 10px 12px;
+    max-height: none;
   }
 }
 
@@ -1567,4 +1575,113 @@ kbd {
 
 .chain-panel .panel-title {
   white-space: nowrap;
+}
+
+/* ---------- 手机端布局重排（一屏内看到 得分 + 棋盘 + 即将投放） ---------- */
+
+/*
+ * 做法：手机端由 js/game.js 的 applyMobileLayout() 把「本局得分」搬到 .layout 之前
+ * （棋盘上方）、把「即将投放」搬进 .board-wrap 做成浮层，这里只写搬过去之后的样式。
+ * 特意不用 display:contents + 命名区域来重排：没有 grid-template-areas 时，
+ * `grid-area: stage` 这类命名会退化成「隐式命名线」，反而把单列布局搞成乱多列。
+ */
+@media (max-width: 880px) {
+  .score-panel.is-topstrip {
+    margin-bottom: 10px;
+    padding: 8px 12px 10px;
+  }
+
+  .score-panel.is-topstrip .panel-head {
+    margin-bottom: 2px;
+  }
+
+  .score-panel.is-topstrip .score-value {
+    font-size: 34px;
+    line-height: 1.05;
+  }
+
+  .score-panel.is-topstrip .score-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px 8px;
+    margin-top: 6px;
+  }
+
+  .score-panel.is-topstrip .score-grid .k {
+    font-size: 10px;
+  }
+
+  .score-panel.is-topstrip .score-grid b {
+    font-size: 13px;
+  }
+
+  .score-panel.is-topstrip .combo {
+    margin-top: 5px;
+  }
+
+  /* 「即将投放」缩成小卡片，浮在棋盘左上角 */
+  .next-panel.is-floating {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    z-index: 6;
+    margin: 0;
+    padding: 5px 7px;
+    border-radius: 12px;
+    max-width: 46%;
+    background: rgba(17, 24, 34, 0.8);
+    backdrop-filter: blur(3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  }
+
+  .next-panel.is-floating .panel-head,
+  .next-panel.is-floating .next-tag {
+    display: none;
+  }
+
+  .next-panel.is-floating .next-row {
+    gap: 4px;
+  }
+
+  .next-panel.is-floating .next-box {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .next-panel.is-floating .next-fruit {
+    min-height: 0;
+  }
+
+  .stage-hint {
+    font-size: 10.5px;
+    line-height: 1.6;
+  }
+}
+
+/* ---------- 手机端：选图小窗口铺满、单列（不再两列叠在一起） ---------- */
+
+@media (max-width: 780px) {
+  .pk-window {
+    width: calc(100vw - 12px);
+    max-height: calc(100vh - 20px);
+    border-radius: 12px;
+  }
+
+  .pk-body {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+
+  .pk-col {
+    min-width: 0;
+  }
+
+  .pk-slot {
+    grid-template-columns: 4px 46px minmax(0, 1fr) auto;
+    gap: 7px;
+  }
+
+  .pk-slot-file {
+    max-width: 42vw;
+  }
 }
