@@ -171,6 +171,69 @@ function scanWorkspace() {
   console.log('    工作区文件总数：' + all.length);
   if (junk.length) junk.forEach((f) => console.log('    ⚠ 像垃圾：' + path.relative(ROOT, f)));
   else console.log('    ✔ 没有发现 .bak/.tmp/调试残留 之类的垃圾文件');
+  return { all: all, big: big, junk: junk };
+}
+
+/* ---------------- 图片元数据（EXIF / 文本块） ---------------- */
+
+/** JPEG：找 EXIF/XMP/Photoshop/注释段（可能带设备型号、拍摄时间、GPS） */
+function jpegPrivacySegments(file) {
+  const buf = fs.readFileSync(file);
+  const names = { 0xe1: 'EXIF/XMP', 0xed: 'Photoshop', 0xec: 'APP12', 0xfe: '注释' };
+  const found = [];
+  let i = 2;
+  while (i + 4 <= buf.length) {
+    if (buf[i] !== 0xff) {
+      i++;
+      continue;
+    }
+    const marker = buf[i + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      i += 2;
+      continue;
+    }
+    if (marker === 0xda) break; // 图像数据开始
+    const len = buf.readUInt16BE(i + 2);
+    if (names[marker]) found.push(names[marker]);
+    i += 2 + len;
+  }
+  return found;
+}
+
+/** PNG：找 tEXt/iTXt/zTXt/eXIf/tIME 这类块 */
+function pngPrivacyChunks(file) {
+  const buf = fs.readFileSync(file);
+  const found = [];
+  let i = 8;
+  while (i + 8 <= buf.length) {
+    const len = buf.readUInt32BE(i);
+    const type = buf.toString('ascii', i + 4, i + 8);
+    if (/^(tEXt|iTXt|zTXt|eXIf|tIME)$/.test(type)) found.push(type);
+    if (type === 'IEND') break;
+    i += 12 + len;
+  }
+  return found;
+}
+
+function scanImages(all) {
+  console.log('\n=== 6) 图片元数据（EXIF / 文本块 / 时间戳）===');
+  let checked = 0;
+  let bad = 0;
+  all.forEach((abs) => {
+    const rel = path.relative(ROOT, abs).split(path.sep).join('/');
+    let hits = null;
+    if (/\.jpe?g$/i.test(rel)) hits = jpegPrivacySegments(abs);
+    else if (/\.png$/i.test(rel)) hits = pngPrivacyChunks(abs);
+    if (hits === null) return;
+    checked++;
+    if (hits.length) {
+      bad++;
+      add({ where: 'image-meta', rule: '图片元数据（可能含设备/时间/GPS）', file: rel, hit: hits.join(', ') });
+      console.log('    ⚠ ' + rel + '：' + hits.join(', '));
+    }
+  });
+  console.log('    检查了 ' + checked + ' 张图片，' + (bad ? bad + ' 张有问题' : '全部无隐私元数据 ✔'));
+  return { checked, bad };
 }
 
 /* ---------------- 报告 ---------------- */
@@ -178,7 +241,8 @@ function scanWorkspace() {
 console.log('项目：' + ROOT + '\n');
 scanTree();
 scanHistory();
-scanWorkspace();
+const ws = scanWorkspace();
+scanImages(ws.all);
 
 console.log('\n=== 发现 ===');
 if (!findings.length) {
