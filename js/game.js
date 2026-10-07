@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -555,32 +555,55 @@ var limiter = CFG.createAudioLimiter();
         return;
       }
       /*
-       * 预取清单：**图库里所有玩偶**的 drop + merge（不管在不在当前 11 个位子里），
-       * 再加界面音效。全部先下载下来（合计约 7MB），解码仍然按需 ——
-       * 否则 300 条全部解码会吃掉几百 MB 内存。
+       * 预取分两段（这是「加载更快」的关键）：
+       *
+       *   第一段（挡在加载页后面，必须先下完）：
+       *     界面音效 + 当前 11 个位子的**释放语音** drop-1..5，约 1.9MB。
+       *     投放是开局立刻要用的声音，必须先到位。
+       *
+       *   第二段（后台继续，不挡玩家），顺序也讲究：
+       *     ① 当前阵容的**合成语音**（开局一两秒内就用得到，排最前）
+       *     ② 图库里其余角色的全部语音
+       *     合计约 7.7MB，玩家忙着玩的时候下完；万一某条还没到，
+       *     那一次会退回合成音（不会没声音），下好了自动换回原声。
+       *
+       * 为什么不再「全部下完才进游戏」：那是 9.6MB，手机上要等很久，
+       * 而真正开局立刻用得到的只有当前阵容的释放音。
        */
-      var names = [];
+      var priority = [];
+      var lineupMerge = [];
+      for (var tier = 1; tier <= CFG.RULES.maxTier; tier++) {
+        var pid = voiceIdOf(tier);
+        if (!pid) continue;
+        priority = priority.concat(fa.nameList(['drop'], { id: pid }));
+        lineupMerge = lineupMerge.concat(fa.nameList(['merge'], { id: pid }));
+      }
+      priority = priority.concat(fa.nameList(['warn', 'over', 'click']));
+
+      var restNames = lineupMerge.slice();
       var allIds = assets.allIds ? assets.allIds() : [];
       for (var vi = 0; vi < allIds.length; vi++) {
         /* 常服版复用常规版的语音（CFG.AUDIO.audioIdOf），所以先映射再收集，避免重复下载 */
         var mapped = CFG.AUDIO && CFG.AUDIO.audioIdOf ? CFG.AUDIO.audioIdOf(allIds[vi]) : allIds[vi];
-        names = names.concat(fa.nameList(['drop', 'merge'], { id: mapped }));
+        restNames = restNames.concat(fa.nameList(['drop', 'merge'], { id: mapped }));
       }
-      /* 去重（常服映射后会出现重复项） */
+      /* 去重（常服映射后会出现重复项），并把第一段已经覆盖的剔掉 */
       var seen = {};
-      names = names.filter(function (n) {
+      priority.forEach(function (n) {
+        seen[n] = true;
+      });
+      restNames = restNames.filter(function (n) {
         if (seen[n]) return false;
         seen[n] = true;
         return true;
       });
-      /* 兜底：万一拿不到图库清单，至少把当前阵容的预取上 */
-      if (!names.length) {
-        for (var tier = 1; tier <= CFG.RULES.maxTier; tier++) {
-          var tid = voiceIdOf(tier);
-          if (tid) names = names.concat(fa.nameList(['drop', 'merge'], { id: tid }));
-        }
-      }
-      names = names.concat(fa.nameList(['warn', 'over', 'click']));
+
+      /* 暴露两段清单（自检/测试用）：核对「挡在加载页后面的到底有多少」 */
+      root.SUIKA_PRELOAD = { priority: priority.slice(), rest: restNames.slice() };
+
+      var names = priority;
+      /* 兜底：万一当前阵容一个角色都取不到（图库为空等），就退回「全部」 */
+      if (!names.length) names = restNames.slice();
       if (!names.length) {
         resolve();
         return;
@@ -659,9 +682,26 @@ var limiter = CFG.createAudioLimiter();
             /* 预取完成后，把当前/下一只需要用到的先解码好，进游戏就是原声 */
             warmVoices();
             finish();
+            /* 放人进游戏之后，剩下的语音在后台悄悄下完（不挡玩家） */
+            prefetchRest(fa, restNames);
           });
         });
     });
+  }
+
+  /**
+   * 后台把「其余角色」的语音下完。
+   * 不显示进度、不阻塞，失败也无所谓（下次要用的那条会退回合成音）。
+   */
+  function prefetchRest(fa, list) {
+    if (!fa || !fa.prefetchMany || !list || !list.length) return;
+    try {
+      fa.prefetchMany(list, null).then(function () {
+        if (fa.retryMissing) fa.retryMissing(list);
+      });
+    } catch (err) {
+      /* 后台任务失败不影响游戏 */
+    }
   }
 
   /* ---------------- 背景音乐（选图后面那颗图标） ---------------- */

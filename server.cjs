@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 本地静态服务器（可选，但推荐）
  *
  * 为什么需要它：直接用 file:// 双击打开 index.html 时，部分浏览器（尤其 Firefox）
@@ -240,6 +240,16 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
+/** 极简字符串哈希：只用来给静态资源生成 ETag（不涉及安全） */
+function hashOf(buf) {
+  let h = 2166136261;
+  for (let i = 0; i < buf.length; i++) {
+    h ^= buf[i];
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16);
+}
+
 function send(res, code, body, type) {
   res.writeHead(code, { 'Content-Type': type || 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' });
   res.end(body);
@@ -400,7 +410,32 @@ function createServer() {
 
     fs.readFile(target, (err, data) => {
       if (err) return send(res, 404, '404 not found: ' + urlPath);
-      send(res, 200, data, MIME[path.extname(target).toLowerCase()] || 'application/octet-stream');
+      const ext = path.extname(target).toLowerCase();
+      const type = MIME[ext] || 'application/octet-stream';
+      /*
+       * 静态资源（图/语音/脚本）都带缓存：
+       *   · 语音和玩偶图是「下载一次就够」的大头（9.6MB + 9MB），
+       *     没有缓存的话每次刷新都要重新拉一遍，加载自然慢；
+       *   · HTML 不缓存（否则改了页面要手动强刷才看得到）。
+       * 用 ETag + max-age 一起：命中就直接 304，几乎没有流量。
+       */
+      const isHtml = ext === '.html' || ext === '';
+      if (isHtml) {
+        res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+        return res.end(data);
+      }
+      const etag = '"' + data.length.toString(16) + '-' + hashOf(Buffer.from(urlPath)) + '"';
+      if (req.headers['if-none-match'] === etag) {
+        res.writeHead(304, { ETag: etag, 'Cache-Control': 'public, max-age=604800' });
+        return res.end();
+      }
+      res.writeHead(200, {
+        'Content-Type': type,
+        ETag: etag,
+        'Cache-Control': 'public, max-age=604800',
+        ...CORS
+      });
+      res.end(data);
     });
   });
 }

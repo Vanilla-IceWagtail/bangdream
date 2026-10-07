@@ -1010,3 +1010,31 @@ test('Q裙交流：按钮在「组建乐队」和音乐图标之间，点开显�
   assert.match(body, /1107292028/, '要显示群号');
   assert.deepEqual(page.errors, [], '点开不该报错');
 });
+
+test('加载提速：挡在加载页前面的只有释放音，合成音排到后台最前', async () => {
+  /* 不能用 ?demo=1：演示模式会跳过加载页，两段清单就不会构建 */
+  const page = await bootPage({ search: '?lib=none' });
+  await new Promise((r) => setTimeout(r, 0));
+  const pre = page.sandbox.SUIKA_PRELOAD;
+  assert.ok(pre, '演示模式应该暴露两段预取清单');
+  assert.ok(pre.priority.length > 0 && pre.rest.length > 0, '两段都要有内容');
+  assert.ok(
+    pre.priority.length < pre.rest.length,
+    '第一段（挡加载）应该明显小于第二段（后台），实际 ' + pre.priority.length + ' vs ' + pre.rest.length
+  );
+  /* 第一段：只允许释放音 + 界面音；不许出现 merge- */
+  const bad = pre.priority.filter((n) => n.indexOf('merge-') >= 0);
+  /* 注意：sandbox 里的数组属于另一个 realm，deepEqual 会因为原型不同而失败，所以比长度 */
+  assert.equal(bad.length, 0, '第一段不该包含合成音：' + bad.slice(0, 3).join(', '));
+  assert.ok(
+    pre.priority.some((n) => n.indexOf('drop-') >= 0),
+    '第一段要有释放音'
+  );
+  /* 第二段：最前面的应该是当前阵容的合成音 */
+  assert.match(pre.rest[0], /merge-/, '第二段第一条应该是合成音（开局马上就用得到）');
+  /* 两段不重叠 */
+  const set = new Set(pre.priority);
+  const dup = pre.rest.filter((n) => set.has(n));
+  assert.equal(dup.length, 0, '两段不该重复：' + dup.slice(0, 3).join(', '));
+  assert.deepEqual(page.errors, [], '不该报错');
+});

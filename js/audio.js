@@ -431,7 +431,7 @@
       });
     }
 
-    /** 批量预取（下载）。并发放宽到 4（下载是 I/O，不像解码那样占主线程） */
+    /** 批量预取（下载）。并发放宽到 6（下载是 I/O，不像解码那样占主线程） */
     function prefetchMany(names, onProgress) {
       var queue = (names || []).slice();
       var total = queue.length;
@@ -453,7 +453,7 @@
         });
       }
       var workers = [];
-      for (var k = 0; k < 4; k++) workers.push(worker());
+      for (var k = 0; k < 6; k++) workers.push(worker());
       return Promise.all(workers).then(function () {
         return { total: total, done: done, bytes: 0 };
       });
