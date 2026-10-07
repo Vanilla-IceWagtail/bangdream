@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 页面级冒烟测试（真实页面代码 + 无头 DOM）
  *
  * 为什么要有它：截图只能证明「第一帧长什么样」。页面里有些代码要跑一会儿才会执行到
@@ -216,6 +216,54 @@ function makeDocument() {
 
 /* ---------------- 运行页面 ---------------- */
 
+/** 假音频上下文：只关心「到底 start 了几次」（= 真的发声了几次） */
+function makeFakeAudioContext() {
+  const ctx = {
+    started: 0,
+    state: 'running',
+    currentTime: 1,
+    destination: {},
+    createOscillator() {
+      return {
+        type: 'sine',
+        frequency: { setValueAtTime() {} },
+        connect() {},
+        start() {
+          ctx.started += 1;
+        },
+        stop() {}
+      };
+    },
+    createGain() {
+      return {
+        gain: { value: 1, setValueAtTime() {}, exponentialRampToValueAtTime() {} },
+        connect() {}
+      };
+    },
+    createBufferSource() {
+      return {
+        buffer: null,
+        connect() {},
+        start() {
+          ctx.started += 1;
+        }
+      };
+    },
+    decodeAudioData() {
+      return Promise.resolve({ duration: 0.2 });
+    },
+    resume() {
+      ctx.state = 'running';
+      return Promise.resolve();
+    },
+    suspend() {
+      ctx.state = 'suspended';
+      return Promise.resolve();
+    }
+  };
+  return ctx;
+}
+
 function bootPage(opts = {}) {
   const errors = [];
   const rafQueue = [];
@@ -297,8 +345,12 @@ function bootPage(opts = {}) {
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   sandbox.self = sandbox;
-  // 音频直接用不了（和真实浏览器首次交互前一样），顺便验证静音路径不炸
-  sandbox.AudioContext = undefined;
+  /*
+   * 默认没有音频（大部分测试不关心，顺便验证「没有 AudioContext」时不炸）。
+   * 传 opts.AudioContext 就能装一个假上下文，用来验证「真的发声了」——
+   * 排查「一点声音都没有」时就靠它区分「游戏没触发」和「浏览器/系统静音」。
+   */
+  sandbox.AudioContext = opts.AudioContext || undefined;
   sandbox.webkitAudioContext = undefined;
 
   const context = vm.createContext(sandbox);
@@ -706,4 +758,58 @@ test('语音规则：全语音每级都出声；名场面只在高光时刻出�
   assert.equal(CFG3.AUDIO.sounds.drop.dir, '{id}/', '语音放在 assets/voice/<玩偶ID>/ 下');
   assert.ok(CFG3.AUDIO.sounds.drop.count >= 2 && CFG3.AUDIO.sounds.merge.count >= 2, '池子至少 2 条才谈得上随机');
   assert.equal(CFG3.AUDIO.sounds.scene, undefined, '名场面音频还没导入，先不配');
+});
+
+test('语音档位：老存档里 sound:false 不该变成静音（曾导致「一点声音都没有」）', async () => {
+  /* 模拟老版本留下的 prefs（只有 sound 字段，没有 voice） */
+  const store = new Map();
+  store.set('suika.prefs.v1', JSON.stringify({ sound: false, player: '玩家', difficulty: 5 }));
+  const page = await bootPage({ search: '?lib=none', store });
+  await new Promise((r) => setTimeout(r, 0));
+  const btn = page.el('btn-sound');
+  assert.match(String(btn.textContent), /全语音/, '老存档不该把档位变成静音，实际 ' + btn.textContent);
+  assert.deepEqual(page.errors, [], '启动不该报错');
+});
+
+test('发声通路：投放与合成会真的调用 AudioContext（用假上下文验证）', async () => {
+  /*
+   * 「没声音」问题的分界线：
+   *   started > 0 → 游戏确实在发声；听不到就是浏览器标签静音 / 系统音量 / 档位选了静音
+   *   started = 0 → 游戏自己没触发，属于代码 bug
+   */
+  const ctx = makeFakeAudioContext();
+  const page = await bootPage({
+    search: '?demo=1&lib=none',
+    AudioContext: function () {
+      return ctx;
+    }
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(300);
+  assert.ok(ctx.started > 0, '演示模式跑完应该真的发声过（start 次数 ' + ctx.started + '）');
+  if (page.sandbox.SuikaDemo) {
+    const c = page.sandbox.SuikaDemo.counts();
+    assert.ok(c && c.synth > 0, '发声计数应该 > 0，实际 ' + JSON.stringify(c));
+  }
+  assert.deepEqual(page.errors, [], '不该报错');
+});
+
+test('静音档：切到静音后就不该再发声（但游戏照常能玩）', async () => {
+  const ctx = makeFakeAudioContext();
+  const page = await bootPage({
+    search: '?demo=1&lib=none',
+    AudioContext: function () {
+      return ctx;
+    }
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(200);
+  const before = ctx.started;
+  assert.ok(before > 0, '前置条件：全语音档应该有发声');
+  /* 全语音 → 名场面 → 静音 */
+  page.el('btn-sound').click();
+  page.el('btn-sound').click();
+  page.pump(200);
+  assert.equal(ctx.started, before, '静音档不该再发声（实际多了 ' + (ctx.started - before) + ' 次）');
+  assert.deepEqual(page.errors, [], '静音档也要能正常玩');
 });

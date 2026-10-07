@@ -96,7 +96,15 @@
      * 所有发声都过这一道限制器（见 js/config.js 的 createAudioLimiter）：
      * 并发上限 + 同一个音最短间隔。连击、危险线报警、成堆掉落叠在一起时不会爆音。
      */
-    var limiter = CFG.createAudioLimiter();
+var limiter = CFG.createAudioLimiter();
+
+    /*
+     * 计数：合成音 / 文件音各"真的发出声"了几次。
+     * 用来排查「一点声音都没有」到底是游戏没触发，还是浏览器/系统那边被静音了
+     * （?audio=1 会把这两个数字显示出来）。
+     */
+    var synthCount = 0;
+    var fileCount = 0;
 
     function tone(freq, dur, type, vol, delay, key) {
       if (!voiceOn()) return;
@@ -116,6 +124,7 @@
       gain.connect(ac.destination);
       osc.start(t0);
       osc.stop(t0 + dur + 0.03);
+      synthCount += 1;
       /* 播完把声部还回去；老浏览器没有 onended 就用定时器兜底 */
       var done = function () {
         limiter.release();
@@ -138,7 +147,9 @@
     function playFile(key, o) {
       if (!fileAudio || !voiceOn()) return false;
       try {
-        return fileAudio.play(key, o) === true;
+        var ok = fileAudio.play(key, o) === true;
+        if (ok) fileCount += 1; // 只有真的播出去才算
+        return ok;
       } catch (err) {
         return false;
       }
@@ -165,6 +176,10 @@
         }
       },
       /** 文件音效的状态（自检/调试用：?audio=1 会打到控制台和页面上） */
+      /** 排查「没声音」用：合成音/文件音真正发声的次数 */
+      counts: function () {
+        return { synth: synthCount, file: fileCount };
+      },
       fileStats: function () {
         return fileAudio && fileAudio.stats ? fileAudio.stats() : null;
       },
@@ -479,8 +494,13 @@
   function voiceMode() {
     var m = prefs && prefs.voice;
     if (CFG.VOICE_MODES && CFG.VOICE_MODES.indexOf(m) >= 0) return m;
-    /* 兼容老版本只存了布尔 sound 的情况 */
-    return prefs && prefs.sound === false ? 'mute' : 'all';
+    /*
+     * 没有 voice 字段时**一律按「全语音」**，不再从老版本的布尔 sound 推断。
+     * 原因：老版本点过「音效」关掉的人，localStorage 里留着 sound:false，
+     * 若据此推断成 mute，升级后就是「一点声音都没有」，很容易被当成 bug（真发生过）。
+     * 静音现在必须在新按钮上明确选一次。
+     */
+    return 'all';
   }
 
   var voiceOn = function () {
@@ -1439,6 +1459,10 @@
         },
         aim: function () {
           return aimX;
+        },
+        /* 排查「一点声音都没有」用：合成音 / 语音各真的发声了几次 */
+        counts: function () {
+          return sfx && sfx.counts ? sfx.counts() : null;
         }
       };
     }
@@ -1456,6 +1480,15 @@
       }
     });
     wire();
+
+    /*
+     * 启动时如果停在静音档，明确提示一下 ——
+     * 「一点声音都没有」最常见的原因就是这个档位（点过按钮或老存档带来的），
+     * 用户不会想到去看右上角那颗按钮。
+     */
+    if (voiceMode() === 'mute') {
+      UI.toast('当前是「静音」档：点右上角 🎵 可以切回全语音');
+    }
 
     /*
      * 上次打到一半的局（手机切后台被系统丢掉页面后，回来不能让成绩清零）：
@@ -1549,10 +1582,15 @@
       if (/[?&]audio=1/.test(root.location.search)) {
         var showAudioState = function () {
           var st = sfx.fileStats && sfx.fileStats();
+          var c = sfx.counts ? sfx.counts() : { synth: 0, file: 0 };
           var txt =
             '语音档位 ' +
             CFG.VOICE_MODE_LABELS[voiceMode()] +
-            (st ? ' · 语音已加载 ' + st.loaded + ' 条 · 缺失 ' + st.absent + ' 条' : ' · 当前无语音文件（走合成音）');
+            ' · 发声 合成' +
+            c.synth +
+            ' / 语音' +
+            c.file +
+            (st ? ' · 已加载 ' + st.loaded + ' 条' : '');
           if (dom.appVersion) dom.appVersion.textContent = txt;
           UI.toast(txt);
         };
