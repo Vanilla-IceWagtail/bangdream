@@ -1914,3 +1914,42 @@ kbd {
 .credit-box b {
   color: #007aff;
 }
+
+/* Q 裙交流弹窗：群号大一点、可一键复制 */
+
+.qq-msg {
+  margin: 2px 0 12px;
+  font-size: 14px;
+  color: #4a3327;
+}
+
+.qq-num-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.qq-num {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #007aff;
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: 10px;
+  padding: 6px 12px;
+  user-select: all;
+}
+
+.qq-tip {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #9a7a68;
+}
+
+@media (max-width: 560px) {
+  .qq-num {
+    font-size: 19px;
+  }
+}

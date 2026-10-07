@@ -1061,6 +1061,66 @@ var limiter = CFG.createAudioLimiter();
     });
   }
 
+  /**
+   * Q 裙交流：点顶栏那颗「💬 Q裙交流」弹出来。
+   * 群号单独一行、可一键复制 —— 手机上手动选中一串数字很费劲。
+   */
+  var QQ_GROUP = '1107292028';
+
+  function showQqGroup() {
+    UI.showOverlay({
+      title: '💬 Q裙交流',
+      body:
+        '<p class="qq-msg">欢迎一起来交流哦</p>' +
+        '<div class="qq-num-wrap">' +
+        '<span class="qq-num" id="qq-num">' +
+        QQ_GROUP +
+        '</span>' +
+        '<button class="btn btn-primary qq-copy" id="qq-copy" type="button">复制群号</button>' +
+        '</div>' +
+        '<p class="qq-tip">群号：' + QQ_GROUP + '</p>',
+      actions: [{ label: '关闭', kind: 'ghost', onClick: function () { UI.hideOverlay(); } }]
+    });
+    var copyBtn = document.getElementById('qq-copy');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        copyText(QQ_GROUP, '群号已复制：' + QQ_GROUP);
+      });
+    }
+  }
+
+  /** 复制到剪贴板：优先 Clipboard API，失败就退回老办法（http 下没有 clipboard） */
+  function copyText(text, okMsg) {
+    var done = function () {
+      UI.toast(okMsg);
+    };
+    var fallback = function () {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', 'readonly');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (err) {
+        UI.toast('复制失败，群号是 ' + text);
+      }
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+        return;
+      }
+    } catch (err) {
+      /* 落到 fallback */
+    }
+    fallback();
+  }
+
   function renderRoundResult(summary, submitted) {
     var def = CFG.tierByNumber(summary.maxTier) || CFG.tierByNumber(1);
     var diff = CFG.difficultyOf(summary.difficulty);
@@ -1476,6 +1536,9 @@ var limiter = CFG.createAudioLimiter();
       true
     );
 
+    /* Q 裙交流：组建乐队右边那颗 */
+    if (dom.qqBtn) dom.qqBtn.addEventListener('click', showQqGroup);
+
     /* 背景音乐：选图后面那颗图标，点一下播放、再点一下停止 */
     if (dom.musicBtn) {
       dom.musicBtn.addEventListener('click', toggleBgm);
@@ -1643,6 +1706,7 @@ var limiter = CFG.createAudioLimiter();
     dom.restart = UI.el('btn-restart');
     dom.sound = UI.el('btn-sound');
     dom.pickerBtn = UI.el('btn-picker');
+    dom.qqBtn = UI.el('btn-qq');
     dom.musicBtn = UI.el('btn-music');
     dom.lbList = UI.el('lb-list');
     dom.lbClear = UI.el('lb-clear');
@@ -1961,6 +2025,8 @@ var limiter = CFG.createAudioLimiter();
       // 否则报错会发生在截图之后，看不到。
       // ?demo=1&donate=1 ：直接打开「请作者吃小布丁」弹窗（截图/自检用）
       if (/[?&]donate=1/.test(root.location.search)) showDonate();
+      // ?demo=1&qq=1 ：直接打开「Q裙交流」弹窗（截图/自检用）
+      if (/[?&]qq=1/.test(root.location.search)) showQqGroup();
 
       // ?combo=6 ：把连击 HUD 摆成 6 连（走真实的 HUD 更新路径，用来验证手机端分数面板不会被撑高）
       var cm = /[?&]combo=(\d+)/.exec(root.location.search);

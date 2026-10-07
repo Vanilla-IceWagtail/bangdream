@@ -554,7 +554,9 @@ test('JS 里用到的所有元素 id 都真实存在于 index.html', () => {
     'result-submit',
     'result-name-status',
     /* 结算界面里点「🎵 音频来源」就地展开的那张卡片，同样是 showOverlay 动态拼的 */
-    'result-credit'
+    'result-credit',
+    /* Q 裙交流弹窗里的「复制群号」按钮，也是弹窗渲染后才存在的 */
+    'qq-copy'
   ]);
   for (const rel of jsFiles) {
     const code = fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -987,4 +989,24 @@ test('结算界面：带「🎵 音频来源」，来源文案齐全且默认收
   assert.match(body, /id="result-credit"\s+hidden/, '来源卡片默认应该是收起的（点了才展开）');
   assert.match(body, /<b>音频来源<\/b>/, '卡片里要有「音频来源」标题');
   assert.deepEqual(page.errors, [], '不该报错');
+});
+
+test('Q裙交流：按钮在「组建乐队」和音乐图标之间，点开显示群号', async () => {
+  /* 位置：静态校验 index.html 里的先后顺序 */
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const iPicker = html.indexOf('id="btn-picker"');
+  const iQq = html.indexOf('id="btn-qq"');
+  const iMusic = html.indexOf('id="btn-music"');
+  assert.ok(iPicker > 0 && iQq > 0 && iMusic > 0, '三个按钮都要在');
+  assert.ok(iPicker < iQq && iQq < iMusic, '顺序应该是 组建乐队 → Q裙交流 → 音乐图标');
+  assert.match(html, /id="btn-qq"[^>]*>💬 Q裙交流</, '按钮文案是「Q裙交流」');
+
+  /* 行为：点一下弹出群号 */
+  const page = await bootPage({ search: '?lib=none&noloading=1' });
+  await new Promise((r) => setTimeout(r, 0));
+  page.el('btn-qq').click();
+  const body = String(page.el('overlay-body').innerHTML || '');
+  assert.match(body, /欢迎一起来交流哦/, '要有欢迎语');
+  assert.match(body, /1107292028/, '要显示群号');
+  assert.deepEqual(page.errors, [], '点开不该报错');
 });
