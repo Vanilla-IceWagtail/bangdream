@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 生成「语音试听页」：voice-preview.html
  *
  *   node tools/make-voice-preview.cjs
@@ -26,16 +26,13 @@ let html = fs.readFileSync(SRC, 'utf8');
 const inject = [
   '    <!--',
   '      语音试听页（由 tools/make-voice-preview.cjs 生成，别手改；改了 index.html 就重跑一次）。',
-  '      和正式页的区别只有下面两段：语音目录指向 ' + VOICE_BASE + '，',
-  '      以及双击打开（file://）时补上内联语音数据。',
+  '      和正式页的区别只有两点：语音目录指向 ' + VOICE_BASE + '，并且打开音频自检。',
+  '      （双击打开时的内联语音回退已经在 index.html 里统一处理，这里不重复注入。）',
   '    -->',
   '    <script>',
   "      window.SUIKA_AUDIO_BASE = '" + VOICE_BASE + "';",
   '      // 试听页打开音频自检：第一次点击会响一声「叮」并报状态',
   '      window.SUIKA_AUDIO_SELFTEST = true;',
-  "      if (location.protocol === 'file:') {",
-  "        document.write('<script src=\"assets/voice-inline.js\"><\\/script>');",
-  '      }',
   '    </script>',
   ''
 ].join('\n');

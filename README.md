@@ -84,9 +84,11 @@
 音源里没有的 15 只（三角初音、若叶睦、仲町阿拉蕾、MyGO / Ave Mujica 等）自动退回合成音。
 挑中的台词见 `assets/voice/台词清单.md`，**想换哪句直接替换同名文件**。
 进入游戏还会**预热当前 / 下一只**的语音池（各 10 条 ≈ 250 KB），所以第一次投放就有声。
-**临时试听页**：`voice-preview.html`（由 `node tools/make-voice-preview.cjs` 生成，只比正式页多一行 `SUIKA_AUDIO_BASE`）。
+**已经整合进正式页**（`AUDIO.base = 'assets/voice/'`）：在线玩、`启动游戏.cmd`、直接双击 `index.html` 都有语音。
+单独的自检页是 `voice-preview.html`（比正式页多一个「点一下就响一声『叮』并报音频状态」的自检）。
+目录说明见 [`assets/voice/README.md`](assets/voice/README.md)。
 
-**音频（零文件也能玩）**
+**音频实现**
 
 - 所有音效都用 WebAudio **现场合成**（振荡器 + 包络），仓库里没有任何 `.mp3/.ogg/.wav` ——
   不占体积、不用等加载、也不存在格式兼容问题。

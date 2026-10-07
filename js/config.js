@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.12';
+  var VERSION = '0.4.13';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -188,7 +188,8 @@
   var AUDIO = {
     enabled: true,
     /* 临时试听页可以用 window.SUIKA_AUDIO_BASE 指到别的目录（比如 assets/voice/），正式版不受影响 */
-    base: (typeof window !== 'undefined' && window.SUIKA_AUDIO_BASE) || 'assets/audio/',
+    /* 语音目录（按玩偶 ID 组织）。试听页可以用 window.SUIKA_AUDIO_BASE 指到别处 */
+    base: (typeof window !== 'undefined' && window.SUIKA_AUDIO_BASE) || 'assets/voice/',
     formats: ['opus', 'm4a', 'mp3'], // 体积：opus 最小 → m4a 次之 → mp3 最大但最通用
     sounds: {
       /*
