@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 音频清单自查：assets/audio/ 里有哪些音、缺哪些、总体积多少
  *
  * 用法：node tools/audio-check.cjs
@@ -125,12 +125,15 @@ if (extra.length) {
   extra.forEach((e) => console.log('  ? ' + e + '.' + byBase.get(e).join('/')));
 }
 
-/* 体积提醒 */
-const LIMIT = 1.2 * 1024 * 1024;
+/* 体积提醒
+   上限的由来：做过一次「加载页把所有语音都预取下来」的需求，7MB 左右是被接受的量级；
+   加上 Mujica 那批 16kHz wav（50 条 ≈ 2.6MB）之后总数约 9.6MB。
+   这里留到 12MB 作为回归线：真的又涨了才提醒，不要天天喊狼来了。 */
+const LIMIT = 12 * 1024 * 1024;
 if (totalBytes > LIMIT) {
-  console.log('\n⚠ 音频合计 ' + kb(totalBytes) + '，超过建议上限 ' + kb(LIMIT) + '：手机上首次加载会偏慢，建议压到 64~96kbps。');
+  console.log('\n⚠ 音频合计 ' + kb(totalBytes) + '，超过约定上限 ' + kb(LIMIT) + '：手机上首次加载会偏慢，考虑改用 opus/更低码率。');
 } else if (totalBytes > 0) {
-  console.log('\n✔ 体积在建议范围内（' + kb(totalBytes) + ' / 建议 ≤ 1.2 MB）');
+  console.log('\n✔ 体积在约定范围内（' + kb(totalBytes) + ' / 上限 ' + kb(LIMIT) + '）');
 }
 
 if (strict && missing.length) {

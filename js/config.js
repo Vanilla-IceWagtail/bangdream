@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 基础配置
  * 纯数据 + 纯函数，不依赖 DOM，可以直接在 node 下 require 做逻辑测试。
  * 想改玩偶顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.20';
+  var VERSION = '0.4.21';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -190,7 +190,18 @@
     /* 临时试听页可以用 window.SUIKA_AUDIO_BASE 指到别的目录（比如 assets/voice/），正式版不受影响 */
     /* 语音目录（按玩偶 ID 组织）。试听页可以用 window.SUIKA_AUDIO_BASE 指到别处 */
     base: (typeof window !== 'undefined' && window.SUIKA_AUDIO_BASE) || 'assets/voice/',
-    formats: ['opus', 'm4a', 'mp3'], // 体积：opus 最小 → m4a 次之 → mp3 最大但最通用
+    formats: ['opus', 'm4a', 'mp3', 'wav'], // 体积：opus 最小 → m4a → mp3 → wav（Mujica 那批没有 mp3 编码器，用 16kHz 单声道 wav）
+    /*
+     * 「同一角色的不同造型」共用一份语音。
+     * 例：avemujica-casual-01（三角初音·常服）没有单独录音，就直接用 avemujica-01 的。
+     * 规则很简单：把 -casual- 去掉即可，所以以后别的乐队出常服版也自动受益。
+     */
+    audioIdOf: function (id) {
+      if (!id) return id;
+      var s = String(id);
+      var fixed = s.replace('-casual-', '-');
+      return fixed === s ? s : fixed;
+    },
     sounds: {
       /*
        * 释放 / 合成：**按玩偶 ID** 取语音。

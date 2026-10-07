@@ -550,3 +550,13 @@ test('果冻：形变会过冲（弹过头变成微微拉长）再回摆停住�
     assert.ok(CFG.AUDIO_LIMITS.minGapMs >= 10, '任意两声之间要有最小间隔');
     assert.ok(CFG.AUDIO_LIMITS.sameGapMs >= CFG.AUDIO_LIMITS.minGapMs, '同音间隔应不小于全局间隔');
   });
+
+test('语音别名：常服版玩偶复用常规版的语音（Mujica 常服没有单独录音）', () => {
+  assert.equal(CFG.AUDIO.audioIdOf('avemujica-casual-01'), 'avemujica-01', '三角初音·常服 → 三角初音');
+  assert.equal(CFG.AUDIO.audioIdOf('avemujica-casual-05'), 'avemujica-05');
+  assert.equal(CFG.AUDIO.audioIdOf('avemujica-01'), 'avemujica-01', '常规版不受影响');
+  assert.equal(CFG.AUDIO.audioIdOf('afterglow-01'), 'afterglow-01', '其它乐队不受影响');
+  assert.equal(CFG.AUDIO.audioIdOf(null), null, '空值要能安全返回');
+  assert.ok(CFG.AUDIO.formats.indexOf('wav') >= 0, 'wav 要作为兜底格式（Mujica 那批是 16kHz wav）');
+  assert.equal(CFG.AUDIO.formats[CFG.AUDIO.formats.length - 1], 'wav', 'wav 放最后，别抢在 mp3 前面');
+});

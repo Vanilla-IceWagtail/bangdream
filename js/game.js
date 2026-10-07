@@ -490,7 +490,7 @@ var limiter = CFG.createAudioLimiter();
     var body = game.drop(currentTier, aimX);
     if (!body) return;
     render.addDrop(body.position.x, currentTier);
-    sfx.drop(assets.idOf(currentTier), currentTier, game.getState().combo);
+    sfx.drop(voiceIdOf(currentTier), currentTier, game.getState().combo);
     currentTier = null;
     cooldown = roundDiff().dropCooldownMs;
     syncHud();
@@ -520,7 +520,7 @@ var limiter = CFG.createAudioLimiter();
     if (!fa || !fa.preload) return;
     if (voiceMode() === 'mute') return;
     [currentTier, nextTier].forEach(function (tier) {
-      var id = assets && assets.idOf ? assets.idOf(tier) : null;
+      var id = voiceIdOf(tier);
       if (!id || warmedIds[id]) return;
       warmedIds[id] = true;
       try {
@@ -562,12 +562,21 @@ var limiter = CFG.createAudioLimiter();
       var names = [];
       var allIds = assets.allIds ? assets.allIds() : [];
       for (var vi = 0; vi < allIds.length; vi++) {
-        names = names.concat(fa.nameList(['drop', 'merge'], { id: allIds[vi] }));
+        /* 常服版复用常规版的语音（CFG.AUDIO.audioIdOf），所以先映射再收集，避免重复下载 */
+        var mapped = CFG.AUDIO && CFG.AUDIO.audioIdOf ? CFG.AUDIO.audioIdOf(allIds[vi]) : allIds[vi];
+        names = names.concat(fa.nameList(['drop', 'merge'], { id: mapped }));
       }
+      /* 去重（常服映射后会出现重复项） */
+      var seen = {};
+      names = names.filter(function (n) {
+        if (seen[n]) return false;
+        seen[n] = true;
+        return true;
+      });
       /* 兜底：万一拿不到图库清单，至少把当前阵容的预取上 */
       if (!names.length) {
         for (var tier = 1; tier <= CFG.RULES.maxTier; tier++) {
-          var tid = assets.idOf(tier);
+          var tid = voiceIdOf(tier);
           if (tid) names = names.concat(fa.nameList(['drop', 'merge'], { id: tid }));
         }
       }
@@ -778,6 +787,15 @@ var limiter = CFG.createAudioLimiter();
      * 静音现在必须在新按钮上明确选一次。
      */
     return 'all';
+  }
+
+  /**
+   * 取「这一级该用哪个角色的语音」：先查图库 id，再应用常服别名（常服版复用常规版语音）。
+   */
+  function voiceIdOf(tier) {
+    if (!assets || !assets.idOf) return null;
+    var id = assets.idOf(tier);
+    return CFG.AUDIO && CFG.AUDIO.audioIdOf ? CFG.AUDIO.audioIdOf(id) : id;
   }
 
   /** 切到「静音」档时顺手把背景音乐也停掉（用户点的是静音，期望整体安静） */
@@ -1722,7 +1740,7 @@ var limiter = CFG.createAudioLimiter();
     game.on('merge', function (m) {
       var showTier = m.resultTier || m.fromTier;
       render.addMerge(m.x, m.y, showTier, m.gained, m.resultTier, m.combo);
-      sfx.merge(showTier, m.combo, assets.idOf(showTier));
+      sfx.merge(showTier, m.combo, voiceIdOf(showTier));
       showDelta(m.gained, m.combo);
       setComboHud(m.combo, m.multiplier, 1);
       if (m.score > best) {
