@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.6';
+  var VERSION = '0.4.7';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -176,6 +176,86 @@
     prefs: 'suika.prefs.v1'
   };
 
+  /* ---------- 音频文件（可选：没有文件就全部走现场合成） ---------- */
+
+  /*
+   * 把音频按下面的名字丢进 assets/audio/ 就会被自动使用；缺文件不影响游戏
+   * （js/audio.js 会退回 WebAudio 合成音）。命名与体积建议见 assets/audio/README.md。
+   *
+   * 格式：同一个名字出多份，按 formats 的顺序找第一个能用的（建议 opus + m4a + mp3）。
+   * 音量/节流：volume 是 0~1；gapMs 是「同一个音最短间隔」（留空用全局默认 45ms）。
+   */
+  var AUDIO = {
+    enabled: true,
+    base: 'assets/audio/',
+    formats: ['opus', 'm4a', 'mp3'], // 体积：opus 最小 → m4a 次之 → mp3 最大但最通用
+    sounds: {
+      /* 投放：可以多录几套随机播，避免听着重复 */
+      drop: { files: ['drop-1', 'drop-2', 'drop-3'], volume: 0.5, gapMs: 60 },
+      /* 合成：每级一个（merge-1 … merge-11）；没有的级别会退回合成音 */
+      merge: { perTier: true, pattern: 'merge-{tier}', volume: 0.65, gapMs: 45 },
+      /* 大玩偶合成额外的「哇」一下（可选，没有就不放） */
+      mergeBig: { files: ['merge-big'], volume: 0.7, gapMs: 300 },
+      /* 连击点缀：按连击数选，没有就退回合成音 */
+      combo: { files: ['combo-2', 'combo-4', 'combo-6'], volume: 0.5, gapMs: 200 },
+      /* 危险线报警 */
+      warn: { files: ['ui-warn'], volume: 0.45, gapMs: 900 },
+      /* 本局结束 */
+      over: { files: ['ui-over'], volume: 0.6, gapMs: 500 },
+      /* 按钮/选图等界面音（可选） */
+      click: { files: ['ui-click'], volume: 0.35, gapMs: 60 }
+    }
+  };
+  /* ---------- 音频节流（现场合成与文件音效共用） ---------- */
+
+  /*
+   * 为什么需要它：手机能同时混音的「声部」是有限的（实测体验上 8~16 个就比较稳，
+   * iOS 上用 <audio> 元素老版本甚至只有 4~6 个）。合成连击、危险线报警、成堆掉落
+   * 叠加起来很容易一瞬间触发十几个声音，结果就是爆音/掉音/卡顿。
+   * 所以这里做一个纯函数限制器：并发上限 + 同一个音的最短间隔 + 全局最短间隔。
+   */
+  var AUDIO_LIMITS = {
+    maxVoices: 8, // 同时最多 8 个声部
+    minGapMs: 18, // 任意两个音之间至少隔 18ms（避免同帧叠一堆）
+    sameGapMs: 45 // 同一个音（同一 tier 的合成音）至少隔 45ms
+  };
+
+  /**
+   * 造一个限制器。传入 now（毫秒）由调用方决定，方便测试。
+   *   allow(key, now) → 能不能放；能放就会占一个声部
+   *   release(now)    → 声部播完释放（也可以不调用，靠 maxVoices 自然回收）
+   */
+  function createAudioLimiter(opts) {
+    var o = Object.assign({}, AUDIO_LIMITS, opts || {});
+    var voices = 0;
+    var lastAny = -1e9;
+    var lastSame = {};
+    return {
+      limits: o,
+      allow: function (key, now) {
+        var t = Number(now) || 0;
+        if (voices >= o.maxVoices) return false;
+        if (t - lastAny < o.minGapMs) return false;
+        var k = String(key || '');
+        if (t - (lastSame[k] == null ? -1e9 : lastSame[k]) < o.sameGapMs) return false;
+        voices += 1;
+        lastAny = t;
+        lastSame[k] = t;
+        return true;
+      },
+      release: function () {
+        voices = Math.max(0, voices - 1);
+      },
+      voices: function () {
+        return voices;
+      },
+      reset: function () {
+        voices = 0;
+        lastAny = -1e9;
+        lastSame = {};
+      }
+    };
+  }
   /* ---------- 纯函数工具 ---------- */
 
   function tierAt(index) {
@@ -261,6 +341,9 @@
     PHYSICS: PHYSICS,
     TIERS: TIERS,
     RULES: RULES,
+    AUDIO: AUDIO,
+    AUDIO_LIMITS: AUDIO_LIMITS,
+    createAudioLimiter: createAudioLimiter,
     DIFFICULTY: DIFFICULTY,
     DEFAULT_DIFFICULTY: DEFAULT_DIFFICULTY,
     BOARD_SYNC: BOARD_SYNC,

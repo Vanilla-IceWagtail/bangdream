@@ -92,10 +92,18 @@
       return ctx;
     }
 
-    function tone(freq, dur, type, vol, delay) {
+    /*
+     * 所有发声都过这一道限制器（见 js/config.js 的 createAudioLimiter）：
+     * 并发上限 + 同一个音最短间隔。连击、危险线报警、成堆掉落叠在一起时不会爆音。
+     */
+    var limiter = CFG.createAudioLimiter();
+
+    function tone(freq, dur, type, vol, delay, key) {
       if (!prefs.sound) return;
       var ac = ensure();
       if (!ac) return;
+      /* 限流：并发上限 + 同一个音最短间隔 */
+      if (!limiter.allow(key || 'f' + freq, ac.currentTime * 1000)) return;
       var t0 = ac.currentTime + (delay || 0);
       var osc = ac.createOscillator();
       var gain = ac.createGain();
@@ -108,31 +116,89 @@
       gain.connect(ac.destination);
       osc.start(t0);
       osc.stop(t0 + dur + 0.03);
+      /* 播完把声部还回去；老浏览器没有 onended 就用定时器兜底 */
+      var done = function () {
+        limiter.release();
+      };
+      if (osc.onended !== undefined) osc.onended = done;
+      else root.setTimeout(done, (dur + 0.06 + (delay || 0)) * 1000);
+    }
+
+    /*
+     * 文件音效（可选）。把音频按 js/config.js 的 AUDIO.sounds 命名丢进 assets/audio/
+     * 就会被用上；没有文件、取不到（file://）、或浏览器不支持时 play() 返回 false，
+     * 这里就退回下面的现场合成音 —— 所以「加不加音频文件」都不影响能玩。
+     */
+    var fileAudio =
+      root.SuikaAudio && CFG.AUDIO && CFG.AUDIO.enabled
+        ? root.SuikaAudio.create({ config: CFG })
+        : null;
+
+    /** 先试文件音效；没有再退回合成音 */
+    function playFile(key, o) {
+      if (!fileAudio || !prefs.sound) return false;
+      try {
+        return fileAudio.play(key, o) === true;
+      } catch (err) {
+        return false;
+      }
     }
 
     return {
+      /** 音频上下文（切后台时要把挂起/恢复，省电又避免积压音效一起响） */
+      context: function () {
+        var ac = ensure();
+        return ac || (fileAudio && fileAudio.context ? fileAudio.context() : null);
+      },
       unlock: function () {
         var ac = ensure();
         if (ac && ac.state === 'suspended') ac.resume();
+        if (fileAudio && fileAudio.unlock) fileAudio.unlock();
+        /* 解锁之后顺手预热几个最常用的音（失败无所谓，不阻塞） */
+        if (fileAudio && fileAudio.preload) {
+          try {
+            fileAudio.preload(['drop', 'merge', 'warn', 'over']);
+          } catch (err) {
+            /* 忽略 */
+          }
+        }
+      },
+      /** 文件音效的状态（自检/调试用：?audio=1 会打到控制台和页面上） */
+      fileStats: function () {
+        return fileAudio && fileAudio.stats ? fileAudio.stats() : null;
       },
       drop: function () {
-        tone(300, 0.08, 'triangle', 0.045);
+        if (playFile('drop')) return;
+        tone(300, 0.08, 'triangle', 0.045, 0, 'drop');
       },
       merge: function (tier, combo) {
         var c = Math.max(1, combo || 1);
+        if (playFile('merge', { tier: tier })) {
+          /* 合成出大玩偶时再补一个「哇」（可选文件，没有就不响） */
+          if (tier >= CFG.RULES.maxTier - 2) playFile('mergeBig');
+          if (c >= 2) playFile('combo', { voice: c });
+          return;
+        }
         // 连击越高音越亮，给连击一个听觉反馈
         var f = 260 * Math.pow(1.085, Math.max(0, tier)) * Math.pow(1.06, c - 1);
-        tone(f, 0.15, 'sine', 0.085);
-        tone(f * 1.5, 0.11, 'sine', 0.035, 0.015);
-        if (c >= 3) tone(f * 2, 0.1, 'triangle', 0.03, 0.05);
+        // key 带上 tier：同一只玩偶连爆时节流，不同 tier 互不压制
+        tone(f, 0.15, 'sine', 0.085, 0, 'merge' + tier);
+        tone(f * 1.5, 0.11, 'sine', 0.035, 0.015, 'mergeH' + tier);
+        if (c >= 3) tone(f * 2, 0.1, 'triangle', 0.03, 0.05, 'mergeC' + tier);
       },
       warn: function () {
-        tone(180, 0.18, 'sawtooth', 0.035);
+        if (playFile('warn')) return;
+        tone(180, 0.18, 'sawtooth', 0.035, 0, 'warn');
       },
       over: function () {
+        if (playFile('over')) return;
         tone(420, 0.22, 'sine', 0.07);
         tone(300, 0.26, 'sine', 0.07, 0.14);
         tone(190, 0.42, 'sine', 0.07, 0.28);
+      },
+      /** 界面音（按钮/选图，可选文件；没有文件就静音，不硬凑合成音） */
+      click: function () {
+        playFile('click');
       }
     };
   }
@@ -1035,6 +1101,16 @@
     }
 
     function onVisibility() {
+      /* 后台挂起音频上下文：省电，也避免切回来时积压的音效一起炸响 */
+      var ac = sfx && sfx.context ? sfx.context() : null;
+      if (ac) {
+        try {
+          if (isHidden() && ac.state === 'running' && ac.suspend) ac.suspend();
+          else if (!isHidden() && ac.state === 'suspended' && ac.resume) ac.resume();
+        } catch (err) {
+          /* 音频挂起失败不影响游戏 */
+        }
+      }
       if (isHidden()) {
         if (phase === 'playing') {
           autoPaused = true;

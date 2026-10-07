@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 逻辑测试（node --test）
  *
  *   cd <项目根目录>
@@ -484,4 +484,40 @@ test('果冻：形变会过冲（弹过头变成微微拉长）再回摆停住�
     assert.equal(s.score, 0, '坏分数按 0 处理');
     runSteps(g, 200);
     assert.equal(Number.isFinite(g.summary().score), true, '坏存档之后还能正常跑');
+  });
+
+  /* ---------------- 音频节流（并发上限 + 同一个音最短间隔） ---------------- */
+
+  test('音频节流：并发上限与同音间隔都生效（防止连击爆音）', () => {
+    const lim = CFG.createAudioLimiter({ maxVoices: 3, minGapMs: 10, sameGapMs: 50 });
+
+    // 同一毫秒只能放一个（受「任意两声最短间隔」限制），所以时间要往前走
+    assert.equal(lim.allow('a', 1000), true);
+    assert.equal(lim.allow('b', 1000), false, '同一毫秒开第二个应被全局间隔挡住');
+    assert.equal(lim.allow('b', 1011), true, '过了全局间隔可以开');
+    assert.equal(lim.allow('c', 1022), true);
+    assert.equal(lim.allow('d', 1033), false, '第 4 个应被并发上限挡住（前 3 个声部还没释放）');
+    assert.equal(lim.voices(), 3);
+
+    // 释放一个声部后就能再开
+    lim.release();
+    assert.equal(lim.allow('e', 1044), true, '释放一个声部后可以再开');
+    assert.equal(lim.voices(), 3);
+
+    // 同一个音（同 key）还有更长的间隔
+    const lim2 = CFG.createAudioLimiter({ maxVoices: 99, minGapMs: 0, sameGapMs: 50 });
+    assert.equal(lim2.allow('merge5', 2000), true);
+    assert.equal(lim2.allow('merge5', 2030), false, '同一个音 30ms 内不该重复放');
+    assert.equal(lim2.allow('merge5', 2060), true, '过 50ms 可以再放');
+    assert.equal(lim2.allow('merge6', 2060), true, '不同 key 互不影响');
+
+    lim2.reset();
+    assert.equal(lim2.voices(), 0);
+    assert.equal(lim2.allow('merge5', 3000), true, 'reset 之后立刻可用');
+  });
+
+  test('音频节流：默认参数对手机友好（并发不超过 8、同音至少 45ms）', () => {
+    assert.ok(CFG.AUDIO_LIMITS.maxVoices <= 8, '并发上限不该超过 8 个声部');
+    assert.ok(CFG.AUDIO_LIMITS.minGapMs >= 10, '任意两声之间要有最小间隔');
+    assert.ok(CFG.AUDIO_LIMITS.sameGapMs >= CFG.AUDIO_LIMITS.minGapMs, '同音间隔应不小于全局间隔');
   });
