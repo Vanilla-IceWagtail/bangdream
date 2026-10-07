@@ -1,4 +1,4 @@
-# 🎸 合成邦多利皇帝 · v0.4.9
+# 🎸 合成邦多利皇帝 · v0.4.13
 
 [![tests](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml/badge.svg)](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml)
 [![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
