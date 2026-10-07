@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 基础配置
  * 纯数据 + 纯函数，不依赖 DOM，可以直接在 node 下 require 做逻辑测试。
  * 想改玩偶顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.7';
+  var VERSION = '0.4.8';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -55,7 +55,7 @@
    */
   var TIERS = [
     { tier: 1, key: 'cherry', name: '山吹沙绫', emoji: '🍒', r: 20, score: 0, color: '#e8483f', edge: '#9e1f18' },
-    { tier: 2, key: 'strawberry', name: '上原绯玛', emoji: '🍓', r: 24, score: 1, color: '#f2536b', edge: '#ab2540' },
+    { tier: 2, key: 'strawberry', name: '上原绯玛丽', emoji: '🍓', r: 24, score: 1, color: '#f2536b', edge: '#ab2540' },
     { tier: 3, key: 'grape', name: '丸山彩', emoji: '🍇', r: 29, score: 3, color: '#8e5ad6', edge: '#52298f' },
     { tier: 4, key: 'orange', name: '今井莉莎', emoji: '🍊', r: 35, score: 6, color: '#f79331', edge: '#b25c0a' },
     { tier: 5, key: 'kiwi', name: '北泽育美', emoji: '🥝', r: 42, score: 10, color: '#8bbf3f', edge: '#547f19' },
@@ -187,13 +187,19 @@
    */
   var AUDIO = {
     enabled: true,
-    base: 'assets/audio/',
+    /* 临时试听页可以用 window.SUIKA_AUDIO_BASE 指到别的目录（比如 assets/voice/），正式版不受影响 */
+    base: (typeof window !== 'undefined' && window.SUIKA_AUDIO_BASE) || 'assets/audio/',
     formats: ['opus', 'm4a', 'mp3'], // 体积：opus 最小 → m4a 次之 → mp3 最大但最通用
     sounds: {
-      /* 投放：可以多录几套随机播，避免听着重复 */
-      drop: { files: ['drop-1', 'drop-2', 'drop-3'], volume: 0.5, gapMs: 60 },
-      /* 合成：每级一个（merge-1 … merge-11）；没有的级别会退回合成音 */
-      merge: { perTier: true, pattern: 'merge-{tier}', volume: 0.65, gapMs: 45 },
+      /*
+       * 释放玩偶：按「当前要投放的那一级」放对应玩偶的语音（drop-<级>-1、drop-<级>-2 随机）
+       * 没有语音的级别（音源里缺那个角色）自动退回合成音。
+       */
+      drop: { perTier: true, pattern: 'drop-{tier}', variants: 2, volume: 0.7, gapMs: 70, files: ['drop-1', 'drop-2', 'drop-3'] },
+      /* 合成：按「合成出来的那一级」放语音 */
+      merge: { perTier: true, pattern: 'merge-{tier}', variants: 2, volume: 0.8, gapMs: 60 },
+      /* 名场面：只有「名场面」模式下的高光时刻才放（大玩偶 / 高连击 / 本局结束） */
+      scene: { perTier: true, pattern: 'scene-{tier}', variants: 1, volume: 0.85, gapMs: 800 },
       /* 大玩偶合成额外的「哇」一下（可选，没有就不放） */
       mergeBig: { files: ['merge-big'], volume: 0.7, gapMs: 300 },
       /* 连击点缀：按连击数选，没有就退回合成音 */
@@ -206,6 +212,27 @@
       click: { files: ['ui-click'], volume: 0.35, gapMs: 60 }
     }
   };
+  /* ---------- 语音模式：全语音 → 名场面 → 静音 ---------- */
+
+  /*
+   * 右上角那颗按钮点一下换一档，顺序固定：
+   *   all   全语音：释放与合成，每一级都放对应玩偶的语音
+   *   scene 名场面：平时安静，只有高光时刻出声（合成出大玩偶 / 连击 ≥3 / 本局结束），
+   *                 而且放的是「名场面」那批台词
+   *   mute  静音  ：完全不发声（语音和音效都没有）
+   */
+  var VOICE_MODES = ['all', 'scene', 'mute'];
+  var VOICE_MODE_LABELS = { all: '全语音', scene: '名场面', mute: '静音' };
+  var VOICE_MODE_ICONS = { all: '🔊', scene: '✨', mute: '🔇' };
+  /* 「高光时刻」的门槛：合成到这一级及以上、或连击到这么多，才算名场面 */
+  var VOICE_HIGHLIGHT = { tierFrom: 9, comboFrom: 3 };
+
+  function nextVoiceMode(mode) {
+    var i = VOICE_MODES.indexOf(mode);
+    /* 认不出来的值当它是第一档（和 js/game.js 的 voiceMode() 兜底保持一致） */
+    if (i < 0) i = 0;
+    return VOICE_MODES[(i + 1) % VOICE_MODES.length];
+  }
   /* ---------- 音频节流（现场合成与文件音效共用） ---------- */
 
   /*
@@ -342,6 +369,11 @@
     TIERS: TIERS,
     RULES: RULES,
     AUDIO: AUDIO,
+    VOICE_MODES: VOICE_MODES,
+    VOICE_MODE_LABELS: VOICE_MODE_LABELS,
+    VOICE_MODE_ICONS: VOICE_MODE_ICONS,
+    VOICE_HIGHLIGHT: VOICE_HIGHLIGHT,
+    nextVoiceMode: nextVoiceMode,
     AUDIO_LIMITS: AUDIO_LIMITS,
     createAudioLimiter: createAudioLimiter,
     DIFFICULTY: DIFFICULTY,

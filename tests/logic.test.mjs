@@ -464,11 +464,12 @@ test('果冻：形变会过冲（弹过头变成微微拉长）再回摆停住�
     assert.equal(g2.getState().gameOver, false, '还原后不该是已结束状态');
 
     /* 再存一次应该稳定（可以反复切后台） */
+    const scoreNow = g2.summary().score; // 注意：这一局还在跑，期间可能又合成了，分数会涨
     const again = g2.snapshot();
     assert.equal(JSON.stringify(again).length < 60 * 1024, true);
     const g3 = ENGINE.create({ difficulty: 5 });
     assert.equal(g3.restore(again), true);
-    assert.equal(g3.summary().score, after.score, '二次还原分数不变');
+    assert.equal(g3.summary().score, scoreNow, '二次还原分数应与存档那一刻一致');
   });
 
   test('局内快照：坏存档不炸（被改坏/版本不符时按新一局处理）', () => {

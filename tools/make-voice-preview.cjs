@@ -1,0 +1,68 @@
+/*!
+ * 生成「语音试听页」：voice-preview.html
+ *
+ *   node tools/make-voice-preview.cjs
+ *
+ * 试听页 = index.html + 一行 window.SUIKA_AUDIO_BASE = 'assets/voice/'，
+ * 所以正式页完全不受影响（正式页读 assets/audio/，那是空的 → 维持合成音）。
+ * 检验满意要整合时：把 assets/voice/*.mp3 复制到 assets/audio/ 即可，
+ * 之后就不需要这个试听页了。
+ */
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const SRC = path.join(ROOT, 'index.html');
+const OUT = path.join(ROOT, 'voice-preview.html');
+const VOICE_BASE = process.argv[2] || 'assets/voice/';
+
+let html = fs.readFileSync(SRC, 'utf8');
+
+const inject = [
+  '    <!--',
+  '      语音试听页：和正式页唯一的区别就是下面这一行 —— 语音目录指向 ' + VOICE_BASE,
+  '      正式页仍然读 assets/audio/（现在是空的，所以正式页维持原来的合成音）。',
+  '      这个文件由 tools/make-voice-preview.cjs 生成，别手改（改 index.html 后重新跑一次）。',
+  '    -->',
+  '    <script>',
+  "      window.SUIKA_AUDIO_BASE = '" + VOICE_BASE + "';",
+  '    </script>',
+  ''
+].join('\n');
+
+/* 插在所有 js 之前（config.js 会读这个变量决定音频目录） */
+const firstScript = html.indexOf('    <script src=');
+if (firstScript < 0) {
+  console.log('index.html 里找不到 <script src= …>，无法生成');
+  process.exit(1);
+}
+html = html.slice(0, firstScript) + inject + html.slice(firstScript);
+
+/* 标题与品牌名标注「试听版」，免得和正式页混淆 */
+html = html
+  .replace(/<title>([^<]*)<\/title>/, '<title>$1 · 语音试听版</title>')
+  .replace(/(<h1[^>]*>)([\s\S]*?)(<\/h1>)/, '$1$2<span class="try-badge">语音试听版 · 语音来自「全音频」</span>$3');
+
+/* 加一点点样式（只影响试听页） */
+html = html.replace(
+  '</head>',
+  [
+    '  <style>',
+    '    .try-badge {',
+    '      font-size: 13px;',
+    '      font-weight: 400;',
+    '      color: #9a7a68;',
+    '      margin-left: 10px;',
+    '    }',
+    '  </style>',
+    '</head>'
+  ].join('\n')
+);
+
+fs.writeFileSync(OUT, html, 'utf8');
+console.log('已生成 voice-preview.html');
+console.log('  语音目录：' + VOICE_BASE);
+console.log('  版本引用：' + ((html.match(/\?v=/g) || []).length) + ' 处');
+console.log('  用法：双击 启动游戏.cmd，然后打开 http://127.0.0.1:5173/voice-preview.html');

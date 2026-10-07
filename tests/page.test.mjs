@@ -662,3 +662,48 @@ test('存档只在真正开局后写：停在开始界面 / 演示模式都不�
   demo.doc.dispatch('visibilitychange', {});
   assert.equal(demoStore.has('suika.save.v1'), false, '演示模式不该写存档');
 });
+
+test('语音按钮：点一下换一档，顺序是 全语音 → 名场面 → 静音 → 全语音', async () => {
+  const page = await bootPage({ search: '?lib=none' });
+  await new Promise((r) => setTimeout(r, 0));
+  const btn = page.el('btn-sound');
+  assert.ok(btn, '应该有语音按钮');
+  const label = () => String(btn.textContent);
+  const CFG2 = page.sandbox.SuikaConfig;
+
+  /* 初始：全语音 */
+  assert.match(label(), /全语音/, '初始应该是全语音，实际 ' + label());
+  btn.click();
+  assert.match(label(), /名场面/, '点一下变名场面，实际 ' + label());
+  btn.click();
+  assert.match(label(), /静音/, '再点一下变静音，实际 ' + label());
+  btn.click();
+  assert.match(label(), /全语音/, '第三下转回全语音，实际 ' + label());
+
+  /* 选择要存下来（刷新后还是那一档） */
+  const saved = JSON.parse(page.store.get(CFG2.STORAGE_KEYS.prefs) || '{}');
+  assert.equal(saved.voice, 'all', '当前档位应该写进 prefs');
+  assert.equal(CFG2.VOICE_MODES.join(','), 'all,scene,mute', '顺序固定：全语音 → 名场面 → 静音');
+  assert.deepEqual(page.errors, [], '切档不该报错');
+});
+
+test('语音规则：全语音每级都出声；名场面只在高光时刻出声', () => {
+  const CFG3 = page_config();
+  function page_config() {
+    return require(path.join(ROOT, 'js', 'config.js'));
+  }
+  assert.deepEqual(CFG3.VOICE_MODES, ['all', 'scene', 'mute']);
+  assert.equal(CFG3.nextVoiceMode('all'), 'scene');
+  assert.equal(CFG3.nextVoiceMode('scene'), 'mute');
+  assert.equal(CFG3.nextVoiceMode('mute'), 'all');
+  assert.equal(CFG3.nextVoiceMode('无法识别的值'), 'scene', '坏值按第一档处理');
+  const h = CFG3.VOICE_HIGHLIGHT;
+  assert.ok(h.tierFrom >= 8 && h.tierFrom <= 11, '大玩偶门槛应该在 8~11 级之间');
+  assert.ok(h.comboFrom >= 2, '连击门槛至少 2');
+  /* 语音清单：释放/合成按级别，名场面按级别 */
+  assert.equal(CFG3.AUDIO.sounds.drop.perTier, true);
+  assert.equal(CFG3.AUDIO.sounds.merge.perTier, true);
+  assert.equal(CFG3.AUDIO.sounds.scene.perTier, true);
+  assert.equal(CFG3.AUDIO.sounds.scene.variants, 1, '名场面单变体：文件名不带 -1 后缀');
+  assert.equal(CFG3.AUDIO.sounds.drop.variants, 2);
+});

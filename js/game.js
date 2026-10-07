@@ -99,7 +99,7 @@
     var limiter = CFG.createAudioLimiter();
 
     function tone(freq, dur, type, vol, delay, key) {
-      if (!prefs.sound) return;
+      if (!voiceOn()) return;
       var ac = ensure();
       if (!ac) return;
       /* 限流：并发上限 + 同一个音最短间隔 */
@@ -136,7 +136,7 @@
 
     /** 先试文件音效；没有再退回合成音 */
     function playFile(key, o) {
-      if (!fileAudio || !prefs.sound) return false;
+      if (!fileAudio || !voiceOn()) return false;
       try {
         return fileAudio.play(key, o) === true;
       } catch (err) {
@@ -167,18 +167,34 @@
       fileStats: function () {
         return fileAudio && fileAudio.stats ? fileAudio.stats() : null;
       },
-      drop: function () {
-        if (playFile('drop')) return;
+      /**
+       * 释放玩偶：
+       *   全语音 → 放「当前要投放的那一级」对应玩偶的语音（drop-<级>-1/2）
+       *   名场面 → 平时安静，只有连击高光时才出声
+       *   静音   → 什么都不放
+       */
+      drop: function (tier, combo) {
+        if (!voiceOn()) return;
+        if (voiceAllowed(tier, combo) && playFile('drop', { tier: tier })) return;
+        if (voiceMode() === 'scene') return; // 名场面模式下不补合成音，保持"安静"
         tone(300, 0.08, 'triangle', 0.045, 0, 'drop');
       },
+      /**
+       * 合成玩偶：
+       *   全语音 → 放「合成出来的那一级」的语音
+       *   名场面 → 只有合成出大玩偶（tier ≥ 9）或连击 ≥3 时，放「名场面」台词
+       *   静音   → 什么都不放
+       */
       merge: function (tier, combo) {
         var c = Math.max(1, combo || 1);
-        if (playFile('merge', { tier: tier })) {
-          /* 合成出大玩偶时再补一个「哇」（可选文件，没有就不响） */
-          if (tier >= CFG.RULES.maxTier - 2) playFile('mergeBig');
-          if (c >= 2) playFile('combo', { voice: c });
-          return;
+        if (!voiceOn()) return;
+        if (voiceAllowed(tier, c)) {
+          if (playFile(voiceKeyFor(tier), { tier: tier })) {
+            if (tier >= CFG.RULES.maxTier - 2) playFile('mergeBig');
+            return;
+          }
         }
+        if (voiceMode() === 'scene') return; // 名场面模式：非高光时刻保持安静
         // 连击越高音越亮，给连击一个听觉反馈
         var f = 260 * Math.pow(1.085, Math.max(0, tier)) * Math.pow(1.06, c - 1);
         // key 带上 tier：同一只玩偶连爆时节流，不同 tier 互不压制
@@ -187,11 +203,15 @@
         if (c >= 3) tone(f * 2, 0.1, 'triangle', 0.03, 0.05, 'mergeC' + tier);
       },
       warn: function () {
+        if (!voiceOn()) return;
         if (playFile('warn')) return;
         tone(180, 0.18, 'sawtooth', 0.035, 0, 'warn');
       },
       over: function () {
-        if (playFile('over')) return;
+        if (!voiceOn()) return;
+        /* 本局结束也算高光：名场面模式下会放一句「名场面」台词（用最大等级那句） */
+        if (voiceMode() === 'scene' && playFile('scene', { tier: CFG.RULES.maxTier })) return;
+        if (voiceMode() !== 'scene' && playFile('over')) return;
         tone(420, 0.22, 'sine', 0.07);
         tone(300, 0.26, 'sine', 0.07, 0.14);
         tone(190, 0.42, 'sine', 0.07, 0.28);
@@ -225,8 +245,15 @@
     UI.updateChain(dom.chain, st.maxTier, st.tierCounts);
     if (dom.pause) dom.pause.textContent = phase === 'paused' ? '▶ 继续' : '⏸ 暂停';
     if (dom.sound) {
-      dom.sound.textContent = prefs.sound ? '🔊 音效' : '🔇 静音';
-      dom.sound.setAttribute('aria-pressed', String(!!prefs.sound));
+      var m = voiceMode();
+      dom.sound.textContent = CFG.VOICE_MODE_ICONS[m] + ' ' + CFG.VOICE_MODE_LABELS[m];
+      dom.sound.setAttribute('aria-pressed', String(m !== 'mute'));
+      dom.sound.title =
+        m === 'all'
+          ? '全语音：释放与合成都会念台词（点一下切到「名场面」）'
+          : m === 'scene'
+            ? '名场面：只在大玩偶 / 连击时出声（点一下切到「静音」）'
+            : '静音：完全不发声（点一下切回「全语音」）';
     }
   }
 
@@ -412,7 +439,7 @@
     var body = game.drop(currentTier, aimX);
     if (!body) return;
     render.addDrop(body.position.x, currentTier);
-    sfx.drop();
+    sfx.drop(currentTier, game.getState().combo);
     currentTier = null;
     cooldown = roundDiff().dropCooldownMs;
     syncHud();
@@ -430,6 +457,31 @@
     }
   }
 
+  /* ---------------- 语音模式 ---------------- */
+
+  /** 当前是哪一档：all（全语音）/ scene（名场面）/ mute（静音） */
+  function voiceMode() {
+    var m = prefs && prefs.voice;
+    if (CFG.VOICE_MODES && CFG.VOICE_MODES.indexOf(m) >= 0) return m;
+    /* 兼容老版本只存了布尔 sound 的情况 */
+    return prefs && prefs.sound === false ? 'mute' : 'all';
+  }
+
+  var voiceOn = function () {
+    return voiceMode() !== 'mute';
+  };
+  /** 名场面模式只在「高光时刻」出声；全语音模式一律出声 */
+  var voiceAllowed = function (tier, combo) {
+    var m = voiceMode();
+    if (m === 'mute') return false;
+    if (m === 'all') return true;
+    var h = CFG.VOICE_HIGHLIGHT || { tierFrom: 9, comboFrom: 3 };
+    return (tier != null && tier >= h.tierFrom) || (combo != null && combo >= h.comboFrom);
+  };
+  /** 名场面模式放「名场面」台词；全语音模式放对应玩偶的普通语音 */
+  var voiceKeyFor = function (tier) {
+    return voiceMode() === 'scene' ? 'scene' : 'merge';
+  };
   /* ---------------- 局内存档（手机切后台不清零） ---------------- */
 
   /*
@@ -1027,12 +1079,24 @@
     if (dom.pause) dom.pause.addEventListener('click', function () { togglePause(); });
     if (dom.restart) dom.restart.addEventListener('click', function () { startRound(); });
     if (dom.sound) {
+      /*
+       * 点一下换一档，顺序固定：全语音 → 名场面 → 静音 → 全语音 …
+       * 选择存在 prefs.voice 里，下次打开还是这一档。
+       */
       dom.sound.addEventListener('click', function () {
-        prefs.sound = !prefs.sound;
+        prefs.voice = CFG.nextVoiceMode(voiceMode());
+        prefs.sound = prefs.voice !== 'mute'; // 兼容老字段
         saveJson(CFG.STORAGE_KEYS.prefs, prefs);
         sfx.unlock();
         syncHud();
-        UI.toast(prefs.sound ? '音效已打开' : '音效已关闭');
+        var mode = voiceMode();
+        UI.toast(
+          mode === 'all'
+            ? '全语音：释放与合成都会念台词'
+            : mode === 'scene'
+              ? '名场面：只在大玩偶 / 连击时出声'
+              : '静音：不发声'
+        );
       });
     }
     // 选图小窗口
@@ -1464,6 +1528,24 @@
         var n = Math.min(900, Math.max(1, parseInt(pm[1], 10) || 120));
         var t0 = root.performance && root.performance.now ? root.performance.now() : Date.now();
         for (var fi = 0; fi < n; fi++) frame(t0 + fi * 16.7);
+      }
+
+      /*
+       * ?audio=1 ：把当前语音档位和「加载了几条语音」显示出来（自检用）。
+       * 语音是懒加载的，所以这里等一会儿再报，数字才是准的。
+       */
+      if (/[?&]audio=1/.test(root.location.search)) {
+        var showAudioState = function () {
+          var st = sfx.fileStats && sfx.fileStats();
+          var txt =
+            '语音档位 ' +
+            CFG.VOICE_MODE_LABELS[voiceMode()] +
+            (st ? ' · 语音已加载 ' + st.loaded + ' 条 · 缺失 ' + st.absent + ' 条' : ' · 当前无语音文件（走合成音）');
+          if (dom.appVersion) dom.appVersion.textContent = txt;
+          UI.toast(txt);
+        };
+        root.setTimeout(showAudioState, 1500);
+        root.setTimeout(showAudioState, 4000);
       }
     }
 

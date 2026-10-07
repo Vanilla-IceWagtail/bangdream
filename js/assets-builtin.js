@@ -64,7 +64,7 @@
   "images": [
     {
       "id": "afterglow-01",
-      "name": "上原绯玛",
+      "name": "上原绯玛丽",
       "group": "afterglow",
       "w": 290,
       "h": 384,
