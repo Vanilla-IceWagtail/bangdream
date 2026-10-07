@@ -161,6 +161,34 @@ test('引擎连击：1 秒内连续合成会累计连击并加价，超时后归
   assert.equal(ended.bestCombo, 2);
 });
 
+test('连击只算本次投放引发的连锁：一投放就把连击清零', () => {
+  /*
+   * 规则的由来（用户要求）：连击只统计「这颗玩偶落下造成的合成」，
+   * 上一颗玩偶沉降/滚动引发的合成不该蹭进新一次投放的连击里。
+   * 做法是 drop() 时把 combo 清零，之后再合成从 1 重新累计。
+   */
+  const game = ENGINE.create({ gravity: 0 });
+  const combosAtDrop = [];
+  game.on('drop', () => combosAtDrop.push(game.getState().combo));
+
+  game.debugSpawn(1, 140, 300);
+  game.debugSpawn(1, 170, 300);
+  runSteps(game, CFG.BOARD.fixedStep * 2);
+  assert.equal(game.getState().combo, 1, '前置条件：先合出一次连击 1');
+
+  /* 再投放一颗：连击必须归零（而不是接着上一次继续涨） */
+  game.drop(1, 240);
+  assert.equal(game.getState().combo, 0, '投放后连击要清零');
+  assert.equal(game.getState().comboRatio, 0, '连击条也要清掉');
+
+  game.drop(1, 260);
+  game.drop(1, 280);
+  assert.ok(
+    combosAtDrop.every((c) => c === 0),
+    '每次投放时连击都应该是 0，实际 ' + JSON.stringify(combosAtDrop)
+  );
+});
+
 /* ---------------- 草莓粘连 / 悬空（用户反馈的 bug） ---------------- */
 
 test('悬空的水果一定会掉下来，不会卡在半空（沉睡已关闭）', () => {

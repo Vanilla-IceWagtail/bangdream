@@ -48,7 +48,7 @@
     win.hidden = true;
 
     var bar = el('header', 'pk-bar');
-    var title = el('span', 'pk-title', '🖼 选图窗口');
+    var title = el('span', 'pk-title', '🎸 组建乐队');
     var subtitle = el('span', 'pk-subtitle', '从图库里挑 11 张放到棉花娃娃位上');
     var barActions = el('div', 'pk-bar-actions');
     var btnCollapse = el('button', 'btn btn-mini btn-ghost', '折叠');
@@ -97,7 +97,7 @@
     var confirmTitle = el('b', 'pk-confirm-title', '');
     var confirmNote = el('span', 'pk-confirm-note', '没选的位子会沿用图库默认图（没有默认图就用 emoji 外观）。');
     var confirmActions = el('div', 'pk-confirm-actions');
-    var btnKeepPicking = el('button', 'btn btn-primary', '继续选图');
+    var btnKeepPicking = el('button', 'btn btn-primary', '继续挑选');
     btnKeepPicking.type = 'button';
     var btnCloseAnyway = el('button', 'btn btn-ghost', '就这样关掉');
     btnCloseAnyway.type = 'button';
@@ -216,7 +216,7 @@
         var line2 = el('div', 'pk-slot-line2');
         var img = assets.imageFor(s.tier);
         var src = assets.sourceOf(s.tier);
-        line2.appendChild(el('span', 'pk-slot-file', img ? img.file : '这个位子还没选图'));
+        line2.appendChild(el('span', 'pk-slot-file', img ? img.file : '这个位子还没选人'));
         if (src === 'default') line2.appendChild(el('span', 'pk-slot-tag', '默认'));
         if (src === 'pick') line2.appendChild(el('span', 'pk-slot-tag is-pick', '已选'));
         info.appendChild(line1);
@@ -381,7 +381,7 @@
       var names = missing.map(function (t) {
         return '⌀' + LIB.slotOf(t).diameter;
       });
-      confirmTitle.textContent = '还有 ' + missing.length + ' 个棉花娃娃位没选图：' + names.join('、');
+      confirmTitle.textContent = '还有 ' + missing.length + ' 个棉花娃娃位还没选人：' + names.join('、');
       confirmBox.hidden = false;
       return true;
     }

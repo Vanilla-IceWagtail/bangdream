@@ -599,17 +599,34 @@ var limiter = CFG.createAudioLimiter();
         screen.hidden = true;
         resolve();
       };
-      /*
-       * ?loading=1 ：把加载页停住（自检/截图用），方便看插图和进度条长什么样。
-       * ?noloading=1 ：反过来，直接跳过加载页。
-       */
+      /* ?loading=1 ：把加载页停住（自检/截图用），方便看插图和进度条长什么样 */
       if (/[?&]loading=1/.test(root.location.search)) {
         if (bar) bar.style.width = '62%';
         if (note) note.textContent = '正在加载游戏（自检：停在这一屏）';
         return;
       }
-      /* 超时兜底：网络慢也别把玩家卡在加载页（30 秒，全部语音 7MB 左右） */
-      root.setTimeout(finish, 30000);
+      /*
+       * 超时兜底：给足时间（手机 4G 下 7MB 语音可能要一两分钟）。
+       * 之前是 30 秒，手机上经常「没加载完就消失」，结果语音不全 —— 现在：
+       *   · 超时放宽到 3 分钟；
+       *   · 而且不再默默消失：超时后还在加载就继续等，并给一个「先进入游戏」的按钮，
+       *     由玩家决定要不要跳过（不会出现「进度条自己没了」）。
+       */
+      var giveUpAfterMs = 180000;
+      var offeredSkip = false;
+      var skipBtn = document.getElementById('loading-skip');
+      if (skipBtn && !skipBtn._wired) {
+        skipBtn._wired = true;
+        skipBtn.addEventListener('click', finish);
+      }
+      var offerSkip = function () {
+        if (offeredSkip || finished) return;
+        offeredSkip = true;
+        if (skipBtn) skipBtn.hidden = false;
+        if (note) note.textContent = '网络较慢，仍在继续加载语音…';
+      };
+      root.setTimeout(offerSkip, 15000);
+      root.setTimeout(offerSkip, giveUpAfterMs);
       var prefetch = fa.prefetchMany || fa.preloadMany;
       prefetch
         .call(fa, names, function (done, total) {
@@ -618,10 +635,22 @@ var limiter = CFG.createAudioLimiter();
           if (note) note.textContent = '正在加载游戏';
         })
         .then(function (res) {
-          if (note) note.textContent = '准备完成，马上开始！';
-          /* 预取完成后，把当前/下一只需要用到的先解码好，进游戏就是原声 */
-          warmVoices();
-          finish();
+          /*
+           * 预取完再核对一次：万一还有没拿到的（断网/限速），补一轮，
+           * 只有真的全部处理完才自动进游戏 —— 这样才不会「语音只加载了一半」。
+           */
+          var retry = fa.retryMissing ? fa.retryMissing(names) : null;
+          var tail = retry && retry.then ? retry : Promise.resolve(null);
+          return tail.then(function (again) {
+            if (again && again.remaining && !offeredSkip) {
+              if (note) note.textContent = '还有 ' + again.remaining + ' 条没拿到，继续重试…';
+              offerSkip();
+            }
+            if (note) note.textContent = '准备完成，马上开始！';
+            /* 预取完成后，把当前/下一只需要用到的先解码好，进游戏就是原声 */
+            warmVoices();
+            finish();
+          });
         });
     });
   }
@@ -1583,7 +1612,7 @@ var limiter = CFG.createAudioLimiter();
         '<ul class="rules">' +
         '<li>前 5 级棉花娃娃会从天上掉下来，<b>两只相同的棉花娃娃碰在一起</b>就会合成更大的棉花娃娃。</li>' +
         '<li>得分按<b>合成出的棉花娃娃大小</b>计算：越大越多分（每级分数见左栏进化表）。</li>' +
-        '<li><b>连击加分</b>：1 秒内连续合成会累积连击，得分最高 ×' +
+        '<li><b>连击加分</b>：只算<b>本次投放的玩偶引发的连锁</b> —— 投放一颗、连锁合成几次就是几连（换了下一颗就重新算），得分最高 ×' +
         CFG.RULES.combo.maxMultiplier +
         '，飘字和音效都会跟着变。</li>' +
         '<li>两只 <b>' + (CFG.tierByNumber(CFG.RULES.maxTier) ? CFG.tierByNumber(CFG.RULES.maxTier).name : '最大玩偶') + '</b> 相撞会双双消失，额外 +100 分。</li>' +
@@ -1596,7 +1625,7 @@ var limiter = CFG.createAudioLimiter();
         ' 分钟自动刷新）。' +
         (root.SUIKA_STANDALONE ? '' : '用「启动游戏.cmd」打开也一样是全球榜。') +
         '</li>' +
-        '<li>棉花娃娃图片来自内置图库：点右上角 <b>🖼 选图</b> 打开小窗口，从图库里挑 11 张放进棉花娃娃位'
+        '<li>棉花娃娃图片来自内置图库：点右上角 <b>🎸 组建乐队</b> 打开小窗口，从图库里挑 11 位角色放进棉花娃娃位'
         + '（图片不用自己导入）。</li>' +
         '</ul>',
       actions: [{ label: '开始游戏', kind: 'primary', onClick: startRound }]

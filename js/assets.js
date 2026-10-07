@@ -133,7 +133,7 @@
     function labelOf(tier) {
       var img = imageFor(tier);
       if (img && img.name) return img.name;
-      if (hasLibrary()) return '未选图';
+      if (hasLibrary()) return '待定';
       var def = CFG.tierByNumber ? CFG.tierByNumber(tier) : null;
       return def ? def.name : '—';
     }

@@ -232,6 +232,14 @@
       var body = spawnBody(tierNum, x, BOARD.spawnY);
       if (body) {
         state.drops += 1;
+        /*
+         * 连击只算「这一个玩偶落下来引发的连锁」：
+         * 每次投放都把连击清零，之后再合成从 1 开始累计。
+         * 这样上一颗玩偶沉降/滚动引发的、和新投放无关的合成不会蹭进连击，
+         * 计分也就只统计本次投放造成的合成。
+         */
+        state.combo = 0;
+        state.comboRatio = 0;
         emit('drop', { tier: tierNum, x: body.position.x, score: state.score });
       }
       return body;

@@ -947,3 +947,16 @@ test('切到「静音」档会把背景音乐一起停掉', async () => {
   assert.equal(page.sandbox.SUIKA_BGM.isOn(), false, '静音档应该把背景音乐停掉');
   assert.deepEqual(page.errors, [], '不该报错');
 });
+
+test('顶栏按钮：选图已改名为「组建乐队」（直接校验 index.html 原文）', () => {
+  /*
+   * 注意：页面测试的 DOM 桩不解析 HTML 文本，所以文案要在 index.html 原文上断言 ——
+   * 这条同时防止「改名只改了一半」。
+   */
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  assert.match(html, /id="btn-picker"[^>]*>🎸 组建乐队</, '选图按钮应该改名为「组建乐队」');
+  assert.equal(html.indexOf('🖼 选图'), -1, 'index.html 里不该还有「🖼 选图」');
+  const picker = fs.readFileSync(path.join(ROOT, 'js', 'picker.js'), 'utf8');
+  assert.match(picker, /组建乐队/, '小窗口标题也要跟着改名');
+  assert.equal(picker.indexOf('🖼 选图窗口'), -1, '小窗口旧标题「🖼 选图窗口」应该已经改掉');
+});

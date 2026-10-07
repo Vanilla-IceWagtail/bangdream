@@ -433,3 +433,38 @@ test('预取全部语音：只下载不解码，之后按需解码（内存才�
     globalThis.AudioContext = realAC;
   }
 });
+
+test('加载页补一轮：网络失败的会重试，真的没有的(404)不重试', async () => {
+  /*
+   * 模拟手机上的真实情况：某个角色的语音第一轮全部超时（断网抖动），
+   * 补一轮时才成功；而音源里确实没有的角色返回 404，不该反复重试。
+   */
+  let drop2Tries = 0;
+  const tries = {};
+  const fetchFn = (url) => {
+    tries[url] = (tries[url] || 0) + 1;
+    if (url.indexOf('drop-2') >= 0) {
+      drop2Tries += 1;
+      /* 第一轮的三个扩展名全部失败（网络原因），之后才放行 */
+      if (drop2Tries <= CFG.AUDIO.formats.length) return Promise.reject(new Error('network down'));
+      return Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) });
+    }
+    if (url.indexOf('drop-3') >= 0) return Promise.resolve({ ok: false, status: 404 });
+    return Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)) });
+  };
+  const audio = AUDIO.create({ config: CFG, fetch: fetchFn });
+  const names = ['roselia-01/drop-1', 'roselia-01/drop-2', 'roselia-01/drop-3'];
+  const first = await audio.prefetchMany(names);
+  assert.equal(first.done, names.length, '第一轮都要处理过');
+  assert.equal(audio.rawCount(), 1, '第一轮只应该拿到 drop-1，实际 ' + audio.rawCount());
+
+  const again = await audio.retryMissing(names);
+  assert.equal(again.remaining, 0, '补一轮之后不该还有缺失，实际 ' + again.remaining);
+  assert.equal(audio.rawCount(), 2, 'drop-2 补上之后应该是 2 条，实际 ' + audio.rawCount());
+  assert.ok(drop2Tries > CFG.AUDIO.formats.length, 'drop-2 应该被重试过，实际尝试 ' + drop2Tries + ' 次');
+
+  /* 404 的文件只该在第一轮试过扩展名，不该进补一轮 */
+  const d3 = Object.keys(tries).filter((u) => u.indexOf('drop-3') >= 0);
+  const d3Tries = d3.reduce((n, u) => n + tries[u], 0);
+  assert.ok(d3Tries <= CFG.AUDIO.formats.length, '404 不该被反复重试，实际 ' + d3Tries + ' 次');
+});

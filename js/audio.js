@@ -30,6 +30,7 @@
     var ctx = null;
     var buffers = {}; // key -> AudioBuffer（已解码）
     var rawCache = {}; // name -> ArrayBuffer（已下载、未解码；加载页预取用）
+    var retryable = {}; // name -> true（网络原因失败，可以再补一轮）
     var bufferOrder = []; // 解码缓存的 LRU 顺序（防止切很多角色后内存无限涨）
     var absent = {}; // key -> true（确定没有这个文件，别再试）
     var pending = {}; // key -> Promise
@@ -369,22 +370,36 @@
         return Promise.resolve(null);
       }
       if (typeof pending['raw:' + name] !== 'undefined') return pending['raw:' + name];
+      /* 注意：必须是**本次调用**的局部变量 —— 4 个并发下载共用一个标志时，
+         别的文件 404 会把本文件也误判成 404，该重试的语音就被永久跳过了（真踩过） */
+      var was404 = false;
       var order = workingExt ? [workingExt].concat(formats.filter(function (f) { return f !== workingExt; })) : formats;
       var i = 0;
       var tryNext = function () {
         if (i >= order.length) {
-          absent[name] = true;
+          /*
+           * 全部扩展名都失败：要分清两种情况 ——
+           *   · 真的没有这个文件（404）→ 记 absent，以后不再试；
+           *   · 网络问题（断网/超时/5xx）→ 记 retryable，等会儿还能补一轮。
+           * 手机上网络抖动很常见，混为一谈的话语音就会「缺一块」且永远补不回来。
+           */
+          if (was404) absent[name] = true;
+          else retryable[name] = true;
           return null;
         }
         var url = base + name + '.' + order[i++];
         return fetchFn(url)
           .then(function (res) {
-            if (!res || !res.ok) throw new Error('http ' + (res && res.status));
+            if (!res || !res.ok) {
+              was404 = !!res && res.status === 404;
+              throw new Error('http ' + (res && res.status));
+            }
             return res.arrayBuffer();
           })
           .then(function (buf) {
             rawCache[name] = buf;
             workingExt = order[i - 1];
+            delete retryable[name];
             return buf;
           })
           .catch(tryNext);
@@ -394,6 +409,26 @@
         return b;
       });
       return pending['raw:' + name];
+    }
+
+    /**
+     * 补一轮：把「因为网络原因没拿到」的再试一次，返回还剩几条第不到。
+     * 加载页用它来确保「真加载完了才消失」。
+     */
+    function retryMissing(names) {
+      var missing = (names || []).filter(function (n) {
+        return !rawCache[n] && !absent[n];
+      });
+      if (!missing.length) return Promise.resolve({ remaining: 0 });
+      missing.forEach(function (n) {
+        delete retryable[n];
+      });
+      return prefetchMany(missing).then(function () {
+        var left = missing.filter(function (n) {
+          return !rawCache[n] && !absent[n];
+        });
+        return { remaining: left.length };
+      });
     }
 
     /** 批量预取（下载）。并发放宽到 4（下载是 I/O，不像解码那样占主线程） */
@@ -429,6 +464,7 @@
       preload: preload,
       preloadMany: preloadMany,
       prefetchMany: prefetchMany,
+      retryMissing: retryMissing,
       nameList: nameList,
       rawCount: function () {
         return Object.keys(rawCache).length;

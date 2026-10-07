@@ -1881,3 +1881,14 @@ kbd {
 .btn.btn-music.is-on:hover:not(:disabled) {
   background: #0a6fe0 !important;
 }
+
+/* 加载页：网络慢时出现的「先进入游戏」（只有超时后才显示，不打断正常加载） */
+
+.loading-skip {
+  margin-top: 12px;
+  font-size: 12.5px;
+}
+
+.loading-skip[hidden] {
+  display: none !important;
+}
