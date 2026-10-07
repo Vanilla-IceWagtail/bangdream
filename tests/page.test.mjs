@@ -342,6 +342,8 @@ function bootPage(opts = {}) {
     fetch: () => Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) }),
     document: doc
   };
+  /* 允许测试预设全局（比如试听页的 SUIKA_AUDIO_SELFTEST，必须在 boot 前就位） */
+  Object.assign(sandbox, opts.globals || {});
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   sandbox.self = sandbox;
@@ -812,4 +814,45 @@ test('静音档：切到静音后就不该再发声（但游戏照常能玩）',
   page.pump(200);
   assert.equal(ctx.started, before, '静音档不该再发声（实际多了 ' + (ctx.started - before) + ' 次）');
   assert.deepEqual(page.errors, [], '静音档也要能正常玩');
+});
+
+test('音频上下文没唤醒时：文件音不许挡住合成音（否则整局静音）', async () => {
+  /*
+   * 真踩过这个坑：文件音在 suspended 的上下文里 start() 其实没声音，
+   * 但旧代码把它当成「播出去了」，于是合成音也不再响 → 用户听到「一点声音都没有」。
+   * 现在只有上下文 running 才算真发声，否则退回合成音。
+   */
+  const ctx = makeFakeAudioContext();
+  ctx.state = 'suspended'; // 自动播放策略还没放行
+  const page = await bootPage({
+    search: '?demo=1&lib=none',
+    AudioContext: function () {
+      return ctx;
+    }
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(300);
+  const demo = page.sandbox.SuikaDemo;
+  assert.ok(demo, '演示模式应该有句柄');
+  const c = demo.counts();
+  assert.equal(c.file, 0, '上下文没唤醒时不该把文件音算作已发声');
+  assert.deepEqual(page.errors, [], '不该报错');
+});
+
+test('试听页自检：第一次交互会响一声「叮」并报告音频状态', async () => {
+  const ctx = makeFakeAudioContext();
+  const page = await bootPage({
+    search: '?lib=none',
+    AudioContext: function () {
+      return ctx;
+    },
+    globals: { SUIKA_AUDIO_SELFTEST: true }
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  /* 自检挂在 document 的 pointerdown 上（capture），这里派发一次 */
+  page.doc.dispatch('pointerdown', {});
+  page.doc.dispatch('pointerdown', {}); // 第二次不该重复响
+  assert.ok(ctx.started >= 1, '自检应该响一声（start 次数 ' + ctx.started + '）');
+  assert.ok(ctx.started <= 2, '第二次派发不该再响，实际 ' + ctx.started);
+  assert.deepEqual(page.errors, [], '不该报错');
 });

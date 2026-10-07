@@ -106,8 +106,9 @@ var limiter = CFG.createAudioLimiter();
     var synthCount = 0;
     var fileCount = 0;
 
-    function tone(freq, dur, type, vol, delay, key) {
-      if (!voiceOn()) return;
+    function tone(freq, dur, type, vol, delay, key, force) {
+      /* force：自检音（ping）不受档位影响，用来判断浏览器能不能出声 */
+      if (!force && !voiceOn()) return;
       var ac = ensure();
       if (!ac) return;
       /* 限流：并发上限 + 同一个音最短间隔 */
@@ -143,13 +144,24 @@ var limiter = CFG.createAudioLimiter();
         ? root.SuikaAudio.create({ config: CFG })
         : null;
 
-    /** 先试文件音效；没有再退回合成音 */
+    /**
+     * 先试文件音效；没有再退回合成音。
+     *
+     * 关键：只有当文件音效的音频上下文**真的在运行**时才算"播出去了"。
+     * 否则（上下文还在 suspended，自动播放策略没放行）文件音只是"排队等唤醒"，
+     * 一点声音都没有 —— 这时必须让调用方退回合成音，
+     * 否则就是「整局全静音」（真踩过：文件音返回 true 把合成音挡住了）。
+     */
     function playFile(key, o) {
       if (!fileAudio || !voiceOn()) return false;
       try {
+        var ac = fileAudio.context ? fileAudio.context() : null;
+        var running = !!ac && ac.state === 'running';
         var ok = fileAudio.play(key, o) === true;
-        if (ok) fileCount += 1; // 只有真的播出去才算
-        return ok;
+        if (!ok) return false;
+        if (!running) return false; // 播了也听不见，交给合成音
+        fileCount += 1;
+        return true;
       } catch (err) {
         return false;
       }
@@ -163,8 +175,17 @@ var limiter = CFG.createAudioLimiter();
       },
       unlock: function () {
         var ac = ensure();
-        if (ac && ac.state === 'suspended') ac.resume();
+        /* 浏览器自动播放策略：上下文默认是 suspended，必须在用户手势里 resume */
+        if (ac && ac.state === 'suspended' && ac.resume) ac.resume();
         if (fileAudio && fileAudio.unlock) fileAudio.unlock();
+        /* 有的浏览器第一次 resume 会被忽略，这里再补一次 */
+        if (ac && ac.state === 'suspended' && ac.resume) {
+          try {
+            ac.resume();
+          } catch (err) {
+            /* 忽略 */
+          }
+        }
         /* 解锁之后：预热固定名字的音效 + 当前/下一只玩偶的语音池 */
         if (fileAudio && fileAudio.preload) {
           try {
@@ -176,6 +197,20 @@ var limiter = CFG.createAudioLimiter();
         }
       },
       /** 文件音效的状态（自检/调试用：?audio=1 会打到控制台和页面上） */
+      /** 音频上下文状态（排查「没声音」：suspended 就是没被唤醒） */
+      contextState: function () {
+        var ac = ensure();
+        var fa = fileAudio && fileAudio.context ? fileAudio.context() : null;
+        return { synth: ac ? ac.state : 'none', file: fa ? fa.state : 'none' };
+      },
+      /**
+       * 自检音：不受档位影响，故意响一声。
+       * 试听页会用它来判断「浏览器/系统这边到底能不能出声」。
+       */
+      ping: function () {
+        tone(880, 0.18, 'sine', 0.14, 0, 'ping', true);
+        tone(1320, 0.16, 'sine', 0.08, 0.13, 'ping2', true);
+      },
       /** 排查「没声音」用：合成音/文件音真正发声的次数 */
       counts: function () {
         return { synth: synthCount, file: fileCount };
@@ -1223,6 +1258,36 @@ var limiter = CFG.createAudioLimiter();
       }
     }
 
+    /*
+     * 试听页专属自检（正式页不开启）：
+     * 第一次用户交互时响一声「叮」并报出音频上下文状态 ——
+     *   听到「叮」= 浏览器/系统这边没问题，之后就该听得到语音；
+     *   听不到    = 标签被静音 / 系统音量 / 输出设备的问题，不是游戏的问题。
+     */
+    var didSelftest = false;
+    function audioSelftest() {
+      if (didSelftest) return;
+      didSelftest = true;
+      sfx.unlock();
+      var st = sfx.contextState ? sfx.contextState() : { synth: 'none', file: 'none' };
+      sfx.ping();
+      var c = sfx.counts ? sfx.counts() : { synth: 0, file: 0 };
+      UI.toast(
+        '自检：档位 ' +
+          CFG.VOICE_MODE_LABELS[voiceMode()] +
+          ' · 音频 ' +
+          st.synth +
+          ' · 发声 合成' +
+          c.synth +
+          '/' +
+          c.file +
+          '（听不到「叮」就是浏览器标签或系统音量的问题）'
+      );
+    }
+    if (root.SUIKA_AUDIO_SELFTEST) {
+      D.addEventListener('pointerdown', audioSelftest, true);
+      D.addEventListener('keydown', audioSelftest, true);
+    }
     D.addEventListener('visibilitychange', onVisibility);
     /* pagehide 比 beforeunload 更可靠（iOS/bfcache 场景），而且不影响前进后退缓存 */
     root.addEventListener('pagehide', function () {

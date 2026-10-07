@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 生成「语音试听页」：voice-preview.html
  *
  *   node tools/make-voice-preview.cjs
@@ -31,6 +31,8 @@ const inject = [
   '    -->',
   '    <script>',
   "      window.SUIKA_AUDIO_BASE = '" + VOICE_BASE + "';",
+  '      // 试听页打开音频自检：第一次点击会响一声「叮」并报状态',
+  '      window.SUIKA_AUDIO_SELFTEST = true;',
   "      if (location.protocol === 'file:') {",
   "        document.write('<script src=\"assets/voice-inline.js\"><\\/script>');",
   '      }',
