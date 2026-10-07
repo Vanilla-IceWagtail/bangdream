@@ -905,3 +905,45 @@ test('加载页插图：静态首帧会换成 GIF（动画才会真的动起来�
   assert.equal(/[0-9]/.test(String(note.textContent)), false, '不该再显示数字，实际 ' + note.textContent);
   assert.deepEqual(page.errors, [], '不该报错');
 });
+
+test('背景音乐按钮：点一下播放并变蓝，再点一下停止并恢复', async () => {
+  const page = await bootPage({ search: '?lib=none&noloading=1' });
+  await new Promise((r) => setTimeout(r, 0));
+  const btn = page.el('btn-music');
+  assert.ok(btn, '选图后面应该有背景音乐按钮');
+  const bgm = page.sandbox.SUIKA_BGM;
+  assert.ok(bgm, '应该暴露 SUIKA_BGM 便于断言');
+
+  /* 初始：不是播放态 */
+  assert.equal(bgm.isOn(), false, '初始不该在播放');
+  assert.equal(btn.classList.contains('is-on'), false, '初始不该有 is-on');
+  assert.equal(btn.getAttribute('aria-pressed'), 'false');
+
+  /* 点一下：播放 + 变蓝（is-on 由 CSS 上色） */
+  btn.click();
+  assert.equal(bgm.isOn(), true, '点一下应该开始播放');
+  assert.equal(btn.classList.contains('is-on'), true, '应该加上 is-on（蓝底白图标）');
+  assert.equal(btn.getAttribute('aria-pressed'), 'true');
+
+  /* 再点一下：停止 + 恢复原样 */
+  btn.click();
+  assert.equal(bgm.isOn(), false, '再点一下应该停止');
+  assert.equal(btn.classList.contains('is-on'), false, 'is-on 应该去掉');
+  assert.equal(btn.getAttribute('aria-pressed'), 'false');
+
+  assert.deepEqual(page.errors, [], '切换背景音乐不该报错');
+});
+
+test('切到「静音」档会把背景音乐一起停掉', async () => {
+  const page = await bootPage({ search: '?lib=none&noloading=1' });
+  await new Promise((r) => setTimeout(r, 0));
+  const music = page.el('btn-music');
+  music.click();
+  assert.equal(page.sandbox.SUIKA_BGM.isOn(), true, '前置条件：先播放');
+  /* 全语音 → 名场面 → 静音 */
+  page.el('btn-sound').click();
+  page.el('btn-sound').click();
+  assert.match(String(page.el('btn-sound').textContent), /静音/, '应该切到静音档');
+  assert.equal(page.sandbox.SUIKA_BGM.isOn(), false, '静音档应该把背景音乐停掉');
+  assert.deepEqual(page.errors, [], '不该报错');
+});

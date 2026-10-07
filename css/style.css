@@ -1843,3 +1843,41 @@ kbd {
     font-size: 11px;
   }
 }
+
+/* ---------- 背景音乐按钮（选图后面那颗小图标） ---------- */
+
+.btn-music {
+  padding: 5px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 只保留按下的缩放过渡：背景色不要过渡 ——
+     否则「点击变蓝」会慢半拍，截图/录屏时也容易拍到中间态 */
+  transition: transform 0.12s ease;
+}
+
+.btn-music-icon {
+  display: block;
+  /* 图标本身留白很少，18px 时上面的光点会糊，这里给到 22px */
+  height: 22px;
+  width: auto;
+  /* 图标本身是「透明底 + 黑图形」，播放时用滤镜翻成白色 */
+  transition: filter 0.15s ease;
+}
+
+/* 播放中：蓝底（#007AFF）+ 白图标
+   注：这里用 !important 是故意的 —— 顶栏里 .btn / .btn:hover 的 background
+   会把这层盖掉（真实页面里只生效了 box-shadow，蓝底没出来），先用最高优先级定死。 */
+.btn.btn-music.is-on {
+  background: #007aff !important;
+  border-color: #007aff !important;
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.32);
+}
+
+.btn.btn-music.is-on .btn-music-icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+.btn.btn-music.is-on:hover:not(:disabled) {
+  background: #0a6fe0 !important;
+}

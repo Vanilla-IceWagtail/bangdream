@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -626,6 +626,116 @@ var limiter = CFG.createAudioLimiter();
     });
   }
 
+  /* ---------------- 背景音乐（选图后面那颗图标） ---------------- */
+
+  /*
+   * 一首完整的歌（朋友的酒 DJ 完整版，4.4MB），所以：
+   *   · 用 <audio> 播放（流式，不占解码内存）而不是 WebAudio 解码整首
+   *   · preload=none：不点就不下载
+   *   · 循环播放，音量压低，别盖过玩偶语音
+   */
+  var BGM_SRC = 'assets/bgm/kkr-pengyou-de-jiu-dj.m4a';
+  var bgmEl = null;
+  var bgmPlaying = false;
+  var bgmWanted = false; // 用户希望它响（切后台时用来恢复）
+
+  function bgmElement() {
+    if (bgmEl) return bgmEl;
+    var el = null;
+    if (D.createElement) {
+      el = D.createElement('audio');
+      if (el) {
+        el.src = BGM_SRC;
+        el.loop = true;
+        el.volume = 0.32;
+        el.preload = 'none';
+      }
+    }
+    bgmEl = el;
+    return el;
+  }
+
+  /**
+   * 把「播放中」的外观画到按钮上。
+   *
+   * 为什么用内联样式而不是只靠 CSS 类：顶栏里 `.btn` / `.btn:hover` 的 background
+   * 会把 `.btn-music.is-on` 那条规则盖掉（实测：类加上了、box-shadow 生效了，
+   * 但底色和图标颜色没变）。内联样式优先级最高，最稳，也不再依赖外部样式表。
+   */
+  function applyBgmLook(on) {
+    if (!dom.musicBtn) return;
+    dom.musicBtn.classList.toggle('is-on', on);
+    try {
+      dom.musicBtn.style.background = on ? '#007aff' : '';
+      dom.musicBtn.style.borderColor = on ? '#007aff' : '';
+      var icon = dom.musicBtn.querySelector ? dom.musicBtn.querySelector('.btn-music-icon') : null;
+      /* 图标本身是「透明底 + 黑图形」，播放时翻成白色 */
+      if (icon) icon.style.filter = on ? 'brightness(0) invert(1)' : '';
+    } catch (err) {
+      /* 内联样式失败也不影响播放本身 */
+    }
+  }
+
+  function syncBgmButton() {
+    if (!dom.musicBtn) return;
+    applyBgmLook(bgmPlaying);
+    dom.musicBtn.setAttribute('aria-pressed', String(bgmPlaying));
+    dom.musicBtn.title = bgmPlaying
+      ? '停止背景音乐（朋友的酒 DJ 完整版）'
+      : '播放背景音乐（朋友的酒 DJ 完整版）';
+  }
+
+  function bgmPlay() {
+    var el = bgmElement();
+    if (!el) return false;
+    try {
+      if (el.play) {
+        var r = el.play();
+        /* 浏览器返回 Promise：失败（比如自动播放策略）就当没播 */
+        if (r && r.catch) {
+          r.catch(function () {
+            bgmPlaying = false;
+            syncBgmButton();
+          });
+        }
+      }
+    } catch (err) {
+      return false;
+    }
+    bgmPlaying = true;
+    syncBgmButton();
+    return true;
+  }
+
+  function bgmStop() {
+    if (bgmEl) {
+      try {
+        if (bgmEl.pause) bgmEl.pause();
+      } catch (err) {
+        /* 忽略 */
+      }
+    }
+    bgmPlaying = false;
+    syncBgmButton();
+  }
+
+  /** 点一下开始 / 再点一下停止 */
+  function toggleBgm() {
+    if (bgmPlaying) {
+      bgmWanted = false;
+      bgmStop();
+      UI.toast('背景音乐已停止');
+      return;
+    }
+    bgmWanted = true;
+    sfx.unlock(); // 顺手把音效上下文也解锁一下
+    if (bgmPlay()) {
+      UI.toast('🎵 朋友的酒（DJ 完整版）开始播放');
+    } else {
+      UI.toast('这个浏览器不让播放音频');
+    }
+  }
+
   /* ---------------- 语音模式 ---------------- */
 
   /** 当前是哪一档：all（全语音）/ scene（名场面）/ mute（静音） */
@@ -639,6 +749,11 @@ var limiter = CFG.createAudioLimiter();
      * 静音现在必须在新按钮上明确选一次。
      */
     return 'all';
+  }
+
+  /** 切到「静音」档时顺手把背景音乐也停掉（用户点的是静音，期望整体安静） */
+  function stopBgmIfMuted() {
+    if (voiceMode() === 'mute' && bgmPlaying) bgmStop();
   }
 
   var voiceOn = function () {
@@ -1258,6 +1373,7 @@ var limiter = CFG.createAudioLimiter();
         prefs.sound = prefs.voice !== 'mute'; // 兼容老字段
         saveJson(CFG.STORAGE_KEYS.prefs, prefs);
         sfx.unlock();
+        stopBgmIfMuted(); // 切到静音档：背景音乐也停掉
         syncHud();
         var mode = voiceMode();
         UI.toast(
@@ -1269,6 +1385,14 @@ var limiter = CFG.createAudioLimiter();
         );
       });
     }
+    /* 背景音乐：选图后面那颗图标，点一下播放、再点一下停止 */
+    if (dom.musicBtn) {
+      dom.musicBtn.addEventListener('click', toggleBgm);
+      syncBgmButton();
+      /* ?bgm-ui=1 ：只把「播放中」的样子亮出来（自检/截图用，不真的播放） */
+      if (/[?&]bgm-ui=1/.test(root.location.search)) applyBgmLook(true);
+    }
+
     // 选图小窗口
     if (dom.pickerBtn) {
       dom.pickerBtn.addEventListener('click', function () {
@@ -1345,6 +1469,18 @@ var limiter = CFG.createAudioLimiter();
           /* 音频挂起失败不影响游戏 */
         }
       }
+      /* 背景音乐：切后台暂停，切回来若本来是「想响」的状态就继续 */
+      if (isHidden()) {
+        if (bgmPlaying && bgmEl && bgmEl.pause) {
+          try {
+            bgmEl.pause();
+          } catch (err) {
+            /* 忽略 */
+          }
+        }
+      } else if (bgmWanted && !bgmPlaying) {
+        bgmPlay();
+      }
       if (isHidden()) {
         if (phase === 'playing') {
           autoPaused = true;
@@ -1416,6 +1552,7 @@ var limiter = CFG.createAudioLimiter();
     dom.restart = UI.el('btn-restart');
     dom.sound = UI.el('btn-sound');
     dom.pickerBtn = UI.el('btn-picker');
+    dom.musicBtn = UI.el('btn-music');
     dom.lbList = UI.el('lb-list');
     dom.lbClear = UI.el('lb-clear');
     dom.lbNote = UI.el('lb-note');
@@ -1618,6 +1755,16 @@ var limiter = CFG.createAudioLimiter();
      * 演示模式暴露一个只读句柄：页面测试要断言「按下不投放、松手才投放」，
      * 而投放次数只有引擎知道。只在 ?demo=1 下挂，正常玩不受影响。
      */
+    /* 背景音乐状态（页面测试断言用） */
+    root.SUIKA_BGM = {
+      isOn: function () {
+        return bgmPlaying;
+      },
+      el: function () {
+        return bgmEl;
+      }
+    };
+
     if (demoMode) {
       root.SuikaDemo = {
         phase: function () {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
     <title>合成邦多利皇帝 · BanG Dream! 棉花娃娃版 · 语音试听版</title>
-    <link rel="stylesheet" href="css/style.css?v=0.4.18" />
+    <link rel="stylesheet" href="css/style.css?v=0.4.19" />
     <style>
     .try-badge { font-size: 13px; font-weight: 400; color: #9a7a68; margin-left: 10px; }
   </style>
@@ -26,6 +26,15 @@
           <button class="btn" id="btn-pause" type="button">⏸ 暂停</button>
           <button class="btn" id="btn-restart" type="button">↻ 重开</button>
           <button class="btn btn-primary" id="btn-picker" type="button">🖼 选图</button>
+          <button
+            class="btn btn-music"
+            id="btn-music"
+            type="button"
+            aria-pressed="false"
+            title="播放/停止背景音乐（朋友的酒 DJ 完整版）"
+          >
+            <img class="btn-music-icon" src="assets/icons/bgm.png" alt="背景音乐" />
+          </button>
         </div>
       </header>
 
@@ -196,7 +205,7 @@
       // 试听页打开音频自检：第一次点击会响一声「叮」并报状态
       window.SUIKA_AUDIO_SELFTEST = true;
     </script>
-    <script src="vendor/matter.min.js?v=0.4.18"></script>
+    <script src="vendor/matter.min.js?v=0.4.19"></script>
     <!--
       直接双击打开（file://）时浏览器不允许 fetch 本地文件，语音会加载不到；
       这种情况下补上内联语音数据（assets/voice-inline.js，约 9MB）。
@@ -207,18 +216,18 @@
         document.write('<script src="assets/voice-inline.js"><\/script>');
       }
     </script>
-    <script src="js/config.js?v=0.4.18"></script>
-    <script src="js/audio.js?v=0.4.18"></script>
-    <script src="js/library.js?v=0.4.18"></script>
-    <script src="js/assets-builtin.js?v=0.4.18"></script>
-    <script src="js/assets.js?v=0.4.18"></script>
-    <script src="js/boards.js?v=0.4.18"></script>
-    <script src="js/transport.js?v=0.4.18"></script>
-    <script src="js/sync.js?v=0.4.18"></script>
-    <script src="js/engine.js?v=0.4.18"></script>
-    <script src="js/render.js?v=0.4.18"></script>
-    <script src="js/ui.js?v=0.4.18"></script>
-    <script src="js/picker.js?v=0.4.18"></script>
-    <script src="js/game.js?v=0.4.18"></script>
+    <script src="js/config.js?v=0.4.19"></script>
+    <script src="js/audio.js?v=0.4.19"></script>
+    <script src="js/library.js?v=0.4.19"></script>
+    <script src="js/assets-builtin.js?v=0.4.19"></script>
+    <script src="js/assets.js?v=0.4.19"></script>
+    <script src="js/boards.js?v=0.4.19"></script>
+    <script src="js/transport.js?v=0.4.19"></script>
+    <script src="js/sync.js?v=0.4.19"></script>
+    <script src="js/engine.js?v=0.4.19"></script>
+    <script src="js/render.js?v=0.4.19"></script>
+    <script src="js/ui.js?v=0.4.19"></script>
+    <script src="js/picker.js?v=0.4.19"></script>
+    <script src="js/game.js?v=0.4.19"></script>
 </body>
 </html>
