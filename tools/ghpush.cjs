@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成大西瓜 · 用 GitHub REST API 推送（本网络 github.com:443 不通、只有 api.github.com 通）
  *
  * 为什么需要它：`git push` 走的是 github.com/codeload，本网络连不上（代理没开）；
@@ -43,6 +43,35 @@ if (!opts.repo || !opts.dir || !TOKEN) {
   console.log('用法：node tools/ghpush.cjs --repo owner/name --dir <目录> [--branch main] [--message "..."] [--create] [--pages]');
   console.log('需要环境变量 GH_TOKEN（$env:GH_TOKEN = gh auth token）');
   process.exit(1);
+}
+
+/*
+ * 安全检查：确认 --dir 真的是这个游戏，而不是手滑指到了别的目录。
+ *
+ * 血的教训：有一次忘了先 cd，--dir . 指到了另一份工程（1600 多个无关文件），
+ * 工具差点把整个仓库替换掉、还会删掉 500 多个文件 —— 幸好远端报错拦住了。
+ * 所以这里要求「必须同时存在这些本项目的标志文件」，否则直接拒绝。
+ */
+const MUST_HAVE = ['index.html', 'js/game.js', 'js/config.js', 'server.cjs'];
+{
+  const dirAbs = path.resolve(opts.dir);
+  const missing = MUST_HAVE.filter((f) => !fs.existsSync(path.join(dirAbs, f)));
+  const suspicious = ['package.json', 'AGENTS.md', 'CLAUDE.md'].filter((f) =>
+    fs.existsSync(path.join(dirAbs, f))
+  );
+  if (missing.length) {
+    console.log('✖ 拒绝上传：' + dirAbs);
+    console.log('  这个目录不像「合成邦多利皇帝」：缺少 ' + missing.join('、'));
+    console.log('  提示：先 cd 到游戏目录，再用 --dir . ；或者直接 --dir "<游戏目录绝对路径>"');
+    process.exit(2);
+  }
+  if (suspicious.length) {
+    console.log('✖ 拒绝上传：' + dirAbs);
+    console.log('  目录里有 ' + suspicious.join('、') + '，看着像另一个工程（不是这个纯静态游戏）');
+    process.exit(2);
+  }
+  opts.dir = dirAbs;
+  console.log('上传目录：' + dirAbs);
 }
 
 /* ---------------- HTTP ---------------- */

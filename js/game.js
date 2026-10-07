@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -303,7 +303,7 @@ var limiter = CFG.createAudioLimiter();
         m === 'all'
           ? '全语音：释放与合成都会念台词（点一下切到「名场面」）'
           : m === 'scene'
-            ? '名场面：只在大玩偶 / 连击时出声（点一下切到「静音」）'
+            ? '名场面：只在大玩偶 / 连击时出声（名场面音频还没导入，暂时只有合成音）'
             : '静音：完全不发声（点一下切回「全语音」）';
     }
   }
@@ -701,6 +701,25 @@ var limiter = CFG.createAudioLimiter();
       });
     } catch (err) {
       /* 后台任务失败不影响游戏 */
+    }
+  }
+
+  /* ---------------- Service Worker（让第二次打开秒开） ---------------- */
+
+  /**
+   * 注册 sw.js：把 js/css/图片/语音存在浏览器本地。
+   * 只在 http(s) 下注册 —— file:// 双击打开时浏览器不允许 SW，
+   * 那种情况走 assets/voice-inline.js 的内联方案。
+   */
+  function registerServiceWorker() {
+    try {
+      if (!root.navigator || !root.navigator.serviceWorker) return;
+      if (root.location.protocol !== 'http:' && root.location.protocol !== 'https:') return;
+      root.navigator.serviceWorker.register('sw.js').catch(function () {
+        /* 注册失败不影响玩（比如隐私模式） */
+      });
+    } catch (err) {
+      /* 忽略 */
     }
   }
 
@@ -1431,6 +1450,9 @@ var limiter = CFG.createAudioLimiter();
     frame(ts);
   }
 
+  /* 注册 Service Worker（http/https 下生效；失败也不影响玩） */
+  registerServiceWorker();
+
   /* ---------------- 选图 ---------------- */
 
   function refreshAssetViews() {
@@ -1559,7 +1581,7 @@ var limiter = CFG.createAudioLimiter();
           mode === 'all'
             ? '全语音：释放与合成都会念台词'
             : mode === 'scene'
-              ? '名场面：只在大玩偶 / 连击时出声'
+              ? '名场面：只在大玩偶 / 连击时出声（音频还没导入，暂时只有合成音）'
               : '静音：不发声'
         );
       });

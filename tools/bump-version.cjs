@@ -34,6 +34,20 @@ if (prev === next) {
   console.log('js/config.js: ' + prev + ' → ' + next);
 }
 
+/*
+ * Service Worker 的缓存名也要跟着版本走：
+ * 否则发版后浏览器还在用旧缓存，玩家看到的还是上一版页面。
+ */
+const swPath = path.join(ROOT, 'sw.js');
+if (fs.existsSync(swPath)) {
+  const sw = fs.readFileSync(swPath, 'utf8');
+  const swNext = sw.replace(/var CACHE_VERSION = '[^']+'/, "var CACHE_VERSION = 'v" + next + "'");
+  if (swNext !== sw) {
+    fs.writeFileSync(swPath, swNext, 'utf8');
+    console.log('sw.js: 缓存版本 → ' + next);
+  }
+}
+
 const htmlPath = path.join(ROOT, 'index.html');
 let html = fs.readFileSync(htmlPath, 'utf8');
 const before = html;

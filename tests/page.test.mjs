@@ -1038,3 +1038,25 @@ test('加载提速：挡在加载页前面的只有释放音，合成音排到�
   assert.equal(dup.length, 0, '两段不该重复：' + dup.slice(0, 3).join(', '));
   assert.deepEqual(page.errors, [], '不该报错');
 });
+
+test('Service Worker：注册代码与 sw.js 都就位（线上二次打开走本地缓存）', () => {
+  const game = fs.readFileSync(path.join(ROOT, 'js', 'game.js'), 'utf8');
+  assert.match(game, /serviceWorker\.register\('sw\.js'\)/, '要注册 sw.js');
+  assert.match(game, /location\.protocol !== 'http:'/, 'file:// 下不该注册');
+
+  const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
+  assert.match(sw, /var CACHE_VERSION = 'v\d+\.\d+\.\d+'/, 'sw.js 要有缓存版本号');
+  assert.match(sw, /addEventListener\('fetch'/, 'sw.js 要接管 fetch');
+  assert.match(sw, /url\.origin !== self\.location\.origin\) return/, '跨域（排行榜）必须放行走网络');
+  assert.match(sw, /index\.html'\)/, '离线时要能回退到 index.html');
+  assert.match(sw, /caches\.delete\(k\)/, '旧版本缓存要在 activate 时删掉');
+
+  /* 版本号必须和页面一致，否则发版后会一直吃旧缓存 */
+  const cfg = fs.readFileSync(path.join(ROOT, 'js', 'config.js'), 'utf8');
+  const ver = /var VERSION = '([^']+)'/.exec(cfg)[1];
+  assert.equal(
+    new RegExp("var CACHE_VERSION = 'v" + ver.replace(/\./g, '\\.') + "'").test(sw),
+    true,
+    'sw.js 的缓存版本要和 config.js 的版本号一致（bump-version.cjs 会一起改）'
+  );
+});
