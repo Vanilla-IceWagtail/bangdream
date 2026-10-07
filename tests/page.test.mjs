@@ -700,10 +700,10 @@ test('语音规则：全语音每级都出声；名场面只在高光时刻出�
   const h = CFG3.VOICE_HIGHLIGHT;
   assert.ok(h.tierFrom >= 8 && h.tierFrom <= 11, '大玩偶门槛应该在 8~11 级之间');
   assert.ok(h.comboFrom >= 2, '连击门槛至少 2');
-  /* 语音清单：释放/合成按级别，名场面按级别 */
-  assert.equal(CFG3.AUDIO.sounds.drop.perTier, true);
-  assert.equal(CFG3.AUDIO.sounds.merge.perTier, true);
-  assert.equal(CFG3.AUDIO.sounds.scene.perTier, true);
-  assert.equal(CFG3.AUDIO.sounds.scene.variants, 1, '名场面单变体：文件名不带 -1 后缀');
-  assert.equal(CFG3.AUDIO.sounds.drop.variants, 2);
+  /* 语音清单：按玩偶 ID 取（玩家换阵容也能对上） */
+  assert.equal(CFG3.AUDIO.sounds.drop.perDoll, true);
+  assert.equal(CFG3.AUDIO.sounds.merge.perDoll, true);
+  assert.equal(CFG3.AUDIO.sounds.drop.dir, '{id}/', '语音放在 assets/voice/<玩偶ID>/ 下');
+  assert.ok(CFG3.AUDIO.sounds.drop.count >= 2 && CFG3.AUDIO.sounds.merge.count >= 2, '池子至少 2 条才谈得上随机');
+  assert.equal(CFG3.AUDIO.sounds.scene, undefined, '名场面音频还没导入，先不配');
 });

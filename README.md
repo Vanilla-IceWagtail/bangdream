@@ -1,4 +1,4 @@
-# 🎸 合成邦多利皇帝 · v0.4.8
+# 🎸 合成邦多利皇帝 · v0.4.9
 
 [![tests](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml/badge.svg)](https://github.com/Vanilla-IceWagtail/bangdream/actions/workflows/tests.yml)
 [![license](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
@@ -72,14 +72,19 @@
 | 档位 | 释放玩偶 | 合成玩偶 | 其它 |
 | --- | --- | --- | --- |
 | **全语音** | 放「当前要投的那一只」的语音 | 放「合成出来的那一只」的语音 | 危险线 / 本局结束照常出声 |
-| **名场面** | 不出声（保持安静） | 只有**合成出 9 级及以上**、或**连击 ≥3** 时才出声，而且放的是「名场面」那批台词 | 本局结束放一句名场面 |
+| **名场面** | 不出声（保持安静） | 只有**合成出 9 级及以上**、或**连击 ≥3** 时才出声（「名场面」那批音频**还没导入**，现在只有合成音） | 照常 |
 | **静音** | 完全不发声（语音与音效都没有） | 同左 | 同左 |
 
-语音取自桌面「全音频」角色台词库（21.6 万个 mp3）：`node tools/import-voice.cjs` 按规则给每个角色挑几句，
-复制成 `drop-<级>-1/2`、`merge-<级>-1/2`、`scene-<级>.mp3` —— 目前 **7 只玩偶共 33 条、约 1 MB**。
-音源里缺的角色（三角初音、仲町阿拉蕾、若叶睦）自动退回合成音。
-挑中的台词见 `assets/voice/台词清单.md`，**想换哪句直接替换同名文件**即可（换完重新跑一次即可生效）。
-**临时试听页**：`voice-preview.html`（由 `node tools/make-voice-preview.cjs` 生成，和正式页只差一行 `SUIKA_AUDIO_BASE`）。
+语音取自桌面「全音频」角色台词库（21.6 万个 mp3，覆盖图库 45 只里的 **30 只**）：
+`node tools/import-voice.cjs` 给每个角色挑 **5 条释放 + 5 条合成**的随机池，
+输出成 `assets/voice/<玩偶ID>/drop-1..5.mp3`、`merge-1..5.mp3` —— **30 只共 300 条、约 7 MB**。
+
+**按玩偶 ID 取语音**（不是按等级）：玩家在选图小窗口里把任意玩偶换到任意等级，语音都跟着走 ——
+游戏里用 `assets.idOf(等级)` 查出「这一级现在是谁」，再在**那个角色的池子里随机播一条**。
+音源里没有的 15 只（三角初音、若叶睦、仲町阿拉蕾、MyGO / Ave Mujica 等）自动退回合成音。
+挑中的台词见 `assets/voice/台词清单.md`，**想换哪句直接替换同名文件**。
+进入游戏还会**预热当前 / 下一只**的语音池（各 10 条 ≈ 250 KB），所以第一次投放就有声。
+**临时试听页**：`voice-preview.html`（由 `node tools/make-voice-preview.cjs` 生成，只比正式页多一行 `SUIKA_AUDIO_BASE`）。
 
 **音频（零文件也能玩）**
 
@@ -108,7 +113,7 @@
 **工程**
 
 - 无框架、无构建、无 npm 依赖（物理引擎 Matter.js 已内嵌 `vendor/matter.min.js`）。
-- **114 项测试**（`node --test`），含整页无头冒烟。
+- **112 项测试**（`node --test`），含整页无头冒烟。
 - 调试/自检用 URL 参数：`?shapes=1`（画碰撞体）、`?squash=`（摆挤压形变）、`?demo=1`（自动开局，不动存档）等，见第五节。
 
 ---
@@ -334,9 +339,9 @@ sync       16 项   第三方 KV 读写 / 缓存队列 / 30 分钟节奏 / 自�
 server     15 项   HTTP API / 并发不丢成绩 / 落盘 / 目录穿越防护
 page       13 项   整页无头冒烟：真页面代码跑 600 帧、零报错、结算与选图、触屏手感、切后台存档、语音档位按钮
 ui-layers   8 项   CSS 契约：弹窗层级 > 浮动「即将投放」、手机端连击不撑高分数面板
-  audio      12 项   语音加载器：格式回退 / 缺文件不报错 / 懒加载 / 多变体命名 / 限流
+  audio      10 项   语音加载器：格式回退 / 缺文件不报错 / 懒加载 / 按玩偶 ID 取语音 / 限流
 
-合计 114 / 114 通过
+合计 112 / 112 通过
 ```
 
 ---
@@ -373,7 +378,7 @@ ui-layers   8 项   CSS 契约：弹窗层级 > 浮动「即将投放」、手�
 ├─ tools/bump-version.cjs    发布：升版本号 + 刷新 index.html 的 ?v=
 ├─ tools/theme-bright.cjs    配色迁移：旧值→新值的映射表，可复核残留
 ├─ tools/ghpush.cjs          特殊网络下用 GitHub API 推送（github.com 不通时）
-├─ tests/                    114 项测试（见 5.7）
+├─ tests/                    112 项测试（见 5.7）
 ├─ .github/workflows/tests.yml  CI：每次推送跑语法检查 + 全部测试
 └─ preview/                  界面预览图与真机截图
 ```

@@ -29,6 +29,24 @@ function expectedNames() {
   Object.keys(AUDIO.sounds || {}).forEach((key) => {
     const d = AUDIO.sounds[key];
     if (!d) return;
+    if (d.perDoll) {
+      /* 按玩偶 ID：assets/voice/<id>/drop-1..N.mp3，id 来自图库清单 */
+      const cnt = Math.max(1, Number(d.count) || 1);
+      const dir = d.dir || '{id}/';
+      let ids = [];
+      try {
+        require(path.join(ROOT, 'js', 'assets-builtin.js'));
+        ids = (globalThis.SUIKA_IMAGE_LIBRARY.images || []).map((i) => i.id);
+      } catch (e) {
+        ids = [];
+      }
+      ids.forEach((id) => {
+        for (let n = 1; n <= cnt; n++) {
+          names.push({ key, name: dir.replace('{id}', id) + String(d.pattern || key + '-{n}').replace('{n}', String(n)), optional: true });
+        }
+      });
+      return;
+    }
     if (d.perTier) {
       const pat = d.pattern || key + '-{tier}';
       const variants = Math.max(1, Number(d.variants) || 1);
@@ -45,19 +63,29 @@ function expectedNames() {
   return names;
 }
 
-const existing = fs.existsSync(DIR) ? fs.readdirSync(DIR) : [];
-const byBase = new Map(); // 基名 -> [扩展名...]
+/* 顶层文件 + 子目录（按玩偶 ID 的语音就放在子目录里） */
+const existing = [];
+const byBase = new Map(); // 「相对路径去扩展名」-> [扩展名...]
 let totalBytes = 0;
-existing.forEach((f) => {
-  const m = /^(.+)\.([a-z0-9]+)$/i.exec(f);
-  if (!m) return;
-  const base = m[1];
-  const ext = m[2].toLowerCase();
-  if (FORMATS.indexOf(ext) < 0) return; // manifest.json / 台词清单.md 之类不算音频
-  if (!byBase.has(base)) byBase.set(base, []);
-  byBase.get(base).push(ext);
-  totalBytes += fs.statSync(path.join(DIR, f)).size;
-});
+function collect(dir, prefix) {
+  if (!fs.existsSync(dir)) return;
+  fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+    if (e.isDirectory()) {
+      collect(path.join(dir, e.name), prefix + e.name + '/');
+      return;
+    }
+    const m = /^(.+)\.([a-z0-9]+)$/i.exec(e.name);
+    if (!m) return;
+    const ext = m[2].toLowerCase();
+    if (FORMATS.indexOf(ext) < 0) return; // manifest.json / 台词清单.md 之类不算音频
+    const key = prefix + m[1];
+    if (!byBase.has(key)) byBase.set(key, []);
+    byBase.get(key).push(ext);
+    existing.push(prefix + e.name);
+    totalBytes += fs.statSync(path.join(dir, e.name)).size;
+  });
+}
+collect(DIR, '');
 
 const want = expectedNames();
 const have = [];

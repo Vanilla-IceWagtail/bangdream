@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 音频加载器（可选的文件音效）
  *
  * 设计原则：**零配置、缺文件不报错**
@@ -55,9 +55,18 @@
       return typeof d === 'string' ? { files: [d] } : d;
     }
 
-    function fileListFor(key, tier) {
+    function fileListFor(key, tier, id) {
       var d = defOf(key);
       if (!d) return null;
+      /* 按玩偶 ID：assets/voice/<id>/drop-1.mp3 …（玩家换阵容也跟着换） */
+      if (d.perDoll) {
+        if (!id) return null;
+        var dir = String(d.dir || '{id}/').replace('{id}', id);
+        var cnt = Math.max(1, Number(d.count) || 1);
+        var list = [];
+        for (var k = 1; k <= cnt; k++) list.push(dir + String(d.pattern || key + '-{n}').replace('{n}', String(k)));
+        return list;
+      }
       if (d.perTier) {
         var pat = d.pattern || key + '-{tier}';
         var t = String(tier == null ? 1 : tier);
@@ -144,7 +153,7 @@
       o = o || {};
       var d = defOf(key);
       if (!d) return false;
-      var list = fileListFor(key, o.tier);
+      var list = fileListFor(key, o.tier, o.id);
       if (!list || !list.length) return false;
       var vol = o.volume == null ? d.volume : o.volume;
 
@@ -170,11 +179,20 @@
       return false;
     }
 
-    /** 预加载（用户第一次交互之后调用；失败无所谓） */
-    function preload(keys) {
+    /**
+     * 预加载（失败无所谓）。
+     *   preload(['warn', 'over'])                     —— 固定名字的音效
+     *   preload(['drop', 'merge'], { id: 'roselia-01' }) —— 某个角色的语音池
+     * 已经预热过的组合会记住，不会重复发请求。
+     */
+    var preloaded = {};
+    function preload(keys, o) {
+      var id = o && o.id;
       (keys || []).forEach(function (k) {
-        var list = fileListFor(k, 1) || [];
+        var list = fileListFor(k, 1, id) || [];
         list.forEach(function (name) {
+          if (preloaded[name]) return;
+          preloaded[name] = true;
           loadFile(name);
         });
       });
@@ -184,8 +202,8 @@
       play: play,
       preload: preload,
       /** 某个 key 的音频是否已经就绪（测试/自检用） */
-      isReady: function (key, tier) {
-        var list = fileListFor(key, tier) || [];
+      isReady: function (key, tier, id) {
+        var list = fileListFor(key, tier, id) || [];
         return list.some(function (n) {
           return !!buffers[n];
         });

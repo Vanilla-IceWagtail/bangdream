@@ -1,284 +1,2170 @@
 {
   "source": "C:\\Users\\极光\\Desktop\\全音频",
+  "perRole": 5,
   "items": [
     {
-      "tier": 1,
-      "name": "山吹沙绫",
-      "files": [
-        {
-          "out": "drop-1-1.mp3",
-          "role": "释放",
-          "text": "はい。それじゃ、行こう",
-          "bytes": 26532
-        },
-        {
-          "out": "drop-1-2.mp3",
-          "role": "释放",
-          "text": "よし、行こう",
-          "bytes": 16848
-        },
-        {
-          "out": "merge-1-1.mp3",
-          "role": "合成",
-          "text": "最高のリズムセッションができたよ！",
-          "bytes": 29196
-        },
-        {
-          "out": "merge-1-2.mp3",
-          "role": "合成",
-          "text": "あはは、キラキラドキドキできるかもね",
-          "bytes": 34920
-        },
-        {
-          "out": "scene-1.mp3",
-          "role": "名场面",
-          "text": "それで、ライブの演出の話だけど……この曲はお客さんと一緒に歌いたくない？",
-          "bytes": 72900
-        }
-      ]
-    },
-    {
-      "tier": 2,
+      "id": "afterglow-01",
       "name": "上原绯玛丽",
+      "group": "afterglow",
       "files": [
         {
-          "out": "drop-2-1.mp3",
-          "role": "释放",
+          "out": "afterglow-01/drop-1.mp3",
+          "role": "drop",
           "text": "は、はい！頑張ります！",
           "bytes": 24192
         },
         {
-          "out": "drop-2-2.mp3",
-          "role": "释放",
+          "out": "afterglow-01/drop-2.mp3",
+          "role": "drop",
           "text": "は、はい……！頑張ります！",
           "bytes": 24624
         },
         {
-          "out": "merge-2-1.mp3",
-          "role": "合成",
-          "text": "やった～！ありがと、巴！",
-          "bytes": 30960
+          "out": "afterglow-01/drop-3.mp3",
+          "role": "drop",
+          "text": "はい、がんばります……",
+          "bytes": 25560
         },
         {
-          "out": "merge-2-2.mp3",
-          "role": "合成",
+          "out": "afterglow-01/drop-4.mp3",
+          "role": "drop",
+          "text": "それはいい過ぎだよ〜！",
+          "bytes": 28548
+        },
+        {
+          "out": "afterglow-01/drop-5.mp3",
+          "role": "drop",
+          "text": "えっ、なにそれ！どうやるの？",
+          "bytes": 30888
+        },
+        {
+          "out": "afterglow-01/merge-1.mp3",
+          "role": "merge",
           "text": "やったよつぐー！完璧にできたー！",
           "bytes": 37548
         },
         {
-          "out": "scene-2.mp3",
-          "role": "名场面",
-          "text": "みんな、今日はほんっとうにありがとうね！今年も最高の誕生日になったよー！",
-          "bytes": 77220
+          "out": "afterglow-01/merge-2.mp3",
+          "role": "merge",
+          "text": "やった～！ありがと、巴！",
+          "bytes": 30960
+        },
+        {
+          "out": "afterglow-01/merge-3.mp3",
+          "role": "merge",
+          "text": "やったー！モカ、ありがとう！",
+          "bytes": 38088
+        },
+        {
+          "out": "afterglow-01/merge-4.mp3",
+          "role": "merge",
+          "text": "す、すごい……！ありがとうございます！",
+          "bytes": 38988
+        },
+        {
+          "out": "afterglow-01/merge-5.mp3",
+          "role": "merge",
+          "text": "……やったー！ありがとうございますっ！",
+          "bytes": 39384
         }
       ]
     },
     {
-      "tier": 3,
-      "name": "丸山彩",
+      "id": "afterglow-02",
+      "name": "宇田川巴",
+      "group": "afterglow",
       "files": [
         {
-          "out": "drop-3-1.mp3",
-          "role": "释放",
-          "text": "はい、一緒にがんばりましょう！",
-          "bytes": 22464
+          "out": "afterglow-02/drop-1.mp3",
+          "role": "drop",
+          "text": "それじゃあ、はい",
+          "bytes": 12456
         },
         {
-          "out": "drop-3-2.mp3",
-          "role": "释放",
-          "text": "それはね、がんばること！",
-          "bytes": 22752
+          "out": "afterglow-02/drop-2.mp3",
+          "role": "drop",
+          "text": "よし、行こう……！",
+          "bytes": 13860
         },
         {
-          "out": "merge-3-1.mp3",
-          "role": "合成",
-          "text": "やったあ！ありがとうございますっ！",
-          "bytes": 22716
+          "out": "afterglow-02/drop-3.mp3",
+          "role": "drop",
+          "text": "よし、早く取りに行こう",
+          "bytes": 18144
         },
         {
-          "out": "merge-3-2.mp3",
-          "role": "合成",
-          "text": "ありがとうございます、がんばります！",
-          "bytes": 23040
+          "out": "afterglow-02/drop-4.mp3",
+          "role": "drop",
+          "text": "……よし。『アレ』、やるか",
+          "bytes": 24516
         },
         {
-          "out": "scene-3.mp3",
-          "role": "名场面",
-          "text": "『私たちは全力でがんばるから、眩しく輝く夢を、一緒に見よう！』",
-          "bytes": 63396
+          "out": "afterglow-02/drop-5.mp3",
+          "role": "drop",
+          "text": "それじゃあ、みんなで行こう！",
+          "bytes": 28224
+        },
+        {
+          "out": "afterglow-02/merge-1.mp3",
+          "role": "merge",
+          "text": "やった！ありがとうございます！",
+          "bytes": 25416
+        },
+        {
+          "out": "afterglow-02/merge-2.mp3",
+          "role": "merge",
+          "text": "ああ、練習通りできた。やったな",
+          "bytes": 30888
+        },
+        {
+          "out": "afterglow-02/merge-3.mp3",
+          "role": "merge",
+          "text": "はは、嬉しいよ。ありがとな！",
+          "bytes": 32796
+        },
+        {
+          "out": "afterglow-02/merge-4.mp3",
+          "role": "merge",
+          "text": "ひとりでやるよりも、ふたりでやったほうが早く終わるだろ",
+          "bytes": 37800
+        },
+        {
+          "out": "afterglow-02/merge-5.mp3",
+          "role": "merge",
+          "text": "おう！最高のラーメンで、お客さんを笑顔にしてやるぜ！",
+          "bytes": 40608
         }
       ]
     },
     {
-      "tier": 4,
-      "name": "今井莉莎",
+      "id": "afterglow-03",
+      "name": "美竹兰",
+      "group": "afterglow",
       "files": [
         {
-          "out": "drop-4-1.mp3",
-          "role": "释放",
-          "text": "がんばろう。それが、アタシの今やること！",
-          "bytes": 29232
+          "out": "afterglow-03/drop-1.mp3",
+          "role": "drop",
+          "text": "……よし、いくよ！",
+          "bytes": 13932
         },
         {
-          "out": "drop-4-2.mp3",
-          "role": "释放",
-          "text": "よしっ！がんばろう！！",
-          "bytes": 15948
+          "out": "afterglow-03/drop-2.mp3",
+          "role": "drop",
+          "text": "……よし、できた",
+          "bytes": 15120
         },
         {
-          "out": "merge-4.mp3",
-          "role": "合成",
-          "text": "やった～！ありがとうございます！",
-          "bytes": 29556
+          "out": "afterglow-03/drop-3.mp3",
+          "role": "drop",
+          "text": "よし、行こう",
+          "bytes": 17604
         },
         {
-          "out": "scene-4.mp3",
-          "role": "名场面",
-          "text": "『みんな、今日は楽しい１日をありがとう。また一緒に、みんなで出かけよ！』",
-          "bytes": 56916
+          "out": "afterglow-03/drop-4.mp3",
+          "role": "drop",
+          "text": "オッケー。それじゃ行こうか",
+          "bytes": 19800
+        },
+        {
+          "out": "afterglow-03/drop-5.mp3",
+          "role": "drop",
+          "text": "……それで、曲は何やるの？",
+          "bytes": 19836
+        },
+        {
+          "out": "afterglow-03/merge-1.mp3",
+          "role": "merge",
+          "text": "やったじゃん",
+          "bytes": 8496
+        },
+        {
+          "out": "afterglow-03/merge-2.mp3",
+          "role": "merge",
+          "text": "……ありがと",
+          "bytes": 9288
+        },
+        {
+          "out": "afterglow-03/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがと……",
+          "bytes": 9396
+        },
+        {
+          "out": "afterglow-03/merge-4.mp3",
+          "role": "merge",
+          "text": "できた……！",
+          "bytes": 9900
+        },
+        {
+          "out": "afterglow-03/merge-5.mp3",
+          "role": "merge",
+          "text": "りみ、がんばれ",
+          "bytes": 13032
         }
       ]
     },
     {
-      "tier": 5,
+      "id": "afterglow-04",
+      "name": "羽泽鸫",
+      "group": "afterglow",
+      "files": [
+        {
+          "out": "afterglow-04/drop-1.mp3",
+          "role": "drop",
+          "text": "よし、頑張ろうっ！",
+          "bytes": 13536
+        },
+        {
+          "out": "afterglow-04/drop-2.mp3",
+          "role": "drop",
+          "text": "は、はい！頑張りますっ！",
+          "bytes": 17820
+        },
+        {
+          "out": "afterglow-04/drop-3.mp3",
+          "role": "drop",
+          "text": "は、はい！がんばります！",
+          "bytes": 20592
+        },
+        {
+          "out": "afterglow-04/drop-4.mp3",
+          "role": "drop",
+          "text": "ふふっ。それじゃ行こう！",
+          "bytes": 22788
+        },
+        {
+          "out": "afterglow-04/drop-5.mp3",
+          "role": "drop",
+          "text": "はい……私、がんばります！",
+          "bytes": 25920
+        },
+        {
+          "out": "afterglow-04/merge-1.mp3",
+          "role": "merge",
+          "text": "やった！ありがとう蘭ちゃん！",
+          "bytes": 27252
+        },
+        {
+          "out": "afterglow-04/merge-2.mp3",
+          "role": "merge",
+          "text": "やったあっ！蘭ちゃん、ありがとうっ",
+          "bytes": 31824
+        },
+        {
+          "out": "afterglow-04/merge-3.mp3",
+          "role": "merge",
+          "text": "うんっ！がんばるっ！ありがとう、イヴちゃんっ",
+          "bytes": 32148
+        },
+        {
+          "out": "afterglow-04/merge-4.mp3",
+          "role": "merge",
+          "text": "みんな、ありがとう！すっごくうれしいっ！",
+          "bytes": 32796
+        },
+        {
+          "out": "afterglow-04/merge-5.mp3",
+          "role": "merge",
+          "text": "イヴちゃん！完璧なライブができたね！",
+          "bytes": 33660
+        }
+      ]
+    },
+    {
+      "id": "afterglow-05",
+      "name": "青叶摩卡",
+      "group": "afterglow",
+      "files": [
+        {
+          "out": "afterglow-05/drop-1.mp3",
+          "role": "drop",
+          "text": "はいは～い、それーっ",
+          "bytes": 29808
+        },
+        {
+          "out": "afterglow-05/drop-2.mp3",
+          "role": "drop",
+          "text": "お、それじゃアタシも一緒に行こうかな",
+          "bytes": 32400
+        },
+        {
+          "out": "afterglow-05/drop-3.mp3",
+          "role": "drop",
+          "text": "はい……これ",
+          "bytes": 12240
+        },
+        {
+          "out": "afterglow-05/drop-4.mp3",
+          "role": "drop",
+          "text": "この前読んだマンガに、薫先輩みたいなキャラが出てきたんですよー",
+          "bytes": 14084
+        },
+        {
+          "out": "afterglow-05/drop-5.mp3",
+          "role": "drop",
+          "text": "それだけです",
+          "bytes": 16128
+        },
+        {
+          "out": "afterglow-05/merge-1.mp3",
+          "role": "merge",
+          "text": "蘭最高～。ありがと～～",
+          "bytes": 42228
+        },
+        {
+          "out": "afterglow-05/merge-2.mp3",
+          "role": "merge",
+          "text": "やったー！パンのお姫様でお願いしまーす",
+          "bytes": 14084
+        },
+        {
+          "out": "afterglow-05/merge-3.mp3",
+          "role": "merge",
+          "text": "蘭、がんばれー",
+          "bytes": 19728
+        },
+        {
+          "out": "afterglow-05/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとー、沙綾",
+          "bytes": 20448
+        },
+        {
+          "out": "afterglow-05/merge-5.mp3",
+          "role": "merge",
+          "text": "そんなにうれしいの？",
+          "bytes": 21960
+        }
+      ]
+    },
+    {
+      "id": "avemujica-01",
+      "name": "三角初音",
+      "group": "avemujica",
+      "files": []
+    },
+    {
+      "id": "avemujica-02",
+      "name": "丰川祥子",
+      "group": "avemujica",
+      "files": []
+    },
+    {
+      "id": "avemujica-03",
+      "name": "八幡海铃",
+      "group": "avemujica",
+      "files": []
+    },
+    {
+      "id": "avemujica-04",
+      "name": "祐天寺若麦",
+      "group": "avemujica",
+      "files": []
+    },
+    {
+      "id": "avemujica-05",
+      "name": "若叶睦",
+      "group": "avemujica",
+      "files": []
+    },
+    {
+      "id": "avemujica-casual-01",
+      "name": "三角初音",
+      "group": "avemujica-casual",
+      "files": []
+    },
+    {
+      "id": "avemujica-casual-02",
+      "name": "丰川祥子",
+      "group": "avemujica-casual",
+      "files": []
+    },
+    {
+      "id": "avemujica-casual-03",
+      "name": "八幡海铃",
+      "group": "avemujica-casual",
+      "files": []
+    },
+    {
+      "id": "avemujica-casual-04",
+      "name": "祐天寺若麦",
+      "group": "avemujica-casual",
+      "files": []
+    },
+    {
+      "id": "avemujica-casual-05",
+      "name": "若叶睦",
+      "group": "avemujica-casual",
+      "files": []
+    },
+    {
+      "id": "halloworld-01",
       "name": "北泽育美",
+      "group": "halloworld",
       "files": [
         {
-          "out": "drop-5-1.mp3",
-          "role": "释放",
+          "out": "halloworld-01/drop-1.mp3",
+          "role": "drop",
           "text": "それじゃあ、走って行こうか！",
           "bytes": 22752
         },
         {
-          "out": "drop-5-2.mp3",
-          "role": "释放",
+          "out": "halloworld-01/drop-2.mp3",
+          "role": "drop",
           "text": "それでお話聞きに来たんだ！",
           "bytes": 28764
         },
         {
-          "out": "merge-5-1.mp3",
-          "role": "合成",
+          "out": "halloworld-01/drop-3.mp3",
+          "role": "drop",
+          "text": "それで…はうちに何買いにきたの？",
+          "bytes": 29160
+        },
+        {
+          "out": "halloworld-01/drop-4.mp3",
+          "role": "drop",
+          "text": "はいはーい！はぐみも行きたーい！",
+          "bytes": 29304
+        },
+        {
+          "out": "halloworld-01/drop-5.mp3",
+          "role": "drop",
+          "text": "それ、はぐみも聞きたいなー！",
+          "bytes": 29340
+        },
+        {
+          "out": "halloworld-01/merge-1.mp3",
+          "role": "merge",
           "text": "やったー！ありがとー！",
           "bytes": 26136
         },
         {
-          "out": "merge-5-2.mp3",
-          "role": "合成",
+          "out": "halloworld-01/merge-2.mp3",
+          "role": "merge",
           "text": "やった！まりなさん、ありがとっ！",
           "bytes": 26928
         },
         {
-          "out": "scene-5.mp3",
-          "role": "名场面",
-          "text": "ありがとう、絶対みんなで会いに来よう。約束だよ……！",
-          "bytes": 55656
+          "out": "halloworld-01/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがとー！はぐみ、やったよー！",
+          "bytes": 27360
+        },
+        {
+          "out": "halloworld-01/merge-4.mp3",
+          "role": "merge",
+          "text": "やったぁ！ありがと！さーや！",
+          "bytes": 27468
+        },
+        {
+          "out": "halloworld-01/merge-5.mp3",
+          "role": "merge",
+          "text": "楽しいステージになるように、はぐみがんばる！",
+          "bytes": 36468
         }
       ]
     },
     {
-      "tier": 6,
-      "name": "千早爱音",
+      "id": "halloworld-02",
+      "name": "弦卷心",
+      "group": "halloworld",
       "files": [
         {
-          "out": "drop-6-1.mp3",
-          "role": "释放",
+          "out": "halloworld-02/drop-1.mp3",
+          "role": "drop",
+          "text": "それじゃあみんな、準備はいいかしら？",
+          "bytes": 31860
+        },
+        {
+          "out": "halloworld-02/drop-2.mp3",
+          "role": "drop",
+          "text": "来たっ！よし……行くわよ！",
+          "bytes": 32292
+        },
+        {
+          "out": "halloworld-02/drop-3.mp3",
+          "role": "drop",
+          "text": "——それよ！！",
+          "bytes": 10152
+        },
+        {
+          "out": "halloworld-02/drop-4.mp3",
+          "role": "drop",
+          "text": "はい、これ！",
+          "bytes": 11052
+        },
+        {
+          "out": "halloworld-02/drop-5.mp3",
+          "role": "drop",
+          "text": "……できたわ！",
+          "bytes": 14076
+        },
+        {
+          "out": "halloworld-02/merge-1.mp3",
+          "role": "merge",
+          "text": "楽しい演奏ができたわね！",
+          "bytes": 22536
+        },
+        {
+          "out": "halloworld-02/merge-2.mp3",
+          "role": "merge",
+          "text": "最高の演奏ができたわねっ！",
+          "bytes": 27612
+        },
+        {
+          "out": "halloworld-02/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがとう、日菜！日菜も最高よ！",
+          "bytes": 31428
+        },
+        {
+          "out": "halloworld-02/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとう！！すごくうれしいわ！",
+          "bytes": 32580
+        },
+        {
+          "out": "halloworld-02/merge-5.mp3",
+          "role": "merge",
+          "text": "ありがとう、紗夜！もちろん紗夜も最高よ！",
+          "bytes": 36288
+        }
+      ]
+    },
+    {
+      "id": "halloworld-03",
+      "name": "松原花音",
+      "group": "halloworld",
+      "files": [
+        {
+          "out": "halloworld-03/drop-1.mp3",
+          "role": "drop",
+          "text": "それじゃあ――いくよ！",
+          "bytes": 27216
+        },
+        {
+          "out": "halloworld-03/drop-2.mp3",
+          "role": "drop",
+          "text": "……はい、できた！もういいよ～",
+          "bytes": 29088
+        },
+        {
+          "out": "halloworld-03/drop-3.mp3",
+          "role": "drop",
+          "text": "はい！それじゃあ、またCiRCLEで！",
+          "bytes": 30204
+        },
+        {
+          "out": "halloworld-03/drop-4.mp3",
+          "role": "drop",
+          "text": "はい……！一生懸命頑張りますっ！",
+          "bytes": 31716
+        },
+        {
+          "out": "halloworld-03/drop-5.mp3",
+          "role": "drop",
+          "text": "きた……っ！",
+          "bytes": 8100
+        },
+        {
+          "out": "halloworld-03/merge-1.mp3",
+          "role": "merge",
+          "text": "や、やった！すごく嬉しいっ！",
+          "bytes": 31932
+        },
+        {
+          "out": "halloworld-03/merge-2.mp3",
+          "role": "merge",
+          "text": "みんなとできたら、すごく楽しいっていうのはわかってるの",
+          "bytes": 44244
+        },
+        {
+          "out": "halloworld-03/merge-3.mp3",
+          "role": "merge",
+          "text": "有咲ちゃん、この前は茶道部にお茶碗を寄付してくれてありがとね",
+          "bytes": 14084
+        },
+        {
+          "out": "halloworld-03/merge-4.mp3",
+          "role": "merge",
+          "text": "うん！頑張ろうっ！",
+          "bytes": 14220
+        },
+        {
+          "out": "halloworld-03/merge-5.mp3",
+          "role": "merge",
+          "text": "がんばれー！",
+          "bytes": 15192
+        }
+      ]
+    },
+    {
+      "id": "halloworld-04",
+      "name": "濑田薰",
+      "group": "halloworld",
+      "files": [
+        {
+          "out": "halloworld-04/drop-1.mp3",
+          "role": "drop",
+          "text": "それでは行こうか",
+          "bytes": 14112
+        },
+        {
+          "out": "halloworld-04/drop-2.mp3",
+          "role": "drop",
+          "text": "それでは暗転といこう",
+          "bytes": 21564
+        },
+        {
+          "out": "halloworld-04/drop-3.mp3",
+          "role": "drop",
+          "text": "なるほど。それじゃあ、行こうか",
+          "bytes": 26424
+        },
+        {
+          "out": "halloworld-04/drop-4.mp3",
+          "role": "drop",
+          "text": "え……？それはいったい、どういう意味だい？",
+          "bytes": 32760
+        },
+        {
+          "out": "halloworld-04/drop-5.mp3",
+          "role": "drop",
+          "text": "うん。それなら……",
+          "bytes": 13464
+        },
+        {
+          "out": "halloworld-04/merge-1.mp3",
+          "role": "merge",
+          "text": "それは嬉しいね。ありがとう、麻弥",
+          "bytes": 32472
+        },
+        {
+          "out": "halloworld-04/merge-2.mp3",
+          "role": "merge",
+          "text": "あ、ありがとう。それは嬉しいよ",
+          "bytes": 34632
+        },
+        {
+          "out": "halloworld-04/merge-3.mp3",
+          "role": "merge",
+          "text": "やった～！ありがとう、ちーちゃん",
+          "bytes": 35136
+        },
+        {
+          "out": "halloworld-04/merge-4.mp3",
+          "role": "merge",
+          "text": "二人ともありがとう。そう言ってもらえると嬉しいよ",
+          "bytes": 39168
+        },
+        {
+          "out": "halloworld-04/merge-5.mp3",
+          "role": "merge",
+          "text": "ありがとう。そう言ってもらえると、やった甲斐があるよ",
+          "bytes": 42840
+        }
+      ]
+    },
+    {
+      "id": "halloworld-05",
+      "name": "米歇尔",
+      "group": "halloworld",
+      "files": [
+        {
+          "out": "halloworld-05/drop-1.mp3",
+          "role": "drop",
+          "text": "はい。がんばりましょう",
+          "bytes": 15084
+        },
+        {
+          "out": "halloworld-05/drop-2.mp3",
+          "role": "drop",
+          "text": "はい。お互いがんばりましょう",
+          "bytes": 20916
+        },
+        {
+          "out": "halloworld-05/drop-3.mp3",
+          "role": "drop",
+          "text": "はいはーい。がんばってー",
+          "bytes": 21168
+        },
+        {
+          "out": "halloworld-05/drop-4.mp3",
+          "role": "drop",
+          "text": "はい。それじゃあ行きましょうか",
+          "bytes": 22824
+        },
+        {
+          "out": "halloworld-05/drop-5.mp3",
+          "role": "drop",
+          "text": "それじゃ、あたしもがんばりますか",
+          "bytes": 29484
+        },
+        {
+          "out": "halloworld-05/merge-1.mp3",
+          "role": "merge",
+          "text": "ありがとうございます",
+          "bytes": 12636
+        },
+        {
+          "out": "halloworld-05/merge-2.mp3",
+          "role": "merge",
+          "text": "うん、ありがと",
+          "bytes": 12888
+        },
+        {
+          "out": "halloworld-05/merge-3.mp3",
+          "role": "merge",
+          "text": "あ、ありがと……",
+          "bytes": 13968
+        },
+        {
+          "out": "halloworld-05/merge-4.mp3",
+          "role": "merge",
+          "text": "え？嬉しい……？",
+          "bytes": 14616
+        },
+        {
+          "out": "halloworld-05/merge-5.mp3",
+          "role": "merge",
+          "text": "……はぐみがやるの！？",
+          "bytes": 15264
+        }
+      ]
+    },
+    {
+      "id": "mewtype-01",
+      "name": "仲町阿拉蕾",
+      "group": "mewtype",
+      "files": []
+    },
+    {
+      "id": "mewtype-02",
+      "name": "千石由乃",
+      "group": "mewtype",
+      "files": []
+    },
+    {
+      "id": "mewtype-03",
+      "name": "宮永野乃花",
+      "group": "mewtype",
+      "files": []
+    },
+    {
+      "id": "mewtype-04",
+      "name": "峰月律",
+      "group": "mewtype",
+      "files": []
+    },
+    {
+      "id": "mewtype-05",
+      "name": "藤都子",
+      "group": "mewtype",
+      "files": []
+    },
+    {
+      "id": "mygo-01",
+      "name": "千早爱音",
+      "group": "mygo",
+      "files": [
+        {
+          "out": "mygo-01/drop-1.mp3",
+          "role": "drop",
+          "text": "それにほら、時間はいっぱいあるんだし！",
+          "bytes": 32508
+        },
+        {
+          "out": "mygo-01/drop-2.mp3",
+          "role": "drop",
           "text": "ちょうど来たね……",
           "bytes": 14076
         },
         {
-          "out": "drop-6-2.mp3",
-          "role": "释放",
+          "out": "mygo-01/drop-3.mp3",
+          "role": "drop",
           "text": "はい、話し合って！",
           "bytes": 15876
         },
         {
-          "out": "merge-6-1.mp3",
-          "role": "合成",
+          "out": "mygo-01/drop-4.mp3",
+          "role": "drop",
+          "text": "うん、がんばろ……！",
+          "bytes": 15948
+        },
+        {
+          "out": "mygo-01/drop-5.mp3",
+          "role": "drop",
+          "text": "あ、ともりん起きた",
+          "bytes": 17388
+        },
+        {
+          "out": "mygo-01/merge-1.mp3",
+          "role": "merge",
           "text": "やった！ありがとうございます！",
           "bytes": 29628
         },
         {
-          "out": "merge-6-2.mp3",
-          "role": "合成",
-          "text": "うん、がんばろ……！",
-          "bytes": 15948
+          "out": "mygo-01/merge-2.mp3",
+          "role": "merge",
+          "text": "えっ、ライブやるの！？",
+          "bytes": 17568
+        },
+        {
+          "out": "mygo-01/merge-3.mp3",
+          "role": "merge",
+          "text": "もらっとくね。ありがと～",
+          "bytes": 20628
+        },
+        {
+          "out": "mygo-01/merge-4.mp3",
+          "role": "merge",
+          "text": "……だからライブ、がんばろう",
+          "bytes": 22644
+        },
+        {
+          "out": "mygo-01/merge-5.mp3",
+          "role": "merge",
+          "text": "私も、がんばってみる",
+          "bytes": 22932
         }
       ]
     },
     {
-      "tier": 7,
-      "name": "三角初音",
-      "files": []
-    },
-    {
-      "tier": 8,
-      "name": "三角初音",
-      "files": []
-    },
-    {
-      "tier": 9,
-      "name": "仲町阿拉蕾",
-      "files": []
-    },
-    {
-      "tier": 10,
-      "name": "若叶睦",
-      "files": []
-    },
-    {
-      "tier": 11,
-      "name": "户山香澄",
+      "id": "mygo-02",
+      "name": "椎名立希",
+      "group": "mygo",
       "files": [
         {
-          "out": "drop-11-1.mp3",
-          "role": "释放",
+          "out": "mygo-02/drop-1.mp3",
+          "role": "drop",
+          "text": "って言われて、来たはいいけど",
+          "bytes": 30528
+        },
+        {
+          "out": "mygo-02/drop-2.mp3",
+          "role": "drop",
+          "text": "……それだけ",
+          "bytes": 9684
+        },
+        {
+          "out": "mygo-02/drop-3.mp3",
+          "role": "drop",
+          "text": "……燈がやるなら",
+          "bytes": 12744
+        },
+        {
+          "out": "mygo-02/drop-4.mp3",
+          "role": "drop",
+          "text": "それはわかる",
+          "bytes": 13356
+        },
+        {
+          "out": "mygo-02/drop-5.mp3",
+          "role": "drop",
+          "text": "……私はいい",
+          "bytes": 13536
+        },
+        {
+          "out": "mygo-02/merge-1.mp3",
+          "role": "merge",
+          "text": "それは……こんないいライブできたら、嬉しいでしょ",
+          "bytes": 44352
+        },
+        {
+          "out": "mygo-02/merge-2.mp3",
+          "role": "merge",
+          "text": "……ありがとう",
+          "bytes": 7740
+        },
+        {
+          "out": "mygo-02/merge-3.mp3",
+          "role": "merge",
+          "text": "……できたけど",
+          "bytes": 14040
+        },
+        {
+          "out": "mygo-02/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとうございます！",
+          "bytes": 14148
+        },
+        {
+          "out": "mygo-02/merge-5.mp3",
+          "role": "merge",
+          "text": "……ありがとうございます",
+          "bytes": 14328
+        }
+      ]
+    },
+    {
+      "id": "mygo-03",
+      "name": "要乐奈",
+      "group": "mygo",
+      "files": [
+        {
+          "out": "mygo-03/drop-1.mp3",
+          "role": "drop",
+          "text": "ライブやる？",
+          "bytes": 9108
+        },
+        {
+          "out": "mygo-03/drop-2.mp3",
+          "role": "drop",
+          "text": "……がんばる",
+          "bytes": 9648
+        },
+        {
+          "out": "mygo-03/drop-3.mp3",
+          "role": "drop",
+          "text": "一緒にやる？",
+          "bytes": 11808
+        },
+        {
+          "out": "mygo-03/drop-4.mp3",
+          "role": "drop",
+          "text": "……まだ弾きたい",
+          "bytes": 12852
+        },
+        {
+          "out": "mygo-03/drop-5.mp3",
+          "role": "drop",
+          "text": "ここでバンドやる",
+          "bytes": 13536
+        },
+        {
+          "out": "mygo-03/merge-1.mp3",
+          "role": "merge",
+          "text": "うん。ありがと",
+          "bytes": 13032
+        },
+        {
+          "out": "mygo-03/merge-2.mp3",
+          "role": "merge",
+          "text": "いつも楽しい",
+          "bytes": 14400
+        },
+        {
+          "out": "mygo-03/merge-3.mp3",
+          "role": "merge",
+          "text": "じゃあ、ギターやる？",
+          "bytes": 15876
+        },
+        {
+          "out": "mygo-03/merge-4.mp3",
+          "role": "merge",
+          "text": "なった。ライブやる",
+          "bytes": 16560
+        },
+        {
+          "out": "mygo-03/merge-5.mp3",
+          "role": "merge",
+          "text": "いける。ライブやる",
+          "bytes": 17424
+        }
+      ]
+    },
+    {
+      "id": "mygo-04",
+      "name": "长崎素世",
+      "group": "mygo",
+      "files": [
+        {
+          "out": "mygo-04/drop-1.mp3",
+          "role": "drop",
+          "text": "はい。それじゃあまた",
+          "bytes": 19044
+        },
+        {
+          "out": "mygo-04/drop-2.mp3",
+          "role": "drop",
+          "text": "それで、どの曲やるの？",
+          "bytes": 20160
+        },
+        {
+          "out": "mygo-04/drop-3.mp3",
+          "role": "drop",
+          "text": "……それ言うために戻ってきたの？",
+          "bytes": 26208
+        },
+        {
+          "out": "mygo-04/drop-4.mp3",
+          "role": "drop",
+          "text": "それなのに……",
+          "bytes": 12888
+        },
+        {
+          "out": "mygo-04/drop-5.mp3",
+          "role": "drop",
+          "text": "はい、チーズ",
+          "bytes": 13320
+        },
+        {
+          "out": "mygo-04/merge-1.mp3",
+          "role": "merge",
+          "text": "ううん。いつもお仕事がんばってくれてありがとう",
+          "bytes": 36288
+        },
+        {
+          "out": "mygo-04/merge-2.mp3",
+          "role": "merge",
+          "text": "頑張るので、楽しんでもらえると嬉しいです♪",
+          "bytes": 37872
+        },
+        {
+          "out": "mygo-04/merge-3.mp3",
+          "role": "merge",
+          "text": "……もう１回やる？",
+          "bytes": 14976
+        },
+        {
+          "out": "mygo-04/merge-4.mp3",
+          "role": "merge",
+          "text": "いいライブできたな……",
+          "bytes": 16632
+        },
+        {
+          "out": "mygo-04/merge-5.mp3",
+          "role": "merge",
+          "text": "うん。お仕事がんばって",
+          "bytes": 20484
+        }
+      ]
+    },
+    {
+      "id": "mygo-05",
+      "name": "高松灯",
+      "group": "mygo",
+      "files": [
+        {
+          "out": "mygo-05/drop-1.mp3",
+          "role": "drop",
+          "text": "よし……行こう……っ！",
+          "bytes": 25884
+        },
+        {
+          "out": "mygo-05/drop-2.mp3",
+          "role": "drop",
+          "text": "は、はい……がんばります……っ",
+          "bytes": 27864
+        },
+        {
+          "out": "mygo-05/drop-3.mp3",
+          "role": "drop",
+          "text": "は、はい……！がんばります……",
+          "bytes": 29520
+        },
+        {
+          "out": "mygo-05/drop-4.mp3",
+          "role": "drop",
+          "text": "はい……そうです。それと……",
+          "bytes": 31500
+        },
+        {
+          "out": "mygo-05/drop-5.mp3",
+          "role": "drop",
+          "text": "私もがんばる……",
+          "bytes": 12924
+        },
+        {
+          "out": "mygo-05/merge-1.mp3",
+          "role": "merge",
+          "text": "はい、ありがとうございます。がんばります",
+          "bytes": 35028
+        },
+        {
+          "out": "mygo-05/merge-2.mp3",
+          "role": "merge",
+          "text": "……！ありがとう、嬉しい",
+          "bytes": 36828
+        },
+        {
+          "out": "mygo-05/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがとう……",
+          "bytes": 8640
+        },
+        {
+          "out": "mygo-05/merge-4.mp3",
+          "role": "merge",
+          "text": "すごい……！",
+          "bytes": 8784
+        },
+        {
+          "out": "mygo-05/merge-5.mp3",
+          "role": "merge",
+          "text": "ありがとうございます",
+          "bytes": 14436
+        }
+      ]
+    },
+    {
+      "id": "pastelpalettes-01",
+      "name": "丸山彩",
+      "group": "pastelpalettes",
+      "files": [
+        {
+          "out": "pastelpalettes-01/drop-1.mp3",
+          "role": "drop",
+          "text": "はい、一緒にがんばりましょう！",
+          "bytes": 22464
+        },
+        {
+          "out": "pastelpalettes-01/drop-2.mp3",
+          "role": "drop",
+          "text": "それはね、がんばること！",
+          "bytes": 22752
+        },
+        {
+          "out": "pastelpalettes-01/drop-3.mp3",
+          "role": "drop",
+          "text": "あ、それで聞きたいことって？",
+          "bytes": 25200
+        },
+        {
+          "out": "pastelpalettes-01/drop-4.mp3",
+          "role": "drop",
+          "text": "それで、今日は何しにきたの？",
+          "bytes": 25956
+        },
+        {
+          "out": "pastelpalettes-01/drop-5.mp3",
+          "role": "drop",
+          "text": "それじゃあ、いくよ……っ",
+          "bytes": 26100
+        },
+        {
+          "out": "pastelpalettes-01/merge-1.mp3",
+          "role": "merge",
+          "text": "やったあ！ありがとうございますっ！",
+          "bytes": 22716
+        },
+        {
+          "out": "pastelpalettes-01/merge-2.mp3",
+          "role": "merge",
+          "text": "ありがとうございます、がんばります！",
+          "bytes": 23040
+        },
+        {
+          "out": "pastelpalettes-01/merge-3.mp3",
+          "role": "merge",
+          "text": "でも、ありがとう！すごくうれしい！",
+          "bytes": 23112
+        },
+        {
+          "out": "pastelpalettes-01/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとう！みんな、がんばってね！",
+          "bytes": 24084
+        },
+        {
+          "out": "pastelpalettes-01/merge-5.mp3",
+          "role": "merge",
+          "text": "すごい！麻弥ちゃん、やったね！",
+          "bytes": 29052
+        }
+      ]
+    },
+    {
+      "id": "pastelpalettes-02",
+      "name": "冰川日菜",
+      "group": "pastelpalettes",
+      "files": [
+        {
+          "out": "pastelpalettes-02/drop-1.mp3",
+          "role": "drop",
+          "text": "それならやるしかないよねー",
+          "bytes": 24228
+        },
+        {
+          "out": "pastelpalettes-02/drop-2.mp3",
+          "role": "drop",
+          "text": "はーいっ！！それじゃいくよ――",
+          "bytes": 27576
+        },
+        {
+          "out": "pastelpalettes-02/drop-3.mp3",
+          "role": "drop",
+          "text": "あー、それで走ってきたんだ？",
+          "bytes": 30240
+        },
+        {
+          "out": "pastelpalettes-02/drop-4.mp3",
+          "role": "drop",
+          "text": "はいっ、あこちゃん！",
+          "bytes": 13068
+        },
+        {
+          "out": "pastelpalettes-02/drop-5.mp3",
+          "role": "drop",
+          "text": "それとそれと……！",
+          "bytes": 13104
+        },
+        {
+          "out": "pastelpalettes-02/merge-1.mp3",
+          "role": "merge",
+          "text": "やったー！おねーちゃん大好き！",
+          "bytes": 33336
+        },
+        {
+          "out": "pastelpalettes-02/merge-2.mp3",
+          "role": "merge",
+          "text": "やったあ！ありがとう、おねーちゃん♪",
+          "bytes": 36324
+        },
+        {
+          "out": "pastelpalettes-02/merge-3.mp3",
+          "role": "merge",
+          "text": "やったー！おねーちゃん大好きー！",
+          "bytes": 36900
+        },
+        {
+          "out": "pastelpalettes-02/merge-4.mp3",
+          "role": "merge",
+          "text": "すごいがんばってて、彩ちゃんって感じしたよ！",
+          "bytes": 39744
+        },
+        {
+          "out": "pastelpalettes-02/merge-5.mp3",
+          "role": "merge",
+          "text": "すごいよね！あたし麻弥ちゃんのコラム大好き！",
+          "bytes": 39780
+        }
+      ]
+    },
+    {
+      "id": "pastelpalettes-03",
+      "name": "大和麻弥",
+      "group": "pastelpalettes",
+      "files": [
+        {
+          "out": "pastelpalettes-03/drop-1.mp3",
+          "role": "drop",
+          "text": "よし、がんばろうっ！",
+          "bytes": 14328
+        },
+        {
+          "out": "pastelpalettes-03/drop-2.mp3",
+          "role": "drop",
+          "text": "はいっ！頑張りましょう！",
+          "bytes": 17208
+        },
+        {
+          "out": "pastelpalettes-03/drop-3.mp3",
+          "role": "drop",
+          "text": "はい、がんばってください！",
+          "bytes": 17784
+        },
+        {
+          "out": "pastelpalettes-03/drop-4.mp3",
+          "role": "drop",
+          "text": "はい！がんばってください！",
+          "bytes": 18072
+        },
+        {
+          "out": "pastelpalettes-03/drop-5.mp3",
+          "role": "drop",
+          "text": "はいっ！ジブンもがんばりますっ！",
+          "bytes": 21060
+        },
+        {
+          "out": "pastelpalettes-03/merge-1.mp3",
+          "role": "merge",
+          "text": "ますきさんと、また一緒にライブできたら嬉しいです！",
+          "bytes": 42012
+        },
+        {
+          "out": "pastelpalettes-03/merge-2.mp3",
+          "role": "merge",
+          "text": "ホントにそう言ってもらえると嬉しいですね、ありがとうございます",
+          "bytes": 43056
+        },
+        {
+          "out": "pastelpalettes-03/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがとうございます！",
+          "bytes": 12744
+        },
+        {
+          "out": "pastelpalettes-03/merge-4.mp3",
+          "role": "merge",
+          "text": "……楽しいです",
+          "bytes": 13392
+        },
+        {
+          "out": "pastelpalettes-03/merge-5.mp3",
+          "role": "merge",
+          "text": "楽しい……？",
+          "bytes": 14040
+        }
+      ]
+    },
+    {
+      "id": "pastelpalettes-04",
+      "name": "白鹭千圣",
+      "group": "pastelpalettes",
+      "files": [
+        {
+          "out": "pastelpalettes-04/drop-1.mp3",
+          "role": "drop",
+          "text": "はい、それではまた",
+          "bytes": 23940
+        },
+        {
+          "out": "pastelpalettes-04/drop-2.mp3",
+          "role": "drop",
+          "text": "はい、それでは。また来ます",
+          "bytes": 24408
+        },
+        {
+          "out": "pastelpalettes-04/drop-3.mp3",
+          "role": "drop",
+          "text": "それじゃあ、お互いがんばりましょう",
+          "bytes": 26172
+        },
+        {
+          "out": "pastelpalettes-04/drop-4.mp3",
+          "role": "drop",
+          "text": "大丈夫よ。それで、聞きたいことって？",
+          "bytes": 27216
+        },
+        {
+          "out": "pastelpalettes-04/drop-5.mp3",
+          "role": "drop",
+          "text": "はいはい、それはよかったわね",
+          "bytes": 27432
+        },
+        {
+          "out": "pastelpalettes-04/merge-1.mp3",
+          "role": "merge",
+          "text": "ありがとう……うれしいわ",
+          "bytes": 23076
+        },
+        {
+          "out": "pastelpalettes-04/merge-2.mp3",
+          "role": "merge",
+          "text": "最後まで完璧な演奏ができたわね",
+          "bytes": 31716
+        },
+        {
+          "out": "pastelpalettes-04/merge-3.mp3",
+          "role": "merge",
+          "text": "いつも応援ありがとうございます。嬉しいです",
+          "bytes": 35640
+        },
+        {
+          "out": "pastelpalettes-04/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとう。楽しんでもらえたみたいでうれしいわ",
+          "bytes": 37908
+        },
+        {
+          "out": "pastelpalettes-04/merge-5.mp3",
+          "role": "merge",
+          "text": "ありがとうございます。そう言ってもらえると嬉しいです",
+          "bytes": 39240
+        }
+      ]
+    },
+    {
+      "id": "pastelpalettes-05",
+      "name": "若宫伊芙",
+      "group": "pastelpalettes",
+      "files": [
+        {
+          "out": "pastelpalettes-05/drop-1.mp3",
+          "role": "drop",
+          "text": "はい、いざっ――",
+          "bytes": 14904
+        },
+        {
+          "out": "pastelpalettes-05/drop-2.mp3",
+          "role": "drop",
+          "text": "よしっ、がんばります！",
+          "bytes": 16920
+        },
+        {
+          "out": "pastelpalettes-05/drop-3.mp3",
+          "role": "drop",
+          "text": "はい、がんばります！",
+          "bytes": 19656
+        },
+        {
+          "out": "pastelpalettes-05/drop-4.mp3",
+          "role": "drop",
+          "text": "はい！いざ出陣です！",
+          "bytes": 23364
+        },
+        {
+          "out": "pastelpalettes-05/drop-5.mp3",
+          "role": "drop",
+          "text": "はいっ！私、頑張りますっ！",
+          "bytes": 23760
+        },
+        {
+          "out": "pastelpalettes-05/merge-1.mp3",
+          "role": "merge",
+          "text": "ありがとうございます！がんばります！",
+          "bytes": 27900
+        },
+        {
+          "out": "pastelpalettes-05/merge-2.mp3",
+          "role": "merge",
+          "text": "ありがとうございます。一緒にがんばりましょう！",
+          "bytes": 41940
+        },
+        {
+          "out": "pastelpalettes-05/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがとうございます。全力でがんばりますっ！",
+          "bytes": 42444
+        },
+        {
+          "out": "pastelpalettes-05/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとうございます！そう言ってもらえると、嬉しいです！",
+          "bytes": 43920
+        },
+        {
+          "out": "pastelpalettes-05/merge-5.mp3",
+          "role": "merge",
+          "text": "キラキラ……",
+          "bytes": 12384
+        }
+      ]
+    },
+    {
+      "id": "poppinparty-01",
+      "name": "山吹沙绫",
+      "group": "poppinparty",
+      "files": [
+        {
+          "out": "poppinparty-01/drop-1.mp3",
+          "role": "drop",
+          "text": "はい。それじゃ、行こう",
+          "bytes": 26532
+        },
+        {
+          "out": "poppinparty-01/drop-2.mp3",
+          "role": "drop",
+          "text": "よし、行こう",
+          "bytes": 16848
+        },
+        {
+          "out": "poppinparty-01/drop-3.mp3",
+          "role": "drop",
+          "text": "はい、がんばります！",
+          "bytes": 17064
+        },
+        {
+          "out": "poppinparty-01/drop-4.mp3",
+          "role": "drop",
+          "text": "それじゃ、そろそろ行こうか",
+          "bytes": 23544
+        },
+        {
+          "out": "poppinparty-01/drop-5.mp3",
+          "role": "drop",
+          "text": "それじゃあ、私が行こうかな",
+          "bytes": 28872
+        },
+        {
+          "out": "poppinparty-01/merge-1.mp3",
+          "role": "merge",
+          "text": "最高のリズムセッションができたよ！",
+          "bytes": 29196
+        },
+        {
+          "out": "poppinparty-01/merge-2.mp3",
+          "role": "merge",
+          "text": "あはは、キラキラドキドキできるかもね",
+          "bytes": 34920
+        },
+        {
+          "out": "poppinparty-01/merge-3.mp3",
+          "role": "merge",
+          "text": "うん、ありがとう巴！最高の誕生日だった！",
+          "bytes": 43128
+        },
+        {
+          "out": "poppinparty-01/merge-4.mp3",
+          "role": "merge",
+          "text": "みんな、本当にありがとね！すっごく嬉しいよ！",
+          "bytes": 45036
+        },
+        {
+          "out": "poppinparty-01/merge-5.mp3",
+          "role": "merge",
+          "text": "ありがとうございます",
+          "bytes": 13356
+        }
+      ]
+    },
+    {
+      "id": "poppinparty-02",
+      "name": "市谷有咲",
+      "group": "poppinparty",
+      "files": [
+        {
+          "out": "poppinparty-02/drop-1.mp3",
+          "role": "drop",
+          "text": "よし。それじゃ、出発の準備できたか？",
+          "bytes": 31968
+        },
+        {
+          "out": "poppinparty-02/drop-2.mp3",
+          "role": "drop",
+          "text": "はい、みんなでがんばります！",
+          "bytes": 21276
+        },
+        {
+          "out": "poppinparty-02/drop-3.mp3",
+          "role": "drop",
+          "text": "それでロックと一緒に来たんだ？",
+          "bytes": 23724
+        },
+        {
+          "out": "poppinparty-02/drop-4.mp3",
+          "role": "drop",
+          "text": "たしかに。それじゃあ、いくよ",
+          "bytes": 24120
+        },
+        {
+          "out": "poppinparty-02/drop-5.mp3",
+          "role": "drop",
+          "text": "よし、できた……！",
+          "bytes": 24300
+        },
+        {
+          "out": "poppinparty-02/merge-1.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキ……？",
+          "bytes": 19440
+        },
+        {
+          "out": "poppinparty-02/merge-2.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキ？",
+          "bytes": 22644
+        },
+        {
+          "out": "poppinparty-02/merge-3.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキを……はい次",
+          "bytes": 26208
+        },
+        {
+          "out": "poppinparty-02/merge-4.mp3",
+          "role": "merge",
+          "text": "ありがとうございます。がんばります！",
+          "bytes": 27000
+        },
+        {
+          "out": "poppinparty-02/merge-5.mp3",
+          "role": "merge",
+          "text": "私にとってのキラキラドキドキか……",
+          "bytes": 38448
+        }
+      ]
+    },
+    {
+      "id": "poppinparty-03",
+      "name": "户山香澄",
+      "group": "poppinparty",
+      "files": [
+        {
+          "out": "poppinparty-03/drop-1.mp3",
+          "role": "drop",
+          "text": "あ、はいっ！それすっごい聞きたかったです！",
+          "bytes": 31572
+        },
+        {
+          "out": "poppinparty-03/drop-2.mp3",
+          "role": "drop",
+          "text": "あ、みんな来た！それじゃ、行こう！",
+          "bytes": 32292
+        },
+        {
+          "out": "poppinparty-03/drop-3.mp3",
+          "role": "drop",
           "text": "はい、がんばります！",
           "bytes": 15696
         },
         {
-          "out": "drop-11-2.mp3",
-          "role": "释放",
+          "out": "poppinparty-03/drop-4.mp3",
+          "role": "drop",
           "text": "それじゃあ行こう！",
           "bytes": 15768
         },
         {
-          "out": "merge-11-1.mp3",
-          "role": "合成",
+          "out": "poppinparty-03/drop-5.mp3",
+          "role": "drop",
+          "text": "はい！がんばります！",
+          "bytes": 16344
+        },
+        {
+          "out": "poppinparty-03/merge-1.mp3",
+          "role": "merge",
           "text": "はいっ！キラキラドキドキで、すっごく楽しいですっ！",
           "bytes": 40068
         },
         {
-          "out": "merge-11-2.mp3",
-          "role": "合成",
-          "text": "みんなで行こう！キラキラドキドキの未来へ！",
-          "bytes": 40212
+          "out": "poppinparty-03/merge-2.mp3",
+          "role": "merge",
+          "text": "『ドキドキで楽しいっ！！』",
+          "bytes": 15480
         },
         {
-          "out": "scene-11.mp3",
-          "role": "名场面",
-          "text": "みんなで、見よう。未来のキラキラドキドキを……一緒に！",
-          "bytes": 56808
+          "out": "poppinparty-03/merge-3.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキしたいです！",
+          "bytes": 19944
+        },
+        {
+          "out": "poppinparty-03/merge-4.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキしよっ！",
+          "bytes": 21024
+        },
+        {
+          "out": "poppinparty-03/merge-5.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキは決まったよ！",
+          "bytes": 22140
+        }
+      ]
+    },
+    {
+      "id": "poppinparty-04",
+      "name": "牛込里美",
+      "group": "poppinparty",
+      "files": [
+        {
+          "out": "poppinparty-04/drop-1.mp3",
+          "role": "drop",
+          "text": "今日はいい演奏ができた気がする！",
+          "bytes": 31356
+        },
+        {
+          "out": "poppinparty-04/drop-2.mp3",
+          "role": "drop",
+          "text": "…………はい",
+          "bytes": 7560
+        },
+        {
+          "out": "poppinparty-04/drop-3.mp3",
+          "role": "drop",
+          "text": "……できた？",
+          "bytes": 9720
+        },
+        {
+          "out": "poppinparty-04/drop-4.mp3",
+          "role": "drop",
+          "text": "は、はい……",
+          "bytes": 9828
+        },
+        {
+          "out": "poppinparty-04/drop-5.mp3",
+          "role": "drop",
+          "text": "頑張ろうね！",
+          "bytes": 10728
+        },
+        {
+          "out": "poppinparty-04/merge-1.mp3",
+          "role": "merge",
+          "text": "ありがとうございます。彩先輩とお揃い、嬉しいです！",
+          "bytes": 14084
+        },
+        {
+          "out": "poppinparty-04/merge-2.mp3",
+          "role": "merge",
+          "text": "ありがとう！がんばる！",
+          "bytes": 21384
+        },
+        {
+          "out": "poppinparty-04/merge-3.mp3",
+          "role": "merge",
+          "text": "やったっ、うまくできた気がする",
+          "bytes": 30996
+        },
+        {
+          "out": "poppinparty-04/merge-4.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキなライブにしたいね！",
+          "bytes": 31608
+        },
+        {
+          "out": "poppinparty-04/merge-5.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキを……みんなと……",
+          "bytes": 34416
+        }
+      ]
+    },
+    {
+      "id": "poppinparty-05",
+      "name": "花园多惠",
+      "group": "poppinparty",
+      "files": [
+        {
+          "out": "poppinparty-05/drop-1.mp3",
+          "role": "drop",
+          "text": "それじゃ、いくよ",
+          "bytes": 16452
+        },
+        {
+          "out": "poppinparty-05/drop-2.mp3",
+          "role": "drop",
+          "text": "よし。行こう、レイ！",
+          "bytes": 16704
+        },
+        {
+          "out": "poppinparty-05/drop-3.mp3",
+          "role": "drop",
+          "text": "それで、いつやるの？",
+          "bytes": 20664
+        },
+        {
+          "out": "poppinparty-05/drop-4.mp3",
+          "role": "drop",
+          "text": "……よし、右足から行こう",
+          "bytes": 21780
+        },
+        {
+          "out": "poppinparty-05/drop-5.mp3",
+          "role": "drop",
+          "text": "はい！それじゃ、また！",
+          "bytes": 21816
+        },
+        {
+          "out": "poppinparty-05/merge-1.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキって",
+          "bytes": 19800
+        },
+        {
+          "out": "poppinparty-05/merge-2.mp3",
+          "role": "merge",
+          "text": "最高の演奏ができたね",
+          "bytes": 26316
+        },
+        {
+          "out": "poppinparty-05/merge-3.mp3",
+          "role": "merge",
+          "text": "最高のライブ、ありがとねチュチュ！",
+          "bytes": 29376
+        },
+        {
+          "out": "poppinparty-05/merge-4.mp3",
+          "role": "merge",
+          "text": "香澄は今、キラキラドキドキしてるの？",
+          "bytes": 30456
+        },
+        {
+          "out": "poppinparty-05/merge-5.mp3",
+          "role": "merge",
+          "text": "ホントに！？やったー、ありがとう！",
+          "bytes": 35136
+        }
+      ]
+    },
+    {
+      "id": "roselia-01",
+      "name": "今井莉莎",
+      "group": "roselia",
+      "files": [
+        {
+          "out": "roselia-01/drop-1.mp3",
+          "role": "drop",
+          "text": "がんばろう。それが、アタシの今やること！",
+          "bytes": 29232
+        },
+        {
+          "out": "roselia-01/drop-2.mp3",
+          "role": "drop",
+          "text": "よしっ！がんばろう！！",
+          "bytes": 15948
+        },
+        {
+          "out": "roselia-01/drop-3.mp3",
+          "role": "drop",
+          "text": "はい、それでお願いします！",
+          "bytes": 24408
+        },
+        {
+          "out": "roselia-01/drop-4.mp3",
+          "role": "drop",
+          "text": "新しいクッキー焼いて来たよー！はい♪",
+          "bytes": 27792
+        },
+        {
+          "out": "roselia-01/drop-5.mp3",
+          "role": "drop",
+          "text": "えっ！？それはいいけど……",
+          "bytes": 27936
+        },
+        {
+          "out": "roselia-01/merge-1.mp3",
+          "role": "merge",
+          "text": "やった～！ありがとうございます！",
+          "bytes": 29556
+        },
+        {
+          "out": "roselia-01/merge-2.mp3",
+          "role": "merge",
+          "text": "ありがと〜。勉強がんばらないとね！",
+          "bytes": 33156
+        },
+        {
+          "out": "roselia-01/merge-3.mp3",
+          "role": "merge",
+          "text": "え？キラキラ……ドキドキ……？",
+          "bytes": 34344
+        },
+        {
+          "out": "roselia-01/merge-4.mp3",
+          "role": "merge",
+          "text": "やったね、燐子！この調子で次も頑張ろうね♪",
+          "bytes": 36576
+        },
+        {
+          "out": "roselia-01/merge-5.mp3",
+          "role": "merge",
+          "text": "キラキラドキドキするから、かぁ……",
+          "bytes": 40104
+        }
+      ]
+    },
+    {
+      "id": "roselia-02",
+      "name": "冰川纱夜",
+      "group": "roselia",
+      "files": [
+        {
+          "out": "roselia-02/drop-1.mp3",
+          "role": "drop",
+          "text": "はい、それでは失礼します",
+          "bytes": 24912
+        },
+        {
+          "out": "roselia-02/drop-2.mp3",
+          "role": "drop",
+          "text": "やめなさい。それ以上は聞きたくない",
+          "bytes": 26640
+        },
+        {
+          "out": "roselia-02/drop-3.mp3",
+          "role": "drop",
+          "text": "はい。それではまた、CiRCLEで",
+          "bytes": 28584
+        },
+        {
+          "out": "roselia-02/drop-4.mp3",
+          "role": "drop",
+          "text": "そう、それはいいアイディアだと思うわ",
+          "bytes": 30780
+        },
+        {
+          "out": "roselia-02/drop-5.mp3",
+          "role": "drop",
+          "text": "それなら、やるべきことは一つしかないわ",
+          "bytes": 32508
+        },
+        {
+          "out": "roselia-02/merge-1.mp3",
+          "role": "merge",
+          "text": "今できる最高の演奏ができた気がします",
+          "bytes": 36252
+        },
+        {
+          "out": "roselia-02/merge-2.mp3",
+          "role": "merge",
+          "text": "はい、ありがとうございます。お互いがんばりましょうね",
+          "bytes": 39744
+        },
+        {
+          "out": "roselia-02/merge-3.mp3",
+          "role": "merge",
+          "text": "ありがとう……",
+          "bytes": 9252
+        },
+        {
+          "out": "roselia-02/merge-4.mp3",
+          "role": "merge",
+          "text": "がんばってくださいね",
+          "bytes": 13932
+        },
+        {
+          "out": "roselia-02/merge-5.mp3",
+          "role": "merge",
+          "text": "ありがとうございます……",
+          "bytes": 14400
+        }
+      ]
+    },
+    {
+      "id": "roselia-03",
+      "name": "凑友希那",
+      "group": "roselia",
+      "files": [
+        {
+          "out": "roselia-03/drop-1.mp3",
+          "role": "drop",
+          "text": "それじゃあ……はい",
+          "bytes": 18540
+        },
+        {
+          "out": "roselia-03/drop-2.mp3",
+          "role": "drop",
+          "text": "それを忘れてはいけないわ",
+          "bytes": 19692
+        },
+        {
+          "out": "roselia-03/drop-3.mp3",
+          "role": "drop",
+          "text": "それではいくわよ……コホンッ",
+          "bytes": 19908
+        },
+        {
+          "out": "roselia-03/drop-4.mp3",
+          "role": "drop",
+          "text": "ふふ……それはいいことね",
+          "bytes": 21204
+        },
+        {
+          "out": "roselia-03/drop-5.mp3",
+          "role": "drop",
+          "text": "そう。それなら、頑張ってちょうだい",
+          "bytes": 28836
+        },
+        {
+          "out": "roselia-03/merge-1.mp3",
+          "role": "merge",
+          "text": "どちらも嬉しいわ、ありがとう",
+          "bytes": 26064
+        },
+        {
+          "out": "roselia-03/merge-2.mp3",
+          "role": "merge",
+          "text": "ありがとう。やるべきことは、しっかり出来たと思っているわ",
+          "bytes": 43560
+        },
+        {
+          "out": "roselia-03/merge-3.mp3",
+          "role": "merge",
+          "text": "――今日は来てくれてありがとう。とても素晴らしいライブができたわ",
+          "bytes": 44604
+        },
+        {
+          "out": "roselia-03/merge-4.mp3",
+          "role": "merge",
+          "text": "あ、ありがとう……",
+          "bytes": 9468
+        },
+        {
+          "out": "roselia-03/merge-5.mp3",
+          "role": "merge",
+          "text": "……ありがとう",
+          "bytes": 9540
+        }
+      ]
+    },
+    {
+      "id": "roselia-04",
+      "name": "宇田川亚子",
+      "group": "roselia",
+      "files": [
+        {
+          "out": "roselia-04/drop-1.mp3",
+          "role": "drop",
+          "text": "それじゃーいくよー！",
+          "bytes": 16056
+        },
+        {
+          "out": "roselia-04/drop-2.mp3",
+          "role": "drop",
+          "text": "はいっ！がんばりますっ！",
+          "bytes": 17424
+        },
+        {
+          "out": "roselia-04/drop-3.mp3",
+          "role": "drop",
+          "text": "はいっ！頑張ろーね、りんりん！",
+          "bytes": 27216
+        },
+        {
+          "out": "roselia-04/drop-4.mp3",
+          "role": "drop",
+          "text": "はいっ……！！",
+          "bytes": 7272
+        },
+        {
+          "out": "roselia-04/drop-5.mp3",
+          "role": "drop",
+          "text": "一緒にやる！？",
+          "bytes": 10512
+        },
+        {
+          "out": "roselia-04/merge-1.mp3",
+          "role": "merge",
+          "text": "やった～！ありがとう、おねーちゃん♪",
+          "bytes": 26388
+        },
+        {
+          "out": "roselia-04/merge-2.mp3",
+          "role": "merge",
+          "text": "やったー！ありがと、りんりん！",
+          "bytes": 31176
+        },
+        {
+          "out": "roselia-04/merge-3.mp3",
+          "role": "merge",
+          "text": "やった～！一緒にがんばろうね！",
+          "bytes": 31968
+        },
+        {
+          "out": "roselia-04/merge-4.mp3",
+          "role": "merge",
+          "text": "やった〜！ありがと、りんりん！",
+          "bytes": 33192
+        },
+        {
+          "out": "roselia-04/merge-5.mp3",
+          "role": "merge",
+          "text": "うんっ、がんばる！ありがとう、まりなさん！",
+          "bytes": 35424
+        }
+      ]
+    },
+    {
+      "id": "roselia-05",
+      "name": "白金燐子",
+      "group": "roselia",
+      "files": [
+        {
+          "out": "roselia-05/drop-1.mp3",
+          "role": "drop",
+          "text": "はい、がんばりましょう",
+          "bytes": 20232
+        },
+        {
+          "out": "roselia-05/drop-2.mp3",
+          "role": "drop",
+          "text": "はい……それではまた……",
+          "bytes": 24228
+        },
+        {
+          "out": "roselia-05/drop-3.mp3",
+          "role": "drop",
+          "text": "はい……頑張りましょう……",
+          "bytes": 24948
+        },
+        {
+          "out": "roselia-05/drop-4.mp3",
+          "role": "drop",
+          "text": "はい。それじゃ、また……",
+          "bytes": 26460
+        },
+        {
+          "out": "roselia-05/drop-5.mp3",
+          "role": "drop",
+          "text": "ううん……それじゃあ、行こう",
+          "bytes": 27000
+        },
+        {
+          "out": "roselia-05/merge-1.mp3",
+          "role": "merge",
+          "text": "あ……ありがとうございます……嬉しいです……",
+          "bytes": 33876
+        },
+        {
+          "out": "roselia-05/merge-2.mp3",
+          "role": "merge",
+          "text": "ありがとう……ございます……もっと……頑張ります……",
+          "bytes": 36324
+        },
+        {
+          "out": "roselia-05/merge-3.mp3",
+          "role": "merge",
+          "text": "それよりも……楽しく……練習できたらうれしいです……",
+          "bytes": 36684
+        },
+        {
+          "out": "roselia-05/merge-4.mp3",
+          "role": "merge",
+          "text": "今できる……最高の演奏が、できた気がします……",
+          "bytes": 40428
+        },
+        {
+          "out": "roselia-05/merge-5.mp3",
+          "role": "merge",
+          "text": "あ、ありがとうございます……嬉しいです……",
+          "bytes": 40788
         }
       ]
     }
   ],
   "missing": [
     {
-      "tier": 7,
+      "id": "avemujica-01",
       "name": "三角初音"
     },
     {
-      "tier": 8,
+      "id": "avemujica-02",
+      "name": "丰川祥子"
+    },
+    {
+      "id": "avemujica-03",
+      "name": "八幡海铃"
+    },
+    {
+      "id": "avemujica-04",
+      "name": "祐天寺若麦"
+    },
+    {
+      "id": "avemujica-05",
+      "name": "若叶睦"
+    },
+    {
+      "id": "avemujica-casual-01",
       "name": "三角初音"
     },
     {
-      "tier": 9,
+      "id": "avemujica-casual-02",
+      "name": "丰川祥子"
+    },
+    {
+      "id": "avemujica-casual-03",
+      "name": "八幡海铃"
+    },
+    {
+      "id": "avemujica-casual-04",
+      "name": "祐天寺若麦"
+    },
+    {
+      "id": "avemujica-casual-05",
+      "name": "若叶睦"
+    },
+    {
+      "id": "mewtype-01",
       "name": "仲町阿拉蕾"
     },
     {
-      "tier": 10,
-      "name": "若叶睦"
+      "id": "mewtype-02",
+      "name": "千石由乃"
+    },
+    {
+      "id": "mewtype-03",
+      "name": "宮永野乃花"
+    },
+    {
+      "id": "mewtype-04",
+      "name": "峰月律"
+    },
+    {
+      "id": "mewtype-05",
+      "name": "藤都子"
     }
   ],
-  "totalBytes": 1065276
+  "totalBytes": 7289096,
+  "files": 300
 }

@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 基础配置
  * 纯数据 + 纯函数，不依赖 DOM，可以直接在 node 下 require 做逻辑测试。
  * 想改玩偶顺序 / 半径 / 分值 / 难度 / 物理手感，只改这一个文件就够了。
@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.8';
+  var VERSION = '0.4.9';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -192,18 +192,15 @@
     formats: ['opus', 'm4a', 'mp3'], // 体积：opus 最小 → m4a 次之 → mp3 最大但最通用
     sounds: {
       /*
-       * 释放玩偶：按「当前要投放的那一级」放对应玩偶的语音（drop-<级>-1、drop-<级>-2 随机）
-       * 没有语音的级别（音源里缺那个角色）自动退回合成音。
+       * 释放 / 合成：**按玩偶 ID** 取语音。
+       * 为什么不用等级：玩家可以在选图窗口里把任意玩偶放到任意等级，
+       * 所以游戏里用 assets.idOf(等级) 查出「这一级现在是谁」，再随机播这个角色的一条。
+       *   assets/voice/<玩偶ID>/drop-1..5.mp3（释放）
+       *   assets/voice/<玩偶ID>/merge-1..5.mp3（合成）
+       * 音源里没有的角色（15 只）自动退回合成音。
        */
-      drop: { perTier: true, pattern: 'drop-{tier}', variants: 2, volume: 0.7, gapMs: 70, files: ['drop-1', 'drop-2', 'drop-3'] },
-      /* 合成：按「合成出来的那一级」放语音 */
-      merge: { perTier: true, pattern: 'merge-{tier}', variants: 2, volume: 0.8, gapMs: 60 },
-      /* 名场面：只有「名场面」模式下的高光时刻才放（大玩偶 / 高连击 / 本局结束） */
-      scene: { perTier: true, pattern: 'scene-{tier}', variants: 1, volume: 0.85, gapMs: 800 },
-      /* 大玩偶合成额外的「哇」一下（可选，没有就不放） */
-      mergeBig: { files: ['merge-big'], volume: 0.7, gapMs: 300 },
-      /* 连击点缀：按连击数选，没有就退回合成音 */
-      combo: { files: ['combo-2', 'combo-4', 'combo-6'], volume: 0.5, gapMs: 200 },
+      drop: { perDoll: true, dir: '{id}/', pattern: 'drop-{n}', count: 5, volume: 0.7, gapMs: 70 },
+      merge: { perDoll: true, dir: '{id}/', pattern: 'merge-{n}', count: 5, volume: 0.8, gapMs: 60 },
       /* 危险线报警 */
       warn: { files: ['ui-warn'], volume: 0.45, gapMs: 900 },
       /* 本局结束 */

@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -154,10 +154,11 @@
         var ac = ensure();
         if (ac && ac.state === 'suspended') ac.resume();
         if (fileAudio && fileAudio.unlock) fileAudio.unlock();
-        /* 解锁之后顺手预热几个最常用的音（失败无所谓，不阻塞） */
+        /* 解锁之后：预热固定名字的音效 + 当前/下一只玩偶的语音池 */
         if (fileAudio && fileAudio.preload) {
           try {
-            fileAudio.preload(['drop', 'merge', 'warn', 'over']);
+            fileAudio.preload(['warn', 'over', 'click']);
+            warmVoices();
           } catch (err) {
             /* 忽略 */
           }
@@ -169,32 +170,28 @@
       },
       /**
        * 释放玩偶：
-       *   全语音 → 放「当前要投放的那一级」对应玩偶的语音（drop-<级>-1/2）
+       *   全语音 → 放「当前要投的那只玩偶」的语音（在那个角色的池子里随机一条）
        *   名场面 → 平时安静，只有连击高光时才出声
        *   静音   → 什么都不放
        */
-      drop: function (tier, combo) {
+      drop: function (id, tier, combo) {
         if (!voiceOn()) return;
-        if (voiceAllowed(tier, combo) && playFile('drop', { tier: tier })) return;
-        if (voiceMode() === 'scene') return; // 名场面模式下不补合成音，保持"安静"
+        if (voiceMode() === 'all' && playFile('drop', { id: id })) return;
+        if (voiceMode() === 'scene' && !voiceAllowed(tier, combo)) return; // 名场面模式：平时安静
         tone(300, 0.08, 'triangle', 0.045, 0, 'drop');
       },
       /**
        * 合成玩偶：
-       *   全语音 → 放「合成出来的那一级」的语音
-       *   名场面 → 只有合成出大玩偶（tier ≥ 9）或连击 ≥3 时，放「名场面」台词
+       *   全语音 → 放「合成出来的那一只」的语音（那个角色的池子里随机一条）
+       *   名场面 → 只有合成出大玩偶（tier ≥ 9）或连击 ≥3 时才出声
        *   静音   → 什么都不放
        */
-      merge: function (tier, combo) {
+      merge: function (tier, combo, id) {
         var c = Math.max(1, combo || 1);
         if (!voiceOn()) return;
-        if (voiceAllowed(tier, c)) {
-          if (playFile(voiceKeyFor(tier), { tier: tier })) {
-            if (tier >= CFG.RULES.maxTier - 2) playFile('mergeBig');
-            return;
-          }
-        }
-        if (voiceMode() === 'scene') return; // 名场面模式：非高光时刻保持安静
+        var highlight = voiceAllowed(tier, c);
+        if ((voiceMode() === 'all' || highlight) && playFile('merge', { id: id })) return;
+        if (voiceMode() === 'scene' && !highlight) return; // 名场面模式：非高光时刻保持安静
         // 连击越高音越亮，给连击一个听觉反馈
         var f = 260 * Math.pow(1.085, Math.max(0, tier)) * Math.pow(1.06, c - 1);
         // key 带上 tier：同一只玩偶连爆时节流，不同 tier 互不压制
@@ -209,9 +206,8 @@
       },
       over: function () {
         if (!voiceOn()) return;
-        /* 本局结束也算高光：名场面模式下会放一句「名场面」台词（用最大等级那句） */
-        if (voiceMode() === 'scene' && playFile('scene', { tier: CFG.RULES.maxTier })) return;
-        if (voiceMode() !== 'scene' && playFile('over')) return;
+        /* 「名场面」那批音频还没导入，这里照常走结束音 */
+        if (playFile('over')) return;
         tone(420, 0.22, 'sine', 0.07);
         tone(300, 0.26, 'sine', 0.07, 0.14);
         tone(190, 0.42, 'sine', 0.07, 0.28);
@@ -439,7 +435,7 @@
     var body = game.drop(currentTier, aimX);
     if (!body) return;
     render.addDrop(body.position.x, currentTier);
-    sfx.drop(currentTier, game.getState().combo);
+    sfx.drop(assets.idOf(currentTier), currentTier, game.getState().combo);
     currentTier = null;
     cooldown = roundDiff().dropCooldownMs;
     syncHud();
@@ -457,6 +453,26 @@
     }
   }
 
+  /**
+   * 预热「当前」和「下一只」这两只玩偶的语音池（各 10 条 ≈ 250KB）。
+   * 目的是让第一次投放/合成就有语音，而不是先用合成音顶一下。
+   * 玩家在选图窗口换了阵容，这里的 id 自然也跟着变。
+   */
+  var warmedIds = {};
+  function warmVoices() {
+    if (!fileAudio || !fileAudio.preload) return;
+    if (voiceMode() === 'mute') return;
+    [currentTier, nextTier].forEach(function (tier) {
+      var id = assets && assets.idOf ? assets.idOf(tier) : null;
+      if (!id || warmedIds[id]) return;
+      warmedIds[id] = true;
+      try {
+        fileAudio.preload(['drop', 'merge'], { id: id });
+      } catch (err) {
+        /* 忽略 */
+      }
+    });
+  }
   /* ---------------- 语音模式 ---------------- */
 
   /** 当前是哪一档：all（全语音）/ scene（名场面）/ mute（静音） */
@@ -477,10 +493,6 @@
     if (m === 'all') return true;
     var h = CFG.VOICE_HIGHLIGHT || { tierFrom: 9, comboFrom: 3 };
     return (tier != null && tier >= h.tierFrom) || (combo != null && combo >= h.comboFrom);
-  };
-  /** 名场面模式放「名场面」台词；全语音模式放对应玩偶的普通语音 */
-  var voiceKeyFor = function (tier) {
-    return voiceMode() === 'scene' ? 'scene' : 'merge';
   };
   /* ---------------- 局内存档（手机切后台不清零） ---------------- */
 
@@ -1355,7 +1367,7 @@
     game.on('merge', function (m) {
       var showTier = m.resultTier || m.fromTier;
       render.addMerge(m.x, m.y, showTier, m.gained, m.resultTier, m.combo);
-      sfx.merge(showTier, m.combo);
+      sfx.merge(showTier, m.combo, assets.idOf(showTier));
       showDelta(m.gained, m.combo);
       setComboHud(m.combo, m.multiplier, 1);
       if (m.score > best) {
