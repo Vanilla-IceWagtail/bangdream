@@ -1,4 +1,4 @@
-/* 合成大西瓜 · 界面样式 */
+﻿/* 合成大西瓜 · 界面样式 */
 :root {
   --bg-0: #fff4ea;
   --bg-1: #ffe8d6;
@@ -1758,6 +1758,9 @@ kbd {
 
 .loading-card {
   width: min(420px, 100%);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 22px 24px 20px;
   border-radius: 18px;
   background: linear-gradient(180deg, #fffaf5, #fff1e6);

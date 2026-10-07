@@ -567,6 +567,21 @@ var limiter = CFG.createAudioLimiter();
         return;
       }
       screen.hidden = false;
+      /*
+       * 插图先用静态首帧（147KB，立刻可见），再在后台把 1.3MB 的动画换上去 ——
+       * 别人不会盯着空白等图，动画也不占加载时间。
+       */
+      var art = screen.querySelector ? screen.querySelector('.loading-art') : null;
+      if (art && art.getAttribute) {
+        var gifSrc = art.getAttribute('data-gif');
+        if (gifSrc && String(art.src).indexOf('loading.gif') < 0) {
+          var artImg = new Image();
+          artImg.onload = function () {
+            art.src = gifSrc;
+          };
+          artImg.src = gifSrc;
+        }
+      }
       var finished = false;
       var finish = function () {
         if (finished) return;
@@ -574,6 +589,15 @@ var limiter = CFG.createAudioLimiter();
         screen.hidden = true;
         resolve();
       };
+      /*
+       * ?loading=1 ：把加载页停住（自检/截图用），方便看插图和进度条长什么样。
+       * ?noloading=1 ：反过来，直接跳过加载页。
+       */
+      if (/[?&]loading=1/.test(root.location.search)) {
+        if (bar) bar.style.width = '62%';
+        if (note) note.textContent = '正在加载玩偶语音 68 / 110（自检：停在这一屏）';
+        return;
+      }
       /* 超时兜底：网络慢也别把玩家卡在加载页 */
       root.setTimeout(finish, 8000);
       fa
