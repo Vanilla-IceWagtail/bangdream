@@ -742,6 +742,12 @@ var limiter = CFG.createAudioLimiter();
     }
     bgmPlaying = true;
     syncBgmButton();
+    /*
+     * 手机上播/停 <audio> 会把 WebAudio 上下文挤成 suspended，
+     * 结果连玩偶语音一起哑掉（用户反馈：「关掉这个图标时也会关闭玩偶的语音」）。
+     * 所以启停之后都要把语音用的上下文重新唤醒一次。
+     */
+    reviveVoices();
     return true;
   }
 
@@ -755,6 +761,18 @@ var limiter = CFG.createAudioLimiter();
     }
     bgmPlaying = false;
     syncBgmButton();
+    reviveVoices();
+  }
+
+  /** 把语音用的音频上下文重新唤醒（手机上 <audio> 抢走音频会话后必须做这一步） */
+  function reviveVoices() {
+    try {
+      if (!sfx || !sfx.context) return;
+      var ac = sfx.context();
+      if (ac && ac.state !== 'running' && sfx.unlock) sfx.unlock();
+    } catch (err) {
+      /* 唤醒失败也不影响游戏 */
+    }
   }
 
   /** 点一下开始 / 再点一下停止 */
@@ -762,7 +780,7 @@ var limiter = CFG.createAudioLimiter();
     if (bgmPlaying) {
       bgmWanted = false;
       bgmStop();
-      UI.toast('背景音乐已停止');
+      UI.toast('背景音乐已停止（玩偶语音照常）');
       return;
     }
     bgmWanted = true;
@@ -1122,7 +1140,11 @@ var limiter = CFG.createAudioLimiter();
 
     UI.showOverlay({
       title: '本局结束',
-      body: rows,
+      body:
+        rows +
+        '<div class="credit-box" id="result-credit" hidden>' +
+        '<b>音频来源</b><br />朋友的酒DJ版——活跃黑江乐' +
+        '</div>',
       actions: [
         { label: '再来一局', kind: 'primary', onClick: startRound },
         {
@@ -1130,6 +1152,16 @@ var limiter = CFG.createAudioLimiter();
           kind: 'ghost',
           onClick: function () {
             UI.hideOverlay();
+          }
+        },
+        {
+          label: '🎵 音频来源',
+          kind: 'ghost',
+          onClick: function () {
+            /* 就地展开，不关掉结算界面（关掉就看不到本局成绩了） */
+            var box = document.getElementById('result-credit');
+            if (!box) return;
+            box.hidden = !box.hidden;
           }
         },
         { label: '🍮 请作者吃小布丁', kind: 'ghost', onClick: showDonate }
@@ -1432,6 +1464,18 @@ var limiter = CFG.createAudioLimiter();
         );
       });
     }
+    /*
+     * 手机上音频上下文随时可能被系统或别的音频挤成 suspended（比如刚播完背景音乐），
+     * 每次点屏幕都顺手检查一次并唤醒 —— 这样语音不会「莫名其妙就没了」。
+     */
+    D.addEventListener(
+      'pointerdown',
+      function () {
+        reviveVoices();
+      },
+      true
+    );
+
     /* 背景音乐：选图后面那颗图标，点一下播放、再点一下停止 */
     if (dom.musicBtn) {
       dom.musicBtn.addEventListener('click', toggleBgm);

@@ -1892,3 +1892,25 @@ kbd {
 .loading-skip[hidden] {
   display: none !important;
 }
+
+/* 结算界面：点「🎵 音频来源」就地展开的小卡片 */
+
+.credit-box {
+  margin: 10px 0 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 122, 255, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.22);
+  color: #2c3e50;
+  font-size: 12.5px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.credit-box[hidden] {
+  display: none !important;
+}
+
+.credit-box b {
+  color: #007aff;
+}

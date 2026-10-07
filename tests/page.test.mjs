@@ -549,7 +549,13 @@ test('JS 里用到的所有元素 id 都真实存在于 index.html', () => {
    * 里面的 id（上榜名字输入框、确认按钮、状态文字）本来就不在 index.html 里，
    * 所以这里排除掉；其余静态 id 仍然要求真实存在（防止写错 id 的回归）。
    */
-  const DYNAMIC_IDS = new Set(['result-player', 'result-submit', 'result-name-status']);
+  const DYNAMIC_IDS = new Set([
+    'result-player',
+    'result-submit',
+    'result-name-status',
+    /* 结算界面里点「🎵 音频来源」就地展开的那张卡片，同样是 showOverlay 动态拼的 */
+    'result-credit'
+  ]);
   for (const rel of jsFiles) {
     const code = fs.readFileSync(path.join(ROOT, rel), 'utf8');
     for (const m of code.matchAll(/(?:UI\.el|document\.getElementById)\(\s*'([^']+)'\s*\)/g)) {
@@ -959,4 +965,26 @@ test('顶栏按钮：选图已改名为「组建乐队」（直接校验 index.h
   const picker = fs.readFileSync(path.join(ROOT, 'js', 'picker.js'), 'utf8');
   assert.match(picker, /组建乐队/, '小窗口标题也要跟着改名');
   assert.equal(picker.indexOf('🖼 选图窗口'), -1, '小窗口旧标题「🖼 选图窗口」应该已经改掉');
+});
+
+test('结算界面：带「🎵 音频来源」，来源文案齐全且默认收起', async () => {
+  /* ?demo=1&over=1 是自带的演示钩子：直接走到「本局结束」那一步（与上面那条结算测试保持一致） */
+  const page = await bootPage({ search: '?demo=1&over=1' });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(160);
+  const overlay = page.el('overlay');
+  assert.ok(overlay, '应该有浮层容器');
+  /* 浮层内容是拼在 overlay-body 里的（overlay 本身只是外壳） */
+  const body = String(page.el('overlay-body').innerHTML || '');
+  assert.match(body, /音频来源/, '结算界面要出现「音频来源」按钮');
+  assert.match(body, /朋友的酒DJ版——活跃黑江乐/, '来源文案要写全');
+  const box = page.doc.getElementById('result-credit');
+  assert.ok(box, '来源卡片应该被拼进浮层');
+  /*
+   * 默认收起：这里校验拼出来的标记本身（DOM 桩不解析 HTML 的 hidden 属性，
+   * 浏览器里带 hidden 就是收起状态）。
+   */
+  assert.match(body, /id="result-credit"\s+hidden/, '来源卡片默认应该是收起的（点了才展开）');
+  assert.match(body, /<b>音频来源<\/b>/, '卡片里要有「音频来源」标题');
+  assert.deepEqual(page.errors, [], '不该报错');
 });
