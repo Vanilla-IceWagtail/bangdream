@@ -94,6 +94,38 @@
         absent[name] = true;
         return Promise.resolve(null);
       }
+      /*
+       * 内联数据优先：语音试听页会加载 assets/voice-inline.js，把语音做成 data URL。
+       * 这样**双击 HTML**（file://）也能发声 —— 浏览器不允许 file:// 页面 fetch 本地文件。
+       * 正式页（有服务器）不走这条，仍按扩展名顺序取真实文件。
+       */
+      var inline = GLOBAL.SUIKA_VOICE_DATA;
+      if (inline && inline[name]) {
+        pending[name] = fetchFn(inline[name])
+          .then(function (res) {
+            return res.arrayBuffer();
+          })
+          .then(function (buf) {
+            return new Promise(function (resolve, reject) {
+              var ret = ac.decodeAudioData(buf, resolve, reject);
+              if (ret && ret.then) ret.then(resolve, reject);
+            });
+          })
+          .then(function (audioBuf) {
+            buffers[name] = audioBuf;
+            return audioBuf;
+          })
+          .catch(function () {
+            absent[name] = true;
+            return null;
+          })
+          .then(function (b) {
+            delete pending[name];
+            return b;
+          });
+        return pending[name];
+      }
+
       var order = workingExt ? [workingExt].concat(formats.filter(function (f) { return f !== workingExt; })) : formats;
       var i = 0;
       var tryNext = function () {

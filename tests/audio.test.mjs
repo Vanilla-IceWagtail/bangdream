@@ -242,3 +242,45 @@ test('名场面：现在没有 scene 音频，配置里也不该再要求它', (
   assert.ok(CFG.AUDIO.sounds.merge.count >= 2);
   assert.equal(CFG.AUDIO.sounds.drop.dir, '{id}/');
 });
+
+test('内联语音（双击 HTML 用）：data URL 也能解码并播放', async () => {
+  /*
+   * 直接双击打开是 file://，浏览器不允许 fetch 本地文件，
+   * 所以试听页会加载 assets/voice-inline.js（把 mp3 做成 data URL）。
+   * 这条测的就是那条通路。
+   */
+  const fsx = require('node:fs');
+  const inlinePath = path.join(ROOT, 'assets', 'voice-inline.js');
+  assert.ok(fsx.existsSync(inlinePath), '应该有内联语音文件（node tools/inline-voice.cjs 生成）');
+
+  /* 只取需要的几条来验证，避免把 9MB 全解析进内存 */
+  const raw = fsx.readFileSync(inlinePath, 'utf8');
+  const line = raw.split('\n').find((l) => l.startsWith('window.SUIKA_VOICE_DATA = '));
+  assert.ok(line, '内联文件里应该有 window.SUIKA_VOICE_DATA = … 这一行');
+  const data = JSON.parse(line.slice('window.SUIKA_VOICE_DATA = '.length).replace(/;\s*$/, ''));
+  const keys = Object.keys(data);
+  assert.ok(keys.length >= 100, '内联语音条数应该有几百条，实际 ' + keys.length);
+  assert.ok(keys.indexOf('afterglow-01/drop-1') >= 0, '应该包含按角色 ID 的命名');
+  assert.match(data['afterglow-01/drop-1'], /^data:audio\/mpeg;base64,/, '应该是 mp3 的 data URL');
+  /* 解出来的头几个字节要像 mp3（ID3 或帧同步） */
+  const head = Buffer.from(data['afterglow-01/drop-1'].split(',')[1].slice(0, 16), 'base64');
+  const looksMp3 = (head[0] === 0x49 && head[1] === 0x44 && head[2] === 0x33) || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0);
+  assert.ok(looksMp3, '解出来应该是真 mp3，实际头字节 ' + head.slice(0, 4).toString('hex'));
+
+  /* 加载器在 data URL 下：第一次 false（异步解码），之后 true（真的播了） */
+  const env = makeLoader({});
+  globalThis.SUIKA_VOICE_DATA = { 'afterglow-01/drop-1': data['afterglow-01/drop-1'] };
+  try {
+    assert.equal(env.audio.play('drop', { id: 'afterglow-01' }), false, '第一次先退回合成音');
+    let played = false;
+    for (let i = 0; i < 40 && !played; i++) {
+      played = env.audio.play('drop', { id: 'afterglow-01' }) === true;
+      await tick();
+    }
+    assert.ok(played, '内联数据应该能解码并播放');
+    assert.ok(env.log.some((u) => u.indexOf('data:audio') === 0), '应该走过内联 data URL');
+  } finally {
+    delete globalThis.SUIKA_VOICE_DATA;
+    env.restore();
+  }
+});
