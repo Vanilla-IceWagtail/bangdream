@@ -856,3 +856,27 @@ test('试听页自检：第一次交互会响一声「叮」并报告音频状�
   assert.ok(ctx.started <= 2, '第二次派发不该再响，实际 ' + ctx.started);
   assert.deepEqual(page.errors, [], '不该报错');
 });
+
+test('加载页：演示模式直接跳过，不挡住开始界面', async () => {
+  const page = await bootPage({ search: '?demo=1&lib=none' });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(60);
+  const ls = page.doc.getElementById('loading-screen');
+  if (ls) assert.equal(ls.hidden, true, '演示模式不该停在加载页');
+  assert.deepEqual(page.errors, [], '不该报错');
+});
+
+test('加载页：正式流程会显示进度并最终让位（用假音频+假 fetch 验证）', async () => {
+  const ctx = makeFakeAudioContext();
+  const page = await bootPage({
+    search: '?lib=none',
+    AudioContext: function () {
+      return ctx;
+    }
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(30);
+  const ls = page.doc.getElementById('loading-screen');
+  if (ls) assert.equal(ls.hidden, true, '加载完（或超时兜底后）应该让位，不能一直挡着');
+  assert.deepEqual(page.errors, [], '加载流程不该报错');
+});

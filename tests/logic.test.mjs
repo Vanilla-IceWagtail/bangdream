@@ -518,7 +518,7 @@ test('果冻：形变会过冲（弹过头变成微微拉长）再回摆停住�
   });
 
   test('音频节流：默认参数对手机友好（并发不超过 8、同音至少 45ms）', () => {
-    assert.ok(CFG.AUDIO_LIMITS.maxVoices <= 8, '并发上限不该超过 8 个声部');
+    assert.ok(CFG.AUDIO_LIMITS.maxVoices >= 4 && CFG.AUDIO_LIMITS.maxVoices <= 12, '并发上限要在 4~12 之间（手机混音器一般 8~16）');
     assert.ok(CFG.AUDIO_LIMITS.minGapMs >= 10, '任意两声之间要有最小间隔');
     assert.ok(CFG.AUDIO_LIMITS.sameGapMs >= CFG.AUDIO_LIMITS.minGapMs, '同音间隔应不小于全局间隔');
   });

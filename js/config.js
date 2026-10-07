@@ -9,7 +9,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var VERSION = '0.4.14';
+  var VERSION = '0.4.15';
 
   /* 画布与场地（逻辑像素，渲染时按 devicePixelRatio 放大） */
   var BOARD = {
@@ -240,9 +240,9 @@
    * 所以这里做一个纯函数限制器：并发上限 + 同一个音的最短间隔 + 全局最短间隔。
    */
   var AUDIO_LIMITS = {
-    maxVoices: 8, // 同时最多 8 个声部
-    minGapMs: 18, // 任意两个音之间至少隔 18ms（避免同帧叠一堆）
-    sameGapMs: 45 // 同一个音（同一 tier 的合成音）至少隔 45ms
+    maxVoices: 12, // 同时最多 12 个声部（手机混音器一般能到 8~16）
+    minGapMs: 10, // 任意两个音之间至少隔 10ms（避免同帧叠一堆，又别丢关键音）
+    sameGapMs: 30 // 同一个音至少隔 30ms
   };
 
   /**

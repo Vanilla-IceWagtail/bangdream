@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -196,6 +196,10 @@ var limiter = CFG.createAudioLimiter();
             /* 忽略 */
           }
         }
+      },
+      /** 文件音效实例（加载页要用它的 preloadMany / nameList） */
+      file: function () {
+        return fileAudio;
       },
       /** 文件音效的状态（自检/调试用：?audio=1 会打到控制台和页面上） */
       /** 音频上下文状态（排查「没声音」：suspended 就是没被唤醒） */
@@ -511,19 +515,80 @@ var limiter = CFG.createAudioLimiter();
    */
   var warmedIds = {};
   function warmVoices() {
-    if (!fileAudio || !fileAudio.preload) return;
+    /* fileAudio 是 createSfx 内部的，这里通过 sfx.file() 拿（之前直接引用报过 ReferenceError） */
+    var fa = sfx && sfx.file ? sfx.file() : null;
+    if (!fa || !fa.preload) return;
     if (voiceMode() === 'mute') return;
     [currentTier, nextTier].forEach(function (tier) {
       var id = assets && assets.idOf ? assets.idOf(tier) : null;
       if (!id || warmedIds[id]) return;
       warmedIds[id] = true;
       try {
-        fileAudio.preload(['drop', 'merge'], { id: id });
+        fa.preload(['drop', 'merge'], { id: id });
       } catch (err) {
         /* 忽略 */
       }
     });
   }
+  /*
+   * 加载页：把「当前阵容要用到的语音」先全部取下来并解码好，再放玩家进游戏。
+   * 这样发声就不会慢半拍、也不会出现「第一次点没声音」。
+   *
+   * 说明（省得以后误解）：这能消掉**加载/解码**带来的延迟，
+   * 但消不掉**音频硬件本身的输出延迟**（那是系统缓冲区，通常 10~40ms）。
+   * 真实输出延迟可以从 sfx.fileStats().baseLatency / outputLatency 读出来。
+   */
+  function runLoadingScreen() {
+    return new Promise(function (resolve) {
+      var screen = document.getElementById('loading-screen');
+      var bar = document.getElementById('loading-bar');
+      var note = document.getElementById('loading-note');
+      /* 演示模式 / 没有文件音效 / 明确跳过时直接过 */
+      var fa = sfx && sfx.file ? sfx.file() : null;
+      var skip =
+        demoMode ||
+        !fa ||
+        !fa.preloadMany ||
+        /[?&]noloading=1/.test(root.location.search);
+      if (skip || !screen) {
+        resolve();
+        return;
+      }
+      /* 预加载清单：当前阵容每一级的 drop + merge，再加界面音效 */
+      var names = [];
+      for (var tier = 1; tier <= CFG.RULES.maxTier; tier++) {
+        var id = assets.idOf(tier);
+        if (!id) continue;
+        names = names.concat(fa.nameList(['drop', 'merge'], { id: id }));
+      }
+      names = names.concat(fa.nameList(['warn', 'over', 'click']));
+      if (!names.length) {
+        resolve();
+        return;
+      }
+      screen.hidden = false;
+      var finished = false;
+      var finish = function () {
+        if (finished) return;
+        finished = true;
+        screen.hidden = true;
+        resolve();
+      };
+      /* 超时兜底：网络慢也别把玩家卡在加载页 */
+      root.setTimeout(finish, 8000);
+      fa
+        .preloadMany(names, function (done, total) {
+          var pct = total ? Math.round((done / total) * 100) : 100;
+          if (bar) bar.style.width = pct + '%';
+          if (note) note.textContent = '正在加载玩偶语音 ' + done + ' / ' + total;
+        })
+        .then(function (res) {
+          if (note) note.textContent = '语音已就绪（' + (res ? res.done : 0) + ' 条）';
+          finish();
+        });
+    });
+  }
+
   /* ---------------- 语音模式 ---------------- */
 
   /** 当前是哪一档：all（全语音）/ scene（名场面）/ mute（静音） */
@@ -1562,8 +1627,14 @@ var limiter = CFG.createAudioLimiter();
      * 存档还新鲜就直接接着打，否则正常显示开始界面。
      */
     var saved = demoMode ? null : loadProgress();
-    if (!(saved && resumeFromSave(saved))) {
-      showReadyOverlay();
+    if (saved && resumeFromSave(saved)) {
+      /* 恢复了上一局：同样先把语音解码好再继续 */
+      runLoadingScreen();
+    } else {
+      /* 先过加载页（把语音解码好），再显示开始界面 —— 进游戏后发声就不会慢半拍 */
+      runLoadingScreen().then(function () {
+        showReadyOverlay();
+      });
     }
     syncHud();
     render.draw(buildFrame());

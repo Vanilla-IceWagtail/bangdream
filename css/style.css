@@ -1737,3 +1737,68 @@ kbd {
     max-width: 42vw;
   }
 }
+
+/* ---------- 加载页（先把语音解码好再进游戏） ---------- */
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(255, 245, 236, 0.94);
+  backdrop-filter: blur(3px);
+}
+
+/* 作者样式里的 display 会盖掉 hidden，这里显式让位（踩过一次） */
+.loading-screen[hidden] {
+  display: none !important;
+}
+
+.loading-card {
+  width: min(420px, 100%);
+  padding: 22px 24px 20px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffaf5, #fff1e6);
+  border: 1px solid rgba(122, 78, 52, 0.14);
+  box-shadow: 0 18px 40px rgba(176, 116, 84, 0.18);
+  text-align: center;
+}
+
+.loading-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #4a3327;
+  margin-bottom: 14px;
+}
+
+.loading-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(122, 78, 52, 0.12);
+  overflow: hidden;
+}
+
+.loading-bar i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7ef0a6, #2fbd66);
+  transition: width 0.18s ease;
+}
+
+.loading-note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6b4a3a;
+}
+
+.loading-hint {
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #9a7a68;
+}

@@ -343,3 +343,58 @@ test('解码缓存：超过上限会淘汰旧的（切很多角色也不会把�
     env.restore();
   }
 });
+
+test('限流声部必须归还：连续播很多次文件音也不会把后续声音挡死', async () => {
+  /*
+   * 真 bug：文件音播完不 release()，播过 maxVoices(8) 次之后限流器认为声部占满，
+   * 之后所有声音（连合成音）都被永久挡住 —— 表现就是「玩一会儿之后偶尔/一直没声音」。
+   */
+  const ctx = makeFakeCtx();
+  const realAC = globalThis.AudioContext;
+  globalThis.AudioContext = function () {
+    return ctx;
+  };
+  const log = [];
+  const cfg = JSON.parse(JSON.stringify(CFG));
+  cfg.AUDIO.sounds.drop = { files: ['ui-warn'], volume: 0.5 };
+  const audio = AUDIO.create({ config: cfg, fetch: makeFetch({ 'ui-warn': ['mp3'] }, log) });
+  try {
+    /* 先解码好 */
+    audio._put('ui-warn', { duration: 0.2, name: 'warn' });
+    let okCount = 0;
+    for (let i = 0; i < 40; i++) {
+      ctx.currentTime += 1; // 时间往前走，绕开「同音最短间隔」
+      if (audio.play('drop') === true) okCount += 1;
+      /* 模拟音频播完（浏览器会触发 onended） */
+      if (ctx._ended) ctx._ended.forEach((fn) => fn());
+    }
+    assert.ok(okCount >= 20, '应该能持续播（不是播几次就被挡死），实际成功 ' + okCount + ' 次');
+  } finally {
+    globalThis.AudioContext = realAC;
+  }
+});
+
+test('加载页：preloadMany 会按清单全部加载并回报进度', async () => {
+  const log = [];
+  const ctx = makeFakeCtx();
+  const realAC = globalThis.AudioContext;
+  globalThis.AudioContext = function () {
+    return ctx;
+  };
+  const audio = AUDIO.create({
+    config: CFG,
+    fetch: makeFetch({ 'roselia-01/drop-1': ['mp3'], 'roselia-01/drop-2': ['mp3'] }, log)
+  });
+  try {
+    const names = audio.nameList(['drop'], { id: 'roselia-01' });
+    assert.ok(names.length >= 2, '应该列出该角色的语音清单，实际 ' + JSON.stringify(names));
+    const seen = [];
+    const res = await audio.preloadMany(names, (done, total) => seen.push(done + '/' + total));
+    assert.equal(res.total, names.length, '总数应该等于清单长度');
+    assert.equal(res.done, names.length, '应该全部处理完');
+    assert.ok(seen.length > 0, '应该报过进度');
+    assert.ok(audio.isReady('drop', null, 'roselia-01'), '加载完应该就绪');
+  } finally {
+    globalThis.AudioContext = realAC;
+  }
+});

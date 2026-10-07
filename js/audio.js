@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * 合成邦多利皇帝 · 音频加载器（可选的文件音效）
  *
  * 设计原则：**零配置、缺文件不报错**
@@ -212,6 +212,19 @@
       gain.connect(ac.destination);
       src.start(0);
       played += 1;
+      /*
+       * 播完必须把声部还回限流器！
+       * 不还的话：播过 maxVoices(8) 次文件音之后，限流器就认为声部被占满，
+       * 之后**所有**声音（连合成音一起）都会被永久挡死 ——
+       * 表现就是「玩一会儿之后偶尔/一直没声音」。真踩过这个坑。
+       */
+      if (limiter && limiter.release) {
+        var done = function () {
+          limiter.release();
+        };
+        if (src.onended !== undefined) src.onended = done;
+        else if (GLOBAL.setTimeout) GLOBAL.setTimeout(done, ((buf.duration || 0.5) + 0.1) * 1000);
+      }
       return true;
     }
 
@@ -269,9 +282,53 @@
       });
     }
 
+    /** 列出某个 key（可带 id）会用到哪些文件 —— 加载页要用它算总数 */
+    function nameList(keys, o) {
+      var out = [];
+      (keys || []).forEach(function (k) {
+        (fileListFor(k, o && o.tier, o && o.id) || []).forEach(function (n) {
+          if (out.indexOf(n) < 0) out.push(n);
+        });
+      });
+      return out;
+    }
+
+    /**
+     * 批量预加载（加载页用）：把清单里的文件全部取下来并解码，边做边报进度。
+     * 并发仍受 MAX_DECODE 限制，避免解码把主线程卡住。
+     */
+    function preloadMany(names, onProgress) {
+      var queue = (names || []).slice();
+      var total = queue.length;
+      var done = 0;
+      if (!total) return Promise.resolve({ total: 0, done: 0 });
+      function worker() {
+        if (!queue.length) return Promise.resolve();
+        var name = queue.shift();
+        return loadFile(name).then(function () {
+          done += 1;
+          if (onProgress) {
+            try {
+              onProgress(done, total);
+            } catch (e) {
+              /* 进度回调的异常不该影响加载 */
+            }
+          }
+          return worker();
+        });
+      }
+      var workers = [];
+      for (var i = 0; i < MAX_DECODE; i++) workers.push(worker());
+      return Promise.all(workers).then(function () {
+        return { total: total, done: done };
+      });
+    }
+
     return {
       play: play,
       preload: preload,
+      preloadMany: preloadMany,
+      nameList: nameList,
       /** 某个 key 的音频是否已经就绪（测试/自检用） */
       isReady: function (key, tier, id) {
         var list = fileListFor(key, tier, id) || [];
