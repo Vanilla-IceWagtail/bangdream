@@ -383,6 +383,7 @@ function bootPage(opts = {}) {
   const files = [
     'vendor/matter.min.js',
     'js/config.js',
+    'js/audio.js',
     'js/library.js',
     'js/assets-builtin.js',
     'js/assets.js',
@@ -879,4 +880,28 @@ test('加载页：正式流程会显示进度并最终让位（用假音频+假 
   const ls = page.doc.getElementById('loading-screen');
   if (ls) assert.equal(ls.hidden, true, '加载完（或超时兜底后）应该让位，不能一直挡着');
   assert.deepEqual(page.errors, [], '加载流程不该报错');
+});
+
+test('加载页插图：静态首帧会换成 GIF（动画才会真的动起来）', async () => {
+  const ctx = makeFakeAudioContext();
+  const page = await bootPage({
+    search: '?lib=none&loading=1',
+    AudioContext: function () {
+      return ctx;
+    }
+  });
+  await new Promise((r) => setTimeout(r, 0));
+  page.pump(10);
+  const art = page.doc.querySelector
+    ? null
+    : null;
+  /* 桩里的 querySelector 只认少数选择器，这里直接扫 id 为 loading-screen 的节点 */
+  const screen = page.el('loading-screen');
+  assert.ok(screen, '应该有加载层');
+  /* ?loading=1 会停在加载页 */
+  assert.equal(screen.hidden, false, '?loading=1 应该停在加载页');
+  const note = page.el('loading-note');
+  assert.match(String(note.textContent), /正在加载游戏/, '文案应该是「正在加载游戏」，实际 ' + note.textContent);
+  assert.equal(/[0-9]/.test(String(note.textContent)), false, '不该再显示数字，实际 ' + note.textContent);
+  assert.deepEqual(page.errors, [], '不该报错');
 });

@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 主流程
  * 把引擎、渲染、界面、音效、排行榜串起来：开局 → 投放 → 合成计分 → 结束 → 上榜。
  */
@@ -605,7 +605,7 @@ var limiter = CFG.createAudioLimiter();
        */
       if (/[?&]loading=1/.test(root.location.search)) {
         if (bar) bar.style.width = '62%';
-        if (note) note.textContent = '正在加载全部玩偶语音 0 / ' + names.length + '（自检：停在这一屏）';
+        if (note) note.textContent = '正在加载游戏（自检：停在这一屏）';
         return;
       }
       /* 超时兜底：网络慢也别把玩家卡在加载页（30 秒，全部语音 7MB 左右） */
@@ -615,10 +615,10 @@ var limiter = CFG.createAudioLimiter();
         .call(fa, names, function (done, total) {
           var pct = total ? Math.round((done / total) * 100) : 100;
           if (bar) bar.style.width = pct + '%';
-          if (note) note.textContent = '正在加载全部玩偶语音 ' + done + ' / ' + total;
+          if (note) note.textContent = '正在加载游戏';
         })
         .then(function (res) {
-          if (note) note.textContent = '全部语音已就绪（' + (res ? res.done : 0) + ' 条）';
+          if (note) note.textContent = '准备完成，马上开始！';
           /* 预取完成后，把当前/下一只需要用到的先解码好，进游戏就是原声 */
           warmVoices();
           finish();
