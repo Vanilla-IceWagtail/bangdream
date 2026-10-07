@@ -113,6 +113,7 @@ var limiter = CFG.createAudioLimiter();
       if (!ac) return;
       /* 限流：并发上限 + 同一个音最短间隔 */
       if (!limiter.allow(key || 'f' + freq, ac.currentTime * 1000)) return;
+      /* 0 延迟就贴在当前时刻（越靠近 currentTime 越不容易听出延迟） */
       var t0 = ac.currentTime + (delay || 0);
       var osc = ac.createOscillator();
       var gain = ac.createGain();
@@ -1281,6 +1282,7 @@ var limiter = CFG.createAudioLimiter();
           c.synth +
           '/' +
           c.file +
+          (st && st.baseLatency != null ? ' · 延迟 ' + st.baseLatency + 'ms' : '') +
           '（听不到「叮」就是浏览器标签或系统音量的问题）'
       );
     }
@@ -1655,7 +1657,10 @@ var limiter = CFG.createAudioLimiter();
             c.synth +
             ' / 语音' +
             c.file +
-            (st ? ' · 已加载 ' + st.loaded + ' 条' : '');
+            (st ? ' · 已加载 ' + st.loaded + ' 条' : '') +
+            (st && st.baseLatency != null
+              ? ' · 延迟 ' + st.baseLatency + 'ms' + (st.outputLatency != null ? '（输出 ' + st.outputLatency + 'ms）' : '')
+              : '');
           if (dom.appVersion) dom.appVersion.textContent = txt;
           UI.toast(txt);
         };

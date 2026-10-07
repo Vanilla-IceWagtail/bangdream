@@ -29,6 +29,7 @@
 
     var ctx = null;
     var buffers = {}; // key -> AudioBuffer（已解码）
+    var bufferOrder = []; // 解码缓存的 LRU 顺序（防止切很多角色后内存无限涨）
     var absent = {}; // key -> true（确定没有这个文件，别再试）
     var pending = {}; // key -> Promise
     var workingExt = null; // 记住第一个成功的扩展名
@@ -36,16 +37,54 @@
     var played = 0;
     var failed = 0;
 
+    /*
+     * 解码队列：并发解码会卡主线程（游戏循环也在主线程上），
+     * 所以限制同时只解一两个，其它排队；空闲时再继续。
+     */
+    var decodeQueue = [];
+    var decoding = 0;
+    var MAX_DECODE = 2;
+    var MAX_BUFFERS = Math.max(4, Number(opts && opts.maxBuffers) || 64); // 解码缓存上限（每个约 0.2MB）
+
     function ensure() {
       if (ctx) return ctx;
       var AC = GLOBAL.AudioContext || GLOBAL.webkitAudioContext;
       if (!AC) return null;
       try {
-        ctx = new AC();
+        /* latencyHint: 'interactive' —— 让浏览器用最小的音频缓冲，降低发声延迟 */
+        ctx = new AC({ latencyHint: 'interactive' });
       } catch (e) {
-        ctx = null;
+        try {
+          ctx = new AC();
+        } catch (e2) {
+          ctx = null;
+        }
       }
       return ctx;
+    }
+
+    /** 把解码任务排队（并发上限之内立刻开工） */
+    function enqueueDecode(name) {
+      if (decoding >= MAX_DECODE) {
+        if (decodeQueue.indexOf(name) < 0) decodeQueue.push(name);
+        return;
+      }
+      decoding += 1;
+      loadFile(name).then(function () {
+        decoding -= 1;
+        var next = decodeQueue.shift();
+        if (next) enqueueDecode(next);
+      });
+    }
+
+    /** 解码缓存满了就丢最早用过的（正在播的 source 自己持有引用，安全） */
+    function rememberBuffer(name, buf) {
+      if (!buffers[name]) bufferOrder.push(name);
+      buffers[name] = buf;
+      while (bufferOrder.length > MAX_BUFFERS) {
+        var old = bufferOrder.shift();
+        if (old !== name) delete buffers[old];
+      }
     }
 
     /** 音效配置：{ files:[...] } 或 { perTier:true, pattern:'merge-{tier}' } */
@@ -112,7 +151,7 @@
             });
           })
           .then(function (audioBuf) {
-            buffers[name] = audioBuf;
+            rememberBuffer(name, audioBuf);
             return audioBuf;
           })
           .catch(function () {
@@ -148,7 +187,7 @@
             });
           })
           .then(function (audioBuf) {
-            buffers[name] = audioBuf;
+            rememberBuffer(name, audioBuf);
             workingExt = order[i - 1];
             return audioBuf;
           })
@@ -206,8 +245,8 @@
         if (limiter && !limiter.allow(key + name, now)) return true; // 限流挡下：算「已处理」，不要再退回合成了
         return playBuffer(buffers[name], key, vol);
       }
-      /* 还没加载：后台取一次，这次先让合成音顶上 */
-      loadFile(name);
+      /* 还没加载：后台取一次（排队解码，别卡住这一帧），这次先让合成音顶上 */
+      enqueueDecode(name);
       return false;
     }
 
@@ -225,7 +264,7 @@
         list.forEach(function (name) {
           if (preloaded[name]) return;
           preloaded[name] = true;
-          loadFile(name);
+          enqueueDecode(name);
         });
       });
     }
@@ -244,7 +283,16 @@
         return Object.keys(buffers).length;
       },
       stats: function () {
-        return { loaded: Object.keys(buffers).length, absent: Object.keys(absent).length, played: played, failed: failed, ext: workingExt };
+        return {
+          loaded: Object.keys(buffers).length,
+          absent: Object.keys(absent).length,
+          played: played,
+          failed: failed,
+          ext: workingExt,
+          queued: decodeQueue.length + decoding,
+          baseLatency: ctx && ctx.baseLatency != null ? Math.round(ctx.baseLatency * 1000) : null,
+          outputLatency: ctx && ctx.outputLatency != null ? Math.round(ctx.outputLatency * 1000) : null
+        };
       },
       context: function () {
         return ctx;

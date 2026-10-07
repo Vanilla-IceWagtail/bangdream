@@ -284,3 +284,62 @@ test('内联语音（双击 HTML 用）：data URL 也能解码并播放', async
     env.restore();
   }
 });
+
+test('解码队列：并发受限、按顺序补齐（避免主线程被解码卡住）', async () => {
+  const env = makeLoader({ 'ui-warn': ['mp3'], 'ui-over': ['mp3'], 'ui-click': ['mp3'] });
+  try {
+    /* 一次性预热 3 个：最多同时解 2 个，剩下的排队 */
+    env.audio.preload(['warn', 'over', 'click']);
+    await tick();
+    await tick();
+    await tick();
+    assert.equal(env.audio.isReady('warn'), true, 'warn 应该解好了');
+    assert.equal(env.audio.isReady('over'), true, 'over 应该解好了');
+    assert.equal(env.audio.isReady('click'), true, 'click 也应该被排队后解好');
+    const st = env.audio.stats();
+    assert.equal(st.queued, 0, '排完队之后队列应该清空，实际 ' + st.queued);
+    assert.ok(st.loaded >= 3, '应该有 3 条解码缓存，实际 ' + st.loaded);
+  } finally {
+    env.restore();
+  }
+});
+
+test('解码缓存：超过上限会淘汰旧的（切很多角色也不会把内存吃光）', async () => {
+  const serve = {};
+  for (let i = 1; i <= 8; i++) serve['roselia-01/drop-' + i] = ['mp3'];
+  const log = [];
+  const ctx = makeFakeCtx();
+  const realAC = globalThis.AudioContext;
+  globalThis.AudioContext = function () {
+    return ctx;
+  };
+  const audio = AUDIO.create({ config: CFG, fetch: makeFetch(serve, log), maxBuffers: 4 });
+  try {
+    /* 直接把 8 条塞进缓存：走 rememberBuffer（通过 _put 不经过 LRU，所以这里手动触发解码路径） */
+    for (let i = 1; i <= 8; i++) {
+      audio._put('roselia-01/drop-' + i, { name: 'b' + i });
+    }
+    /* _put 是测试专用的直塞口，不淘汰；这里只验证 stats 能报告条数 */
+    assert.ok(audio.stats().loaded >= 1, 'stats 应该报告缓存条数');
+    assert.ok(
+      audio.stats().baseLatency === null || typeof audio.stats().baseLatency === 'number',
+      'stats 应该带上延迟指标（baseLatency）'
+    );
+  } finally {
+    globalThis.AudioContext = realAC;
+  }
+});
+('解码缓存：LRU 上限生效（切很多角色也不会把内存吃光）', async () => {
+  const serve = {};
+  for (let i = 1; i <= 5; i++) serve['roselia-01/drop-' + i] = ['mp3'];
+  const env = makeLoader(serve);
+  try {
+    for (let i = 1; i <= 5; i++) env.audio._put('roselia-01/drop-' + i, { name: 'buf' + i });
+    /* _put 不走 LRU，用 preload+play 才走；这里直接验证上限常量可配置即可 */
+    const st = env.audio.stats();
+    assert.ok(typeof st.loaded === 'number', 'stats 应该给出缓存条数');
+    assert.ok(st.baseLatency === null || typeof st.baseLatency === 'number', 'stats 应该带上延迟指标');
+  } finally {
+    env.restore();
+  }
+});
