@@ -251,6 +251,12 @@
       hasLibrary: hasLibrary,
       shapeOf: shapeOf,
       idOf: idOf,
+      /** 图库里所有玩偶的 id（加载页要把「所有语音」都预取下来时用） */
+      allIds: function () {
+        return (library.images || []).map(function (img) {
+          return img.id;
+        });
+      },
       sourceOf: sourceOf,
       preload: preload,
       preloadAll: preloadAll,

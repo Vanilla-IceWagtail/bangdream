@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · 音频加载器（可选的文件音效）
  *
  * 设计原则：**零配置、缺文件不报错**
@@ -29,6 +29,7 @@
 
     var ctx = null;
     var buffers = {}; // key -> AudioBuffer（已解码）
+    var rawCache = {}; // name -> ArrayBuffer（已下载、未解码；加载页预取用）
     var bufferOrder = []; // 解码缓存的 LRU 顺序（防止切很多角色后内存无限涨）
     var absent = {}; // key -> true（确定没有这个文件，别再试）
     var pending = {}; // key -> Promise
@@ -144,6 +145,35 @@
           .then(function (res) {
             return res.arrayBuffer();
           })
+          .then(function (buf) {
+            return new Promise(function (resolve, reject) {
+              var ret = ac.decodeAudioData(buf, resolve, reject);
+              if (ret && ret.then) ret.then(resolve, reject);
+            });
+          })
+          .then(function (audioBuf) {
+            rememberBuffer(name, audioBuf);
+            return audioBuf;
+          })
+          .catch(function () {
+            absent[name] = true;
+            return null;
+          })
+          .then(function (b) {
+            delete pending[name];
+            return b;
+          });
+        return pending[name];
+      }
+
+      /*
+       * 已经有原始字节（加载页预取过）就直接解码，不再走网络 ——
+       * 这样「所有语音都预取好、按需解码」既能保证不缺音，又不会把内存吃光。
+       */
+      if (rawCache[name]) {
+        pending[name] = new Promise(function (resolve) {
+          resolve(rawCache[name]);
+        })
           .then(function (buf) {
             return new Promise(function (resolve, reject) {
               var ret = ac.decodeAudioData(buf, resolve, reject);
@@ -324,11 +354,85 @@
       });
     }
 
+    /**
+     * 只下载、不解码（加载页把「所有语音」都拉下来时用）。
+     *
+     * 为什么不直接解码全部：解码后是 Float32 PCM 常驻内存，
+     * 一条 2~3 秒的语音就 ≈1MB，全部 300 条 ≈ 几百 MB，手机会直接崩。
+     * 所以策略是：**全部下载**（合计约 7MB，随便放）+ **按需解码**（LRU 上限内）。
+     */
+    function prefetchFile(name) {
+      if (rawCache[name]) return Promise.resolve(rawCache[name]);
+      if (absent[name]) return Promise.resolve(null);
+      if (!fetchFn) {
+        absent[name] = true;
+        return Promise.resolve(null);
+      }
+      if (typeof pending['raw:' + name] !== 'undefined') return pending['raw:' + name];
+      var order = workingExt ? [workingExt].concat(formats.filter(function (f) { return f !== workingExt; })) : formats;
+      var i = 0;
+      var tryNext = function () {
+        if (i >= order.length) {
+          absent[name] = true;
+          return null;
+        }
+        var url = base + name + '.' + order[i++];
+        return fetchFn(url)
+          .then(function (res) {
+            if (!res || !res.ok) throw new Error('http ' + (res && res.status));
+            return res.arrayBuffer();
+          })
+          .then(function (buf) {
+            rawCache[name] = buf;
+            workingExt = order[i - 1];
+            return buf;
+          })
+          .catch(tryNext);
+      };
+      pending['raw:' + name] = tryNext().then(function (b) {
+        delete pending['raw:' + name];
+        return b;
+      });
+      return pending['raw:' + name];
+    }
+
+    /** 批量预取（下载）。并发放宽到 4（下载是 I/O，不像解码那样占主线程） */
+    function prefetchMany(names, onProgress) {
+      var queue = (names || []).slice();
+      var total = queue.length;
+      var done = 0;
+      if (!total) return Promise.resolve({ total: 0, done: 0 });
+      function worker() {
+        if (!queue.length) return Promise.resolve();
+        var name = queue.shift();
+        return prefetchFile(name).then(function () {
+          done += 1;
+          if (onProgress) {
+            try {
+              onProgress(done, total);
+            } catch (e) {
+              /* 忽略 */
+            }
+          }
+          return worker();
+        });
+      }
+      var workers = [];
+      for (var k = 0; k < 4; k++) workers.push(worker());
+      return Promise.all(workers).then(function () {
+        return { total: total, done: done, bytes: 0 };
+      });
+    }
+
     return {
       play: play,
       preload: preload,
       preloadMany: preloadMany,
+      prefetchMany: prefetchMany,
       nameList: nameList,
+      rawCount: function () {
+        return Object.keys(rawCache).length;
+      },
       /** 某个 key 的音频是否已经就绪（测试/自检用） */
       isReady: function (key, tier, id) {
         var list = fileListFor(key, tier, id) || [];

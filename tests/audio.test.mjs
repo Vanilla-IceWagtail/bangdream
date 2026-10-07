@@ -398,3 +398,38 @@ test('加载页：preloadMany 会按清单全部加载并回报进度', async ()
     globalThis.AudioContext = realAC;
   }
 });
+
+test('预取全部语音：只下载不解码，之后按需解码（内存才扛得住）', async () => {
+  const log = [];
+  const ctx = makeFakeCtx();
+  const realAC = globalThis.AudioContext;
+  globalThis.AudioContext = function () {
+    return ctx;
+  };
+  const serve = { 'roselia-01/drop-1': ['mp3'], 'roselia-01/drop-2': ['mp3'], 'afterglow-01/merge-1': ['mp3'] };
+  const audio = AUDIO.create({ config: CFG, fetch: makeFetch(serve, log) });
+  try {
+    const names = audio
+      .nameList(['drop'], { id: 'roselia-01' })
+      .concat(audio.nameList(['merge'], { id: 'afterglow-01' }));
+    const seen = [];
+    const res = await audio.prefetchMany(names, (d, t) => seen.push(d + '/' + t));
+    assert.equal(res.total, names.length, '总数应等于清单长度');
+    assert.equal(res.done, names.length, '应该全部处理完');
+    assert.ok(seen.length > 0, '应报进度');
+    assert.equal(audio.stats().loaded, 0, '预取阶段不该解码（loaded 应为 0）');
+    assert.ok(audio.rawCount() >= 2, '原始字节应该缓存下来，实际 ' + audio.rawCount());
+
+    /* 现在真正要播：应该直接用缓存的字节解码，不再发请求 */
+    const before = log.length;
+    let played = false;
+    for (let i = 0; i < 20 && !played; i++) {
+      played = audio.play('drop', { id: 'roselia-01' }) === true;
+      await tick();
+    }
+    assert.ok(played, '预取过的语音应该能直接播');
+    assert.equal(log.length, before, '不该再发新请求：' + log.slice(before).join(', '));
+  } finally {
+    globalThis.AudioContext = realAC;
+  }
+});

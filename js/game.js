@@ -554,12 +554,22 @@ var limiter = CFG.createAudioLimiter();
         resolve();
         return;
       }
-      /* 预加载清单：当前阵容每一级的 drop + merge，再加界面音效 */
+      /*
+       * 预取清单：**图库里所有玩偶**的 drop + merge（不管在不在当前 11 个位子里），
+       * 再加界面音效。全部先下载下来（合计约 7MB），解码仍然按需 ——
+       * 否则 300 条全部解码会吃掉几百 MB 内存。
+       */
       var names = [];
-      for (var tier = 1; tier <= CFG.RULES.maxTier; tier++) {
-        var id = assets.idOf(tier);
-        if (!id) continue;
-        names = names.concat(fa.nameList(['drop', 'merge'], { id: id }));
+      var allIds = assets.allIds ? assets.allIds() : [];
+      for (var vi = 0; vi < allIds.length; vi++) {
+        names = names.concat(fa.nameList(['drop', 'merge'], { id: allIds[vi] }));
+      }
+      /* 兜底：万一拿不到图库清单，至少把当前阵容的预取上 */
+      if (!names.length) {
+        for (var tier = 1; tier <= CFG.RULES.maxTier; tier++) {
+          var tid = assets.idOf(tier);
+          if (tid) names = names.concat(fa.nameList(['drop', 'merge'], { id: tid }));
+        }
       }
       names = names.concat(fa.nameList(['warn', 'over', 'click']));
       if (!names.length) {
@@ -595,19 +605,22 @@ var limiter = CFG.createAudioLimiter();
        */
       if (/[?&]loading=1/.test(root.location.search)) {
         if (bar) bar.style.width = '62%';
-        if (note) note.textContent = '正在加载玩偶语音 68 / 110（自检：停在这一屏）';
+        if (note) note.textContent = '正在加载全部玩偶语音 0 / ' + names.length + '（自检：停在这一屏）';
         return;
       }
-      /* 超时兜底：网络慢也别把玩家卡在加载页 */
-      root.setTimeout(finish, 8000);
-      fa
-        .preloadMany(names, function (done, total) {
+      /* 超时兜底：网络慢也别把玩家卡在加载页（30 秒，全部语音 7MB 左右） */
+      root.setTimeout(finish, 30000);
+      var prefetch = fa.prefetchMany || fa.preloadMany;
+      prefetch
+        .call(fa, names, function (done, total) {
           var pct = total ? Math.round((done / total) * 100) : 100;
           if (bar) bar.style.width = pct + '%';
-          if (note) note.textContent = '正在加载玩偶语音 ' + done + ' / ' + total;
+          if (note) note.textContent = '正在加载全部玩偶语音 ' + done + ' / ' + total;
         })
         .then(function (res) {
-          if (note) note.textContent = '语音已就绪（' + (res ? res.done : 0) + ' 条）';
+          if (note) note.textContent = '全部语音已就绪（' + (res ? res.done : 0) + ' 条）';
+          /* 预取完成后，把当前/下一只需要用到的先解码好，进游戏就是原声 */
+          warmVoices();
           finish();
         });
     });

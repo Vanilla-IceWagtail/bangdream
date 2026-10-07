@@ -1749,6 +1749,8 @@ kbd {
   padding: 24px;
   background: rgba(255, 245, 236, 0.94);
   backdrop-filter: blur(3px);
+  /* 保险：加载层自己绝不产生横向溢出 */
+  overflow: hidden;
 }
 
 /* 作者样式里的 display 会盖掉 hidden，这里显式让位（踩过一次） */
@@ -1804,4 +1806,40 @@ kbd {
   font-size: 11.5px;
   line-height: 1.6;
   color: #9a7a68;
+}
+
+/* 加载页插图：宽度和进度条一致（都占卡片内容宽度，两端对齐） */
+
+.loading-art {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  /* 手机上别把卡片顶出屏幕：限制高度并保持比例 */
+  max-height: 38vh;
+  object-fit: contain;
+  margin: 0 0 14px;
+  border-radius: 14px;
+  background: #cfe8ff;
+  box-shadow: 0 10px 24px rgba(176, 116, 84, 0.18);
+}
+
+@media (max-width: 560px) {
+  .loading-art {
+    max-height: 32vh;
+    margin-bottom: 12px;
+  }
+
+  .loading-card {
+    padding: 16px 16px 16px;
+  }
+
+  .loading-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .loading-hint {
+    font-size: 11px;
+  }
 }
