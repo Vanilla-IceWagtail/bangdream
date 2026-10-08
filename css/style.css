@@ -1847,7 +1847,7 @@ kbd {
 /* ---------- 背景音乐按钮（选图后面那颗小图标） ---------- */
 
 .btn-music {
-  padding: 5px 8px;
+  padding: 4px 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1858,10 +1858,10 @@ kbd {
 
 .btn-music-icon {
   display: block;
-  /* 图标本身留白很少，18px 时上面的光点会糊，这里给到 22px */
-  height: 22px;
+  /* 图标本身留白很少；这里 26px（原来 22px），配合上面减 1px 内边距，
+     按钮总高和其它按钮保持一致 */
+  height: 26px;
   width: auto;
-  /* 图标本身是「透明底 + 黑图形」，播放时用滤镜翻成白色 */
   transition: filter 0.15s ease;
 }
 

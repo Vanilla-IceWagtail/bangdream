@@ -14,7 +14,7 @@
  */
 'use strict';
 
-var CACHE_VERSION = 'v0.4.27';
+var CACHE_VERSION = 'v0.4.28';
 var CACHE_NAME = 'suika-doll-' + CACHE_VERSION;
 
 /* 安装时先缓存「打开页面就要用的壳」，语音不预缓存（太大，用到了再存） */
