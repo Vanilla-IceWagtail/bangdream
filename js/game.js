@@ -732,6 +732,9 @@ var limiter = CFG.createAudioLimiter();
    *   · 循环播放，音量压低，别盖过玩偶语音
    */
   var BGM_SRC = 'assets/bgm/kkr-pengyou-de-jiu-dj.m4a';
+  /* 图标两张：未播放用黑、播放中用白（同一图形，只换颜色；不用 CSS filter） */
+  var BGM_ICON_BLACK = 'assets/icons/bgm.png';
+  var BGM_ICON_WHITE = 'assets/icons/bgm-white.png';
   var bgmEl = null;
   var bgmPlaying = false;
   var bgmWanted = false; // 用户希望它响（切后台时用来恢复）
@@ -766,8 +769,14 @@ var limiter = CFG.createAudioLimiter();
       dom.musicBtn.style.background = on ? '#007aff' : '';
       dom.musicBtn.style.borderColor = on ? '#007aff' : '';
       var icon = dom.musicBtn.querySelector ? dom.musicBtn.querySelector('.btn-music-icon') : null;
-      /* 图标本身是「透明底 + 黑图形」，播放时翻成白色 */
-      if (icon) icon.style.filter = on ? 'brightness(0) invert(1)' : '';
+      /*
+       * 图标直接换图（黑 / 白两张），不用 CSS filter：
+       * filter 上的 !important 会压过内联样式，开与关两种状态会互相打架（真踩过）。
+       */
+      if (icon) {
+        var want = on ? BGM_ICON_WHITE : BGM_ICON_BLACK;
+        if (icon.getAttribute('src') !== want) icon.setAttribute('src', want);
+      }
     } catch (err) {
       /* 内联样式失败也不影响播放本身 */
     }

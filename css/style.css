@@ -1,4 +1,4 @@
-﻿/* 合成大西瓜 · 界面样式 */
+/* 合成大西瓜 · 界面样式 */
 :root {
   --bg-0: #fff4ea;
   --bg-1: #ffe8d6;
@@ -1866,16 +1866,13 @@ kbd {
 }
 
 /* 播放中：蓝底（#007AFF）+ 白图标
-   注：这里用 !important 是故意的 —— 顶栏里 .btn / .btn:hover 的 background
-   会把这层盖掉（真实页面里只生效了 box-shadow，蓝底没出来），先用最高优先级定死。 */
+   注：背景用 !important 是故意的 —— 顶栏里 .btn / .btn:hover 的 background 会把这层盖掉。
+   图标不再用 filter：filter 上的 !important 会压过内联样式，开/关两种状态互相打架（踩过），
+   现在由 js 直接换成 assets/icons/bgm-white.png 那张白色版，最直白也最稳。 */
 .btn.btn-music.is-on {
   background: #007aff !important;
   border-color: #007aff !important;
   box-shadow: 0 6px 16px rgba(0, 122, 255, 0.32);
-}
-
-.btn.btn-music.is-on .btn-music-icon {
-  filter: brightness(0) invert(1) !important;
 }
 
 .btn.btn-music.is-on:hover:not(:disabled) {

@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * 合成邦多利皇帝 · Service Worker
  *
  * 为什么需要：线上是 GitHub Pages，响应头是它固定的（静态资源只给 max-age=600），
@@ -14,7 +14,7 @@
  */
 'use strict';
 
-var CACHE_VERSION = 'v0.4.26';
+var CACHE_VERSION = 'v0.4.27';
 var CACHE_NAME = 'suika-doll-' + CACHE_VERSION;
 
 /* 安装时先缓存「打开页面就要用的壳」，语音不预缓存（太大，用到了再存） */
@@ -37,6 +37,7 @@ var SHELL = [
   'js/game.js',
   'vendor/matter.min.js',
   'assets/icons/bgm.png',
+  'assets/icons/bgm-white.png',
   'assets/loading-poster.png'
 ];
 
